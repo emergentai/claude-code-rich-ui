@@ -1,4 +1,4 @@
-# <img src="docs/assets/rich-ui.png" alt="rich-ui logo" width="56" height="56" align="absmiddle"> rich-ui
+# <img src="docs/assets/rich-ui.png" alt="rich-ui logo" width="56" height="56" align="absmiddle">&nbsp;&nbsp;&nbsp;rich-ui
 
 **Claude Code, in nicer clothes.**
 
