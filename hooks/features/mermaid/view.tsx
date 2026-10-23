@@ -57,7 +57,7 @@ export function buildReply(view: ReplyView) {
           lines.map(line => (
             <Text>
               {runsOf(line).map(run => (
-                <Text dimColor={run.isLine}>{run.text}</Text>
+                <Text color={run.isLine ? 'subtle' : undefined}>{run.text}</Text>
               ))}
             </Text>
           ))
