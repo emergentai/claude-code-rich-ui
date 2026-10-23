@@ -4,6 +4,9 @@ import { clip } from '../../manager/size'
 import { SEPARATOR } from './band'
 import type { Segment } from './band'
 
+// Two cells in, like the prompt's own text, so the band lines up with it.
+export const INDENT = 2
+
 export type BandView = {
   elements: Elements['terminal']
   segments: Segment[]
@@ -15,10 +18,10 @@ export type BandView = {
 export function buildBand(view: BandView) {
   const { Box, Text } = view.elements
   const last = view.segments.length - 1
-  let room = view.width - 2
+  let room = view.width - INDENT
 
   return (
-    <Box paddingX={1}>
+    <Box paddingLeft={INDENT}>
       {view.segments.map((segment, index) => {
         const text = clip(segment.text, room)
         room -= text.length + SEPARATOR.length

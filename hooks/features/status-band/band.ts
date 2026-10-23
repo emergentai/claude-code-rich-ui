@@ -68,7 +68,7 @@ export function segmentsFor(snapshot: UsageSnapshot, now: number): Segment[] {
 
     out.push({
       id: limit.kind,
-      text: `${label} ${Math.round(limit.percentUsed)}%${reset ? ` · resets in ${reset}` : ''}`,
+      text: `${label} ${Math.round(limit.percentUsed)}%${reset ? ` (resets in ${reset})` : ''}`,
       isWarning: limit.percentUsed >= LIMIT_WARN,
     })
   }

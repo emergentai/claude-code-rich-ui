@@ -5,7 +5,7 @@ import type { EnabledMap, UsageSnapshot } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
 import { fitSegments, segmentsFor } from './band'
-import { buildBand } from './view'
+import { buildBand, INDENT } from './view'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
 const enabledAtom = atom(
@@ -57,7 +57,7 @@ export const renderBand: MatchedHook<
   const others = await next(e)
   const band = buildBand({
     elements: $.ui.resolve(e),
-    segments: fitSegments(segments, width - 2),
+    segments: fitSegments(segments, width - INDENT),
     width,
   })
 

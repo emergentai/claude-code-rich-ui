@@ -39,8 +39,8 @@ test('a limit shows from 75 percent with its reset, ordered 5h, 7d, spend', () =
   )
 
   expect(segments.map(s => s.text)).toEqual([
-    '5h 92% · resets in 2h 05m',
-    '7d 80% · resets in 3d 4h',
+    '5h 92% (resets in 2h 05m)',
+    '7d 80% (resets in 3d 4h)',
   ])
   expect(segments.map(s => s.isWarning)).toEqual([true, false])
 })
