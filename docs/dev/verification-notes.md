@@ -4,7 +4,18 @@ Run with `claude --plugin-dir .` in a real terminal, Claude Code 2.1.309.
 
 ## Result
 
-The live check of v0.1.0 passed (reported by the owner): `/rich-ui` opens the pane, diagrams draw, and the source toggle and feature toggle work. The finer open items in the implementation plan, Task 13 step 3 (streaming, viewport margin, themes, scroll on toggle, ELK-only syntax, uninstall data), have not been recorded individually yet.
+The live check of v0.1.0 passed (reported by the owner): `/rich-ui` opens the pane, diagrams draw, and the source toggle and feature toggle work.
+
+## Open items from the implementation plan (Task 13, step 3)
+
+1. **Streaming:** yes. An unclosed fence stays raw and swaps to the diagram once closed.
+2. **Viewport and margin:** yes. The viewport is available, and a diagram resizes (flips direction or falls back) to fit the window.
+3. **Themes:** no. The dim styling is not right across themes. The drawing should follow the terminal's theme (or at least the system's). Follow-up: replace the fixed dim styling with theme-aware colors.
+4. **Toggle redraw:** yes. Only that message redraws.
+5. **ELK-only syntax:** the premise was wrong. Per a direct run of the vendored renderer (owner's pasted result), the ELK stub is never reached on the ASCII path. Subgraphs, including nested ones and cross-boundary edges, render correctly as boxes inside boxes (an early failure came from writing `A-->B` with no spaces and no labels). `xychart-beta` renders as an ASCII bar chart (only a small chart was tried). Types the renderer does not support (mindmap, pie, gantt, journey) throw "Invalid mermaid header" and fall back to code. Note that the feature's own header check (`sanity.ts`) admits only the five supported types, so `xychart-beta` stays a code block in rich-ui regardless.
+6. **Feature off:** no match with the plan's expectation. After turning Mermaid off, a new diagram still shows as drawn UI. The owner considers that a good thing. To clarify what is drawing it (see open question below).
+7. **Persistence:** yes. The toggle is remembered after quitting and reopening.
+8. **Uninstall and where `$.store` lives:** unknown. Needs a marketplace install, so it waits until the repository is pushed.
 
 ## Supported diagram types
 
