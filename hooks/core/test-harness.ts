@@ -39,6 +39,7 @@ export async function boot(
     return h(Text, {}, 'engine') as RenderElement
   })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('session.measure', (_, e) => ({ changed: e.changed }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
   return { clock, saved, failSaves }
