@@ -78,10 +78,10 @@ hooks/manager/
   *.test.ts(x)      # tests beside each file
 hooks/core/
   version.ts        # the plugin version shown in the footer
-scripts/check-version.mjs   # fails if version.ts and plugin.json disagree
+tools/check-version.mjs     # fails if version.ts and plugin.json disagree
 ```
 
-The footer's version cannot be read from `plugin.json` at run time (the module may import only `.ts`/`.tsx`/`.js` family files, not JSON), and plugin tests have no filesystem, so `version.ts` holds the string and `npm run check:version` (a script, run before a release) fails if it differs from `.claude-plugin/plugin.json`.
+The footer's version cannot be read from `plugin.json` at run time (the module may import only `.ts`/`.tsx`/`.js` family files, not JSON), and plugin tests have no filesystem, so `version.ts` holds the string and `npm run check:version` (in `tools/`) (a script, run before a release) fails if it differs from `.claude-plugin/plugin.json`.
 
 `startSession` is the plugin's one `session.start` handler: it loads the saved choices from `$.store` into state and registers the command (the engine allows one unmatched hook per event).
 
@@ -96,7 +96,7 @@ Automated (`claude plugin test`, terminal surface):
 - Rows: one per registry feature, checkbox matches the flag, description dim and cut when narrow.
 - Press: toggles the flag in `$.state` and writes `$.store`; clears that feature's status; other features unchanged.
 - Status: a note renders dim under its row, an error renders in the warning color, a healthy feature shows none.
-- Footer: shows the version; equality with `.claude-plugin/plugin.json` is checked by `scripts/check-version.mjs`.
+- Footer: shows the version; equality with `.claude-plugin/plugin.json` is checked by `tools/check-version.mjs`.
 - Command: running `rich-ui` answers with no text. (The arguments passed to `$.ui.open` are not asserted: the kit's `ui.open` stand-in is registered once, by the harness.)
 - Non-terminal surface: the hook returns the engine's drawing unchanged.
 - Note lifecycle: a note posted while a message draws appears under the row, and a toggle clears it.

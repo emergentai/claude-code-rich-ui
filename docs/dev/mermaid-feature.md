@@ -71,7 +71,7 @@ hooks/features/mermaid/
   *.test.ts(x)      # tests beside each file
 hooks/vendor/
   beautiful-mermaid.js   # bundled, committed, under the 1,048,576 byte import cap
-scripts/build-vendor.mjs  # reproducible build, pinned version
+tools/build-vendor.mjs    # reproducible build, pinned version
 ```
 
 `index.ts` exports one handler, `renderAssistantMessage`, which `register.tsx` hooks on `ui.render` for component `AssistantMessage` (the engine only accepts literal `on(...)` calls there; see `architecture.md` 4.0). It reads its feature flag, then returns `next(e)` untouched unless the reply holds a complete mermaid fence, so replies without mermaid cost one string scan. The view code receives plain data and callbacks, never `$`.

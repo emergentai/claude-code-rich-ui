@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url'
 
 import { build } from 'esbuild'
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const here = dirname(fileURLToPath(import.meta.url))
+const root = join(here, '..')
 const outfile = join(root, 'hooks/vendor/beautiful-mermaid.js')
 const LIMIT = 800 * 1024
 
@@ -16,7 +17,7 @@ const elkStub = `export default class ELK {
 await build({
   stdin: {
     contents: `export { renderMermaidASCII } from 'beautiful-mermaid'`,
-    resolveDir: root,
+    resolveDir: here,
     loader: 'js',
   },
   bundle: true,

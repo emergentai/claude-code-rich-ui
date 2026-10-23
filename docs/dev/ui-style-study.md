@@ -1,6 +1,6 @@
 # rich-ui: how the mod fits Claude Code's own UI
 
-Status: spike done 2026-10-23 on Claude Code 2.1.309, dark theme, tmux at 62, 100, 110, 130 and 180 columns. Method: drive a real interactive session in tmux, send the same prompts with and without the plugin, and compare the screen text and the ANSI colors (`scripts/ui-capture.sh`).
+Status: spike done 2026-10-23 on Claude Code 2.1.309, dark theme, tmux at 62, 100, 110, 130 and 180 columns. Method: drive a real interactive session in tmux, send the same prompts with and without the plugin, and compare the screen text and the ANSI colors (`tools/ui-capture.sh`).
 
 ## 1. The problem
 

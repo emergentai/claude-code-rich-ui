@@ -44,13 +44,16 @@ claude-code-rich-ui/
       gate.ts                # isOn (effective flag) and guard (contain a throw)
       prefs.ts               # parse/serialize/toggle the saved choices (pure)
       errors.ts              # pure helpers over the per-feature status map
-      version.ts             # plugin version string (checked by scripts/check-version.mjs)
+      version.ts             # plugin version string (checked by tools/check-version.mjs)
     manager/                 # the /rich-ui command and pane (always on, not a feature)
     features/
       mermaid/               # first feature (see its own doc)
     vendor/                  # committed third-party bundles
-  scripts/
+  tools/                     # dev tooling only; never needed by an installed plugin
+    package.json             # devDependencies (esbuild, typescript, beautiful-mermaid)
     build-vendor.mjs         # reproducible rebuild of hooks/vendor/*
+    check-version.mjs        # version.ts must match plugin.json
+    ui-capture.sh            # captures native vs mod rendering in tmux
   types/
     index.d.ts               # PluginState contract
   docs/
@@ -149,7 +152,8 @@ Toggle: user presses a row in the pane, then `$.store` and `$.state` are written
 ## 7. Development workflow
 
 - Run the working copy with `claude --plugin-dir .`; the engine hot-reloads it at turn boundaries.
-- Rebuild vendored bundles with `node scripts/build-vendor.mjs`; the script pins exact versions and its output is committed so installs from GitHub need no build.
+- Dev tooling lives in `tools/`, not at the repo root: when Claude Code installs a plugin it runs `npm install` if the plugin's root has a `package.json` with dependencies, which put 51 MB of esbuild, TypeScript and the renderer source on every user's machine (measured: 57 MB installed against 5.4 MB). Run `npm install` once in `tools/`, then `npm run build:vendor`, `check:version`, `typecheck`, `test` and `validate` from there. Never add a `package.json` to the repo root.
+- Rebuild vendored bundles with `npm run build:vendor` in `tools/`; the script pins exact versions and its output is committed so installs from GitHub need no build.
 - Re-run validate, type-check and tests after every Claude Code upgrade, since the mods API is early access.
 
 ## 8. Distribution and compatibility

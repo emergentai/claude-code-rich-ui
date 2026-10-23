@@ -2,7 +2,7 @@
 # Drives a real Claude Code session in tmux and saves what it draws, so the mod's
 # rendering can be compared with the native one (see docs/dev/ui-style-study.md).
 #
-# usage: scripts/ui-capture.sh <name> <columns> <rows> <native|mod> <prompt-file> [wait-seconds]
+# usage: tools/ui-capture.sh <name> <columns> <rows> <native|mod> <prompt-file> [wait-seconds]
 #   native  runs `claude` alone; mod runs `claude --plugin-dir <this repo>`.
 # Writes <out-dir>/<name>.txt (plain) and <name>.ansi (colors as <E>[..m).
 # The session runs in OUT_DIR (default: a fresh temp dir) and trusts it on first use.

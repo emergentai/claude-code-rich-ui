@@ -1,6 +1,6 @@
 # Third-party notices
 
-rich-ui bundles beautiful-mermaid 1.1.3 (MIT) in hooks/vendor/beautiful-mermaid.js, built by scripts/build-vendor.mjs.
+rich-ui bundles beautiful-mermaid 1.1.3 (MIT) in hooks/vendor/beautiful-mermaid.js, built by tools/build-vendor.mjs.
 
 MIT License
 
