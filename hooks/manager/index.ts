@@ -7,6 +7,9 @@ import { parseStored, serialize, STORE_KEY, toggled } from '../core/prefs'
 import { features } from '../core/registry'
 import { VERSION } from '../core/version'
 import { buildPane } from './pane'
+import { contentRows } from './size'
+
+const PANE_ID = 'rich-ui'
 
 // Declared here, not imported: the engine's module scan reads a state source
 // only where it is written (docs/dev/architecture.md 4.0).
@@ -24,11 +27,6 @@ const saveFailedAtom = atom(
   { plugin: 'rich-ui', key: 'saveFailed' } as const,
   false,
   { shape: 'save-failed-1' },
-)
-const managerOpenAtom = atom(
-  { plugin: 'rich-ui', key: 'managerOpen' } as const,
-  false,
-  { shape: 'manager-open-1' },
 )
 
 // One session.start hook does both jobs, because the engine allows only one
@@ -50,27 +48,33 @@ export const startSession: Hook<'session.start'> = async ($, e, next) => {
   return next(e)
 }
 
-// The manager is the band above the prompt, not a Pane: the engine docks a Pane
-// beside the transcript in a wide fullscreen terminal and a plugin cannot choose
-// otherwise, and the band is always above the prompt. A band cannot be handed
-// the keyboard by the plugin ($.ui.focus is denied: the site does not hold the
-// keys), so the band says how to take it.
 export const runCommand: MatchedHook<
   'command.run',
   { command: 'rich-ui' }
 > = async $ => {
-  await update($, managerOpenAtom, () => true)
+  const status = await read($, statusAtom)
+  const saveFailed = await read($, saveFailedAtom)
+  const statusLines = Object.values(status).reduce(
+    (total, entry) => total + (entry.error ? 1 : 0) + entry.notes.length,
+    0,
+  )
+
+  await $.ui.open({
+    id: PANE_ID,
+    title: 'rich-ui',
+    focus: true,
+    closeOnEscape: true,
+    rows: contentRows(features.length, statusLines, saveFailed),
+  })
 
   return {}
 }
 
-export const renderBand: MatchedHook<
+export const renderPane: MatchedHook<
   'ui.render',
-  { component: 'AbovePrompt' }
+  { component: 'Pane'; requestId: 'rich-ui' }
 > = async ($, e, next) => {
   if (e.surface !== 'terminal') return next(e)
-  if (e.props.hasSurvey) return next(e)
-  if (!(await read($, managerOpenAtom))) return next(e)
 
   return buildPane({
     elements: $.ui.resolve(e),
@@ -78,11 +82,9 @@ export const renderBand: MatchedHook<
     enabled: await read($, enabledAtom),
     status: await read($, statusAtom),
     saveFailed: await read($, saveFailedAtom),
-    width: e.props.bodyColumns,
+    width: (e.props.bodyColumns ?? 80) - (e.props.placement === 'dock' ? 2 : 0),
+    isDocked: e.props.placement === 'dock',
     version: VERSION,
-    onClose: () => {
-      void update($, managerOpenAtom, () => false)
-    },
     onToggle: async feature => {
       const enabled = await update($, enabledAtom, map => toggled(map, feature))
       await update($, statusAtom, map => withoutStatus(map, feature.id))

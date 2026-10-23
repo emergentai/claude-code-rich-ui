@@ -11,20 +11,23 @@ export type PaneView = {
   status: StatusMap
   saveFailed: boolean
   width: number
+  isDocked: boolean
   version: string
   onToggle: (feature: Feature) => void
-  onClose: () => void
 }
 
-// Builds the manager from plain data and callbacks: the engine's module scan
+// Builds the pane from plain data and a callback: the engine's module scan
 // rejects a function that is handed `$`, so the hook reads the state and writes
 // the toggle itself.
 export function buildPane(view: PaneView) {
   const { Box, Text, Button } = view.elements
 
   return (
-    <Box flexDirection="column">
-      <Text bold>rich-ui features</Text>
+    <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0}>
+      <Text bold color="text">
+        rich-ui features
+      </Text>
+      <Text> </Text>
       {view.features.map((feature, index) => {
         const isOn = view.enabled[feature.id] ?? feature.defaultEnabled
         const mark = isOn ? '[x]' : '[ ]'
@@ -38,7 +41,9 @@ export function buildPane(view: PaneView) {
               autoFocus={index === 0 ? true : undefined}
               onPress={() => view.onToggle(feature)}
             >
-              {mark} {feature.name}
+              <Text color="text">
+                {mark} {feature.name}
+              </Text>
             </Button>
             <Text dimColor>{clip(`    ${feature.description}`, view.width)}</Text>
             {entry?.error && (
@@ -57,16 +62,11 @@ export function buildPane(view: PaneView) {
           </Box>
         )
       })}
+      <Text> </Text>
       {view.saveFailed && <Text color="warning">Couldn't save your choice</Text>}
       <Text dimColor>
-        {clip('Click a row to toggle it, or press ctrl+x then Tab to use the keyboard', view.width)}
+        {clip(`Enter toggles · Esc closes · rich-ui ${view.version}`, view.width)}
       </Text>
-      <Box>
-        <Button key="close" plain dimColor onPress={() => view.onClose()}>
-          close
-        </Button>
-        <Text dimColor> · rich-ui {view.version}</Text>
-      </Box>
     </Box>
   )
 }

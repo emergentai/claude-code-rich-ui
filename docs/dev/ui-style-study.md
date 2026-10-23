@@ -31,14 +31,17 @@ A hook that returns its own tree for `AssistantMessage` replaces all of this (th
 - `isSummary` rows are left to the engine (it adds its own faint " · summary" mark).
 - Tests: the first block of a reply has the bullet and later blocks do not; a summary row goes to the engine.
 
-## 4. The `/rich-ui` manager: a band, not a Pane
+## 4. The `/rich-ui` pane
 
-Findings:
-- A `Pane` is placed by the engine: docked beside the transcript in a fullscreen terminal of 110+ columns, otherwise inline above the prompt. A plugin cannot choose; `$.ui.open` has no placement option. The dock was a wide, tall strip for a few lines, and in a light-theme session it carried the engine's own dock chrome. Asking for a narrower dock (`columns`) was tried and rejected by the owner.
-- The `AbovePrompt` band is always above the prompt (the strip the engine uses for surveys, with its own `[-]` collapse mark), so the manager is a band now: `/rich-ui` sets a `managerOpen` state value, the band's `ui.render` hook draws while it is true (and yields to a survey), and a `close` button clears it.
-- Cost: a band cannot be given the keyboard by the plugin (`$.ui.focus` is denied with "that site does not hold the keys"; the band's `requestId` is `above-prompt`). Mouse clicks work; for the keyboard the person presses ctrl+x then Tab, after which Enter toggles the focused row. The band says so on its own line.
-- Light theme (reproduced with `claude --settings '{"theme":"light"}'`): the focused row is reverse video and a gray description nested in the button label lost its contrast. The description is on its own dim line, so focus inverts only `[x] Name`. Every color is the engine's theme color (secondary gray 241 in light, 246 in dark); none is fixed.
-- Unchanged earlier fixes: the first row has `autoFocus` (it takes the ring when the person focuses the band), and long lines are clipped to the band width.
+The manager is a `Pane` opened with `focus: true`, so the keyboard works at once. The engine places it: inline above the prompt (a rounded frame sized to the content) below 110 columns or outside fullscreen, docked beside the transcript in a fullscreen terminal of 110+ columns. A plugin cannot choose the placement.
+
+Tried and rejected by the owner: sizing the dock with `columns`, and replacing the pane with an `AbovePrompt` band (it cannot be given the keyboard: `$.ui.focus` is denied with "that site does not hold the keys"). Both were reverted.
+
+Kept fixes:
+- The dock supplies no padding, so the body adds one cell of side padding when `placement` is `dock`. The footer is clipped to the width.
+- The first row has `autoFocus`, so Enter works as soon as the pane opens.
+- Focus draws the row in reverse video, so the description (gray) sits on its own dim line and focus inverts only `[x] Name`.
+- Theming (reproduced with `claude --settings '{"theme":"light"}'`): the engine paints the pane's background per Claude theme (255 light, 235 dark) but text with no color uses the terminal's own default foreground. When the terminal and Claude's theme disagree, that is unreadable or "dark" text on a light pane. The header and rows now use the theme's `text` color (fg 16 on the light pane, 231 on the dark), and secondary text uses `dimColor` (the engine's gray, 241 light and 246 dark). Rule: never draw text in a pane without an explicit theme color.
 
 ## 5. Not yet verified
 
