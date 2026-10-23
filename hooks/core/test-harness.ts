@@ -39,8 +39,14 @@ export async function boot(
     return h(Text, {}, 'engine') as RenderElement
   })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
+  const status: { line: string | undefined } = { line: undefined }
+  on('ui.status', (_, e) => {
+    status.line = e.text
+
+    return { value: undefined }
+  })
   on('session.measure', (_, e) => ({ changed: e.changed }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  return { clock, saved, failSaves }
+  return { clock, saved, failSaves, status }
 }

@@ -82,17 +82,10 @@ function rank(kind: string): number {
   return index === -1 ? LIMIT_ORDER.length : index
 }
 
-// Drops segments from the end until the line fits; the first is always kept.
-export function fitSegments(segments: Segment[], width: number): Segment[] {
-  const kept = [...segments]
-  while (kept.length > 1 && lineLength(kept) > width) kept.pop()
+// The whole line for the engine's status row under the prompt: plain text, so
+// the engine's own styling and theme apply. Empty when nothing runs high.
+export function bandText(segments: Segment[]): string | undefined {
+  if (segments.length === 0) return undefined
 
-  return kept
+  return segments.map(segment => segment.text).join(SEPARATOR)
 }
-
-export function lineLength(segments: Segment[]): number {
-  return segments.reduce((total, segment) => total + segment.text.length, 0) +
-    SEPARATOR.length * Math.max(0, segments.length - 1)
-}
-
-export { SEPARATOR }

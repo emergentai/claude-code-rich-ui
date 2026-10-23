@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { bar, countdown, fitSegments, lineLength, segmentsFor } from './band'
+import { bandText, bar, countdown, segmentsFor } from './band'
 
 const NOW = Date.parse('2026-10-23T10:00:00Z')
 
@@ -67,7 +67,7 @@ test('bar fills in proportion and stays inside its cells', () => {
   expect(bar(150)).toBe('████████')
 })
 
-test('fit drops segments from the end and keeps the first', () => {
+test('the line joins the segments and is empty when nothing runs high', () => {
   const segments = segmentsFor(
     {
       contextPercent: 70,
@@ -76,7 +76,6 @@ test('fit drops segments from the end and keeps the first', () => {
     NOW,
   )
 
-  expect(fitSegments(segments, 200)).toHaveLength(2)
-  expect(fitSegments(segments, lineLength(segments) - 1).map(s => s.id)).toEqual(['context'])
-  expect(fitSegments(segments, 3).map(s => s.id)).toEqual(['context'])
+  expect(bandText(segments)).toBe('context ██████░░ 70%  ·  5h 80% (resets in 1h 00m)')
+  expect(bandText([])).toBeUndefined()
 })

@@ -1,7 +1,7 @@
 import type { Register } from 'claude-code'
 
 import { renderAssistantMessage } from './features/mermaid'
-import { recordUsage, renderBand } from './features/status-band'
+import { recordUsage } from './features/status-band'
 import { renderPane, runCommand, startSession } from './manager'
 
 // The engine only accepts literal `on("event", hook)` calls here, so `on` is
@@ -15,5 +15,4 @@ export const register: Register = on => {
   on('ui.render', { component: 'AssistantMessage' }, renderAssistantMessage)
 
   on('session.measure', recordUsage)
-  on('ui.render', { component: 'AbovePrompt' }, renderBand)
 }

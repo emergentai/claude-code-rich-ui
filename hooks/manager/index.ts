@@ -1,10 +1,13 @@
 import { atom, read, update } from 'claude-code'
 import type { Hook, MatchedHook } from 'claude-code'
 
-import type { EnabledMap, StatusMap } from '../../types'
+import type { EnabledMap, StatusMap, UsageSnapshot } from '../../types'
 import { withoutStatus } from '../core/errors'
+import { isOn } from '../core/gate'
 import { parseStored, serialize, STORE_KEY, toggled } from '../core/prefs'
 import { features } from '../core/registry'
+import { bandText, segmentsFor } from '../features/status-band/band'
+import { statusBand } from '../features/status-band'
 import { VERSION } from '../core/version'
 import { buildPane } from './pane'
 import { contentRows } from './size'
@@ -22,6 +25,11 @@ const statusAtom = atom(
   { plugin: 'rich-ui', key: 'status' } as const,
   {} as StatusMap,
   { shape: 'status-1' },
+)
+const usageAtom = atom(
+  { plugin: 'rich-ui', key: 'usage' } as const,
+  { limits: [] } as UsageSnapshot,
+  { shape: 'usage-1' },
 )
 const saveFailedAtom = atom(
   { plugin: 'rich-ui', key: 'saveFailed' } as const,
@@ -88,6 +96,12 @@ export const renderPane: MatchedHook<
     onToggle: async feature => {
       const enabled = await update($, enabledAtom, map => toggled(map, feature))
       await update($, statusAtom, map => withoutStatus(map, feature.id))
+      // The status band's line sits in the engine's status row, so toggling its
+      // feature clears or restores that line at once.
+      if (feature.id === statusBand.id) {
+        const segments = segmentsFor(await read($, usageAtom), await $.clock.now())
+        $.ui.status(isOn(enabled, statusBand) ? bandText(segments) : undefined)
+      }
       try {
         await $.store.set(STORE_KEY, serialize(enabled))
         await update($, saveFailedAtom, () => false)
