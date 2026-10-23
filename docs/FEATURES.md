@@ -47,8 +47,12 @@ sessions, not just some?
   text.
 - **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
   formatted docs in a pane beside the chat.
-- **Context bar.** A thin stacked bar above the prompt showing how full the context
-  window is.
+- **Status band.** One quiet row above the prompt that shows context fullness, plan
+  usage, model and prompt-cache state only when they carry information, with each
+  segment on its own switch. Status bands are the most common kind of mod, so the aim
+  is to do it with fewer rows, theme-true colors and no clutter on healthy sessions.
+  Replaces the earlier "context bar" entry (context is the likely first segment).
+  Research: [`dev/status-band-research.md`](dev/status-band-research.md).
 - **Inline edit diffs.** A compact colored diff after each `Edit` or `Write`,
   complementing the built-in `/diff` pane.
 - **Image-quality diagrams.** The follow-up to the shipped text diagrams. Path from the
