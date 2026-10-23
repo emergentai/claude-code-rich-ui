@@ -36,7 +36,7 @@ A fence is drawn only if all of these hold; otherwise it is left as the original
 
 ### 3.3 Fitting
 
-Available size: width is the pane or transcript width (`columns` from the render props or viewport); height is the visible terminal rows minus a margin of 6 rows, which leaves room for the prompt, status line and surrounding text. The margin is one named constant so it can be adjusted after the manual terminal checks in section 7.
+Available size: width is the transcript width (`columns` from the viewport); height is the visible terminal rows minus a margin of 6 rows, which leaves room for the prompt, status line and surrounding text. The margin is one named constant so it can be adjusted after the manual terminal checks in section 7.
 1. Render in the author's direction. If it fits, use it.
 2. If it does not fit and the type has a direction (flowchart, state), render again in the perpendicular direction (top-down to left-right, and the reverse). If that fits, use it.
 3. Otherwise leave the original code block.
@@ -92,7 +92,7 @@ Any exception in detection, rendering or tree building is caught by the gate, re
 Automated (`claude plugin test`, terminal surface only):
 - Detection: backtick and tilde fences, mixed case, several per reply, unclosed fence ignored, indented or nested fence ignored.
 - Sanity: each supported header accepted, unknown header rejected, front matter and directives skipped, empty output rejected.
-- Fit: author direction used when it fits, perpendicular direction used when it helps, raw fallback when neither fits, unknown viewport falls back.
+- Fit: author direction used when it fits, perpendicular direction used when it helps, raw fallback when neither fits (no pane note), unknown viewport falls back and posts the "terminal size unknown" note.
 - View: text before and after is preserved, button toggles source, per-diagram state is independent.
 - Gating: feature off draws nothing different from the engine.
 - Golden output: stored expected text for one flowchart, one sequence, one state, one class and one ER sample.

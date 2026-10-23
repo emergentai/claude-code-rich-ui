@@ -82,7 +82,7 @@ The footer's version cannot be read from `plugin.json` at run time (the module m
 ## 6. Failure handling
 
 - The manager is not behind the feature gate, so its own errors are not recorded as feature failures. If the pane's render hook throws, the engine skips it and the pane is empty; the failure appears in the debug log and, while hot-reloading, as the engine's dim transcript line.
-- If writing `$.store` fails after the state flag flipped, the toggle still holds for the current session. The footer line shows "Couldn't save your choice" in the `warning` color until the next successful toggle.
+- If writing `$.store` fails after the state flag flipped, the toggle still holds for the current session and `saveFailed` is set (see `architecture.md` 4.4). The footer line shows "Couldn't save your choice" in the `warning` color until the next successful save.
 
 ## 7. Testing
 
@@ -106,4 +106,3 @@ Manual before release:
 2. A `Button` holding a checkbox string plus a dim `Text` stays on one line and truncates as expected on narrow panes.
 3. Whether `rows` taken from the content height is honored inline, and what happens when a status line is posted while the pane is open (the pane may need to scroll).
 4. Whether `claude plugin test` can set `$.store` to fail, to test the save-failure line.
-5. Whether `$.state` is the right read path for the pane's footer message about a failed save, or it needs its own atom.

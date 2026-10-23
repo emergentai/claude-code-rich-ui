@@ -20,7 +20,7 @@ Non-goals for v1: runtime extension by third parties, non-terminal surfaces (des
 | Toggle UI | `/rich-ui` pane only (no `/config` rows) |
 | Defaults | Each feature declares its own `defaultEnabled` |
 | Gating | Every hook checks its feature's flag on each call |
-| Failures | A failing feature is skipped; the error is shown only inside the `/rich-ui` pane |
+| Failures and notes | A failing feature is skipped; its error, and any note a feature posts about itself, is shown only inside the `/rich-ui` pane |
 | Language | TypeScript, tested with `claude plugin test`, type-checked with `tsc` |
 | Repo root | The repo root is the plugin |
 | Feature set | Closed: features live in this repo |
@@ -41,8 +41,9 @@ claude-code-rich-ui/
       feature.ts             # Feature and FeatureContext types
       registry.ts            # the list of shipped features
       gate.ts                # gated `on` wrapper (flag check, error capture)
-      prefs.ts               # load/save toggle state ($.store <-> $.state)
+      prefs.ts               # load/save/toggle state ($.store <-> $.state)
       errors.ts              # per-feature status: errors and notes (session scoped)
+      version.ts             # plugin version string (tested against plugin.json)
     manager/                 # the /rich-ui command and pane (always on, not a feature)
     features/
       mermaid/               # first feature (see its own doc)
@@ -96,9 +97,10 @@ Two layers, one rule: `$.store` is the source of truth across sessions, `$.state
 - `$.store` key `prefs` holds `{ enabled: Record<featureId, boolean> }`.
 - `$.state` holds an `enabled` atom (the same map) and a `status` atom (errors and notes, 4.5).
 - On `session.start` the plugin hydrates `$.state` from `$.store`. A feature id missing from the store gets its `defaultEnabled`, so adding a feature later never flips anyone's existing choices.
-- A toggle writes `$.store` and `$.state` together. Writing `$.state` redraws the pane and every reader automatically.
+- A toggle (`toggleFeature(id)` in `prefs.ts`, called by the manager) writes `$.state` and `$.store` together and clears the feature's status entry. Writing `$.state` redraws the pane and every reader automatically.
+- If the `$.store` write fails, `$.state` stays as toggled so the choice holds for the session, and a `saveFailed` flag in `$.state` is set for the manager's footer (cleared by the next successful save).
 - Stored shapes use `Shaped` tags (`prefs-1`) so a future change of shape is declined and re-defaulted rather than misread after a reload.
-- Preferences remain after `/plugin uninstall`. To be verified (section 9) and then stated in the README.
+- Per the official docs, uninstalling from the last scope deletes the plugin's data folder and stored options unless `--keep-data` is passed (shell form only). Whether `$.store` lives there is unverified (section 9); we do not rely on preferences surviving uninstall, and a missing store simply hydrates every feature to its `defaultEnabled`.
 
 ### 4.5 Feature status: errors and notes
 
@@ -127,7 +129,7 @@ Toggle: user presses a row in the pane, then `$.store` and `$.state` are written
 ## 6. Testing strategy
 
 - `claude plugin validate .` and `tsc -p .` must pass before any commit.
-- Core: flag off passes through; flag on runs; a throwing hook is recorded and the event continues; defaults hydrate for unknown ids; a stored value of an older shape is declined.
+- Core: flag off passes through; flag on runs; a throwing hook is recorded and the event continues; a posted note is recorded and cleared by a toggle; defaults hydrate for unknown ids; a stored value of an older shape is declined; a failed `$.store` write keeps the toggle and sets `saveFailed`.
 - Registry: a feature that throws in `register` leaves other features and the manager working.
 - Every UI test mounts on the terminal surface only (the supported surface).
 - Each feature owns its own tests; the mermaid feature's are specified in its doc.
@@ -141,14 +143,14 @@ Toggle: user presses a row in the pane, then `$.store` and `$.state` are written
 ## 8. Distribution and compatibility
 
 - `.claude-plugin/plugin.json` names the plugin `rich-ui`; `.claude-plugin/marketplace.json` lists it with source `./`.
-- Install: `/plugin install rich-ui --marketplace emergentai/claude-code-rich-ui`.
-- Uninstall: `/plugin uninstall rich-ui`.
-- The README states the minimum Claude Code version we tested against. Mods are on by default from Claude Code 2.1.287; we will record the exact tested version at release.
+- Install: `/plugin install rich-ui --marketplace emergentai/claude-code-rich-ui` (official docs: valid in a session from Claude Code 2.1.275; the shell form `claude plugin install ... --marketplace ...` from 2.1.292). The documented two-step alternative is `/plugin marketplace add emergentai/claude-code-rich-ui` then `/plugin install rich-ui@<marketplace-name>`, where the name is the `name` field in `marketplace.json` (to be chosen).
+- Uninstall: `/plugin uninstall rich-ui`. The marketplace stays added until removed separately.
+- Official docs: mods are on by default from Claude Code 2.1.287 in the terminal. The README states that as the minimum and the exact version we tested against, recorded at release.
 
 ## 9. Open items to verify before implementation
 
-1. What `$.store` keeps after `/plugin uninstall`, and what a reinstall sees.
+1. Where `$.store` persists and whether `/plugin uninstall` deletes it (the docs say the plugin data folder is deleted unless `--keep-data`).
 2. Whether the `claude plugin test` kit supports `$.store` and `$.state` as the core tests need.
 3. That a gated wrapper type-checks cleanly across the overloads of `on` with matchers.
-4. The exact `plugin.json` fields for the `types` contract and any minimum-version field.
+4. The exact `plugin.json` fields for the `types` contract and any minimum-version field. Also the `hooks.json` key: the engine's bundled authoring guidance uses `{ "modules": ["./register.tsx"] }`, while the public mods overview only says `hooks.json` points to the hooks module without naming the key, so `claude plugin validate` is the authority.
 5. Whether `/rich-ui` can open the pane at any terminal width when run explicitly (the reference says explicit opens seat at any width).

@@ -54,8 +54,9 @@ In Claude Code:
 /plugin install rich-ui --marketplace emergentai/claude-code-rich-ui
 ```
 
-Answer `y` to add the marketplace, then pick a scope. That's it: the next time
-Claude replies with a mermaid diagram, you'll see it drawn.
+Confirm adding the marketplace and choose a scope (the first option, user
+scope, is fine). That's it: the next time Claude replies with a mermaid
+diagram, you'll see it drawn.
 
 **Requirements:** a terminal session of Claude Code (not the desktop app),
 version 2.1.287 or later, tested on <version recorded at release>. The mods API
@@ -76,7 +77,7 @@ choices are remembered.
 /plugin uninstall rich-ui
 ```
 
-Your saved on/off choices stay put in case you reinstall.
+This removes the plugin and, by default, the settings it saved.
 
 ## Coming next
 
@@ -93,15 +94,15 @@ MIT licensed. Third-party notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NO
 Notes on the copy:
 - The tagline line and first paragraph are the whole pitch; nothing above the demo except the title.
 - The shell form (`claude plugin install ...`) goes in `docs/usage.md`, not the README, to keep one install command on the landing page.
-- "Answer `y`, then pick a scope" matches what the engine shows on first install of a marketplace plugin.
-- The uninstall line and "choices stay put" depend on checks listed in section 7.
+- The install line is the one-step form from the official docs (`--marketplace`, valid from Claude Code 2.1.275 in a session). The prompt wording is deliberately generic: the docs say Claude Code shows the resolved source and asks you to confirm, and name the three scope choices (user, project, local), but do not give the add-marketplace prompt's exact text.
+- The uninstall line is the documented `/plugin uninstall <plugin>`. The official docs say uninstalling from the last scope deletes the plugin's data folder and stored options unless `--keep-data` is given (shell only); whether our remembered on/off choices live there is checked in section 7.
 
 ## 5. `docs/usage.md` outline
 
 1. **Using rich-ui:** opening `/rich-ui`, what the checkboxes mean, that toggles affect new output only and persist across sessions.
-2. **Install from a shell:** `claude plugin install rich-ui --marketplace emergentai/claude-code-rich-ui`.
+2. **Install from a shell:** `claude plugin install rich-ui --marketplace emergentai/claude-code-rich-ui` (Claude Code 2.1.292 or later; add `--scope user|project|local` to choose a scope, `--yes` to skip prompts). The two-step form also works: `/plugin marketplace add emergentai/claude-code-rich-ui`, then `/plugin install rich-ui@<marketplace-name>`. Uninstalling the plugin leaves the marketplace added; remove it with `claude plugin marketplace remove <marketplace-name>`, and keep a plugin's saved data on uninstall with `claude plugin uninstall rich-ui --keep-data`.
 3. **Mermaid diagrams:** what is drawn (flowchart, sequence, state, class, ER); that an unsupported type, an unfinished reply, or a diagram that does not fit stays as a code block; how the source toggle works.
-4. **Troubleshooting:** my diagram stays as code (check the type, check the feature is on, check the `/rich-ui` pane for a note; terminal too small or size unknown); a feature shows a warning in the pane (what it means, how to report it); `/rich-ui` is not found (plugin not installed or Claude Code too old; use `/plugin` to check); behavior after a Claude Code upgrade (early-access API; report with your version).
+4. **Troubleshooting:** my diagram stays as code (check it is a supported type and the feature is on in `/rich-ui`; a diagram too big for the window, or a reply still being written, also stays as code; the pane shows a note only when the terminal size is unknown); a feature shows a warning in the pane (what it means, how to report it); `/rich-ui` is not found (plugin not installed or Claude Code too old; use `/plugin` to check); behavior after a Claude Code upgrade (early-access API; report with your version).
 5. **FAQ:** Does it work in the desktop app or VS Code (no, terminal only for now)? Does it send my data anywhere (no, everything runs locally, no network, no telemetry)? Why text and not images (works in every terminal with no extra install; image diagrams are planned)? How do I remove it (uninstall command)?
 6. **Reporting a problem:** what to include (Claude Code version, rich-ui version from the pane footer, the diagram source).
 
@@ -120,14 +121,14 @@ Run on a clean Claude Code profile (no prior marketplaces, no rich-ui store data
 1. The install line works exactly as written and the prompts match the README's wording.
 2. A mermaid diagram in a reply is drawn without any further setup.
 3. `/rich-ui` opens the list and toggles work.
-4. `/plugin uninstall rich-ui` is the correct removal command and removes the plugin.
-5. After reinstalling, saved choices are as the README claims (confirm what happens to stored data on uninstall; reword the README to match reality).
-6. The minimum version claim (2.1.287) is checked, and the tested version is recorded.
+4. `/plugin uninstall rich-ui` removes the plugin (documented; confirm on the profile).
+5. Where `$.store` keeps its data and whether it falls under the plugin data folder that uninstall deletes. After uninstall and reinstall, check what survived and reword the Uninstall note and `docs/usage.md` to match.
+6. Minimum version: official docs confirm mods are on by default from 2.1.287 in the terminal and the `--marketplace` install form from 2.1.275 (session) and 2.1.292 (shell). Record the exact tested version at release.
 7. Every link in the README and `docs/usage.md` resolves.
 
 ## 8. Open items
 
 1. Final pitch choice (section 3).
-2. Exact uninstall syntax and what survives it (checks 4 and 5 above).
+2. What survives uninstall (checks 4 and 5 above). The marketplace `name` in `marketplace.json` is not yet chosen; it appears in the two-step install form (`rich-ui@<marketplace-name>`), so pick it before writing `docs/usage.md`.
 3. The tested Claude Code version to print in Requirements (to be filled at release).
 4. Whether the GIF can show the diagram clearly at a README-friendly size.

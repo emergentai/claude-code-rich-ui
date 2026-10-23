@@ -38,20 +38,11 @@ uninstall. Features live inside it as separate hook modules, each
 independently toggleable at runtime — no per-feature plugin management for
 the user.
 
-```
-claude-code-rich-ui/
-  .claude-plugin/
-    plugin.json
-  hooks/
-    hooks.json                 # lists every feature module, loaded together
-    register.tsx               # registers /rich-ui command + loads feature modules
-    features/
-      mermaid.tsx
-      diff-view.tsx             # future
-      ...
-  docs/
-  README.md
-```
+The full directory layout, feature contract and state design are in
+`docs/dev/architecture.md`; where this document and the dev docs under
+`docs/dev/` differ, the dev docs win. In short: one `hooks.json`, one entry
+module that registers every feature from a registry, and one folder per
+feature under `hooks/features/`.
 
 Every feature module hooks the same events (`ui.render`, `tool.call`, etc.) it
 would if it were its own plugin — splitting features into separate plugins
@@ -61,13 +52,14 @@ independent functions. Packaging as one mod means one `plugin.json`, one
 
 ### 3.2 What a feature actually is
 
-A feature is a self-contained hook module (e.g. `hooks/features/mermaid.tsx`)
-that exports its `on(event, matcher, hook)` registrations. `register.tsx`
-imports every feature module and wires them up. Each feature reads a shared
-`$.state`-backed enabled/disabled flag at the top of its handler and
-short-circuits (`next(e)` unchanged) when off. Features never reach outside
-`$` and never import from each other — one feature's code changing or
-breaking cannot affect another's behavior.
+A feature is a self-contained folder (e.g. `hooks/features/mermaid/`) that
+exports a feature object with its metadata and a `register` function adding
+its `on(event, matcher, hook)` hooks. The entry module registers every feature
+from a registry. Every hook a feature adds goes through a shared gate that
+checks the feature's enabled/disabled flag and short-circuits (`next(e)`
+unchanged) when off. Features never reach outside `$` and never import from
+each other — one feature's code changing or breaking cannot affect another's
+behavior.
 
 ### 3.3 The control surface: `/rich-ui` pane
 
@@ -76,9 +68,10 @@ with a toggle next to it — click/select to flip a feature on or off right
 there, no subcommands or flags to remember or mistype.
 
 Pane state: one row per feature (name, one-line description, on/off toggle),
-backed by the same `$.state` flag per feature name that the hooks check.
-Toggling in the pane writes the flag directly; no reload, takes effect at the
-next hook invocation.
+backed by the same per-feature flag that the hooks check. Toggling in the pane
+writes the flag, remembers it across sessions, and needs no reload: it takes
+effect at the next hook invocation, for new output only. Details are in
+`docs/dev/manager-pane.md`.
 
 A disabled feature's module is still loaded (negligible cost) but produces
 zero observable behavior change — no rendering, no status line entries,
@@ -86,11 +79,14 @@ nothing added to the system prompt.
 
 ### 3.4 Install / uninstall UX
 
-- **Install:** `/plugin marketplace add <org>/claude-code-rich-ui` then
-  `/plugin install rich-ui@<org>` — two commands, done, all features available
-  (default set enabled, see §4 scope).
-- **Uninstall:** `/plugin uninstall rich-ui@<org>` — one command, removes
-  everything, no residual config/state left for the user to hunt down.
+- **Install:** `/plugin install rich-ui --marketplace emergentai/claude-code-rich-ui`
+  — one command (confirm adding the marketplace, then pick a scope). All
+  features are available; each starts on or off according to its own default.
+- **Uninstall:** `/plugin uninstall rich-ui` — one command that removes the
+  plugin. Claude Code deletes a plugin's saved data on uninstall by default
+  (the shell form accepts `--keep-data`), so the remembered on/off choices are
+  expected to go with it; this is verified before release (see
+  `docs/dev/readme.md`).
 - No per-feature install/uninstall. Users who want fewer features use the
   `/rich-ui` pane, not plugin management.
 
@@ -101,10 +97,11 @@ open the toggle pane, one line on how to uninstall. Anything more belongs in
 
 ## 4. v1 Feature: Mermaid Diagram Rendering
 
-**What it does:** When a tool result (e.g. a file write, a `Read`, or model
-output) contains a fenced ` ```mermaid ` code block, the feature renders it as
-an actual diagram via `ui.render` instead of leaving it as raw text the user
-has to mentally parse or copy elsewhere.
+**What it does:** When Claude's reply contains a complete fenced
+` ```mermaid ` code block, the feature draws it as a text diagram (box-drawing
+characters) via `ui.render` instead of leaving it as raw code the user has to
+mentally parse or copy elsewhere. One press under the diagram swaps it for the
+original source and back.
 
 **Why this is the anchor feature:** It's the clearest, least controversial
 instance of principle #1 — it is strictly additive (raw text is still there
@@ -112,18 +109,20 @@ conceptually; we're just presenting it better) and nearly nobody is worse off
 seeing a diagram instead of mermaid source.
 
 **Scope for v1:**
-- Detect fenced mermaid blocks in relevant tool-call results.
-- Render via `ui.render` (pane or inline, inline preferred if the platform
-  supports it at the point the block appears, falling back to a pane for
-  surfaces that need it).
+- Detect complete top-level mermaid fences in assistant replies, on the
+  terminal surface only.
+- Draw flowchart, sequence, state, class and ER diagrams as text; anything
+  else, anything that does not fit the window, and any unfinished fence stays
+  a normal code block.
 - Off switch via the `/rich-ui` pane — when off, blocks render as plain text
   exactly as Claude Code would without the mod.
-- No persistence, no network calls, no external services — pure local
+- No network calls, no external services, no stored diagrams — pure local
   rendering of content already present in the transcript.
 
-**Explicit non-goals for v1:** editing diagrams, exporting images, diagram
-history/gallery, non-mermaid diagram languages (e.g. PlantUML) — all future
-feature candidates, not v1 scope.
+**Explicit non-goals for v1:** image-quality diagrams (planned as a follow-up),
+mermaid in files Claude writes or reads, editing diagrams, exporting,
+diagram history/gallery, non-mermaid diagram languages (e.g. PlantUML) — all
+future work. Full design: `docs/dev/mermaid-feature.md`.
 
 ## 5. Backlog of Future Feature Candidates
 
@@ -148,5 +147,5 @@ UX in the large majority of sessions, not just some."
   minutes, copying at most two commands.
 - Disabling any single feature produces zero change in any other feature's
   behavior.
-- Uninstalling the mod leaves no orphaned state/config the user must manually
-  clean up.
+- Uninstalling the mod leaves no files or config the user must manually clean
+  up.
