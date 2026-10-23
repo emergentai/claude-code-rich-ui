@@ -4,6 +4,9 @@ import type { EnabledMap, StatusMap } from '../../types'
 import type { Feature } from '../core/feature'
 import { clip } from './size'
 
+export const footerFor = (version: string) =>
+  `Enter toggles · Esc closes · rich-ui ${version}`
+
 export type PaneView = {
   elements: Elements['terminal']
   features: Feature[]
@@ -61,7 +64,7 @@ export function buildPane(view: PaneView) {
       <Text> </Text>
       {view.saveFailed && <Text color="warning">Couldn't save your choice</Text>}
       <Text dimColor>
-        {clip(`Enter toggles · Esc closes · rich-ui ${view.version}`, view.width)}
+        {clip(footerFor(view.version), view.width)}
       </Text>
     </Box>
   )

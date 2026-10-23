@@ -6,10 +6,11 @@ import { withoutStatus } from '../core/errors'
 import { parseStored, serialize, STORE_KEY, toggled } from '../core/prefs'
 import { features } from '../core/registry'
 import { VERSION } from '../core/version'
-import { buildPane } from './pane'
-import { contentRows } from './size'
+import { buildPane, footerFor } from './pane'
+import { contentColumns, contentRows } from './size'
 
 const PANE_ID = 'rich-ui'
+const footerText = footerFor(VERSION)
 
 // Declared here, not imported: the engine's module scan reads a state source
 // only where it is written (docs/dev/architecture.md 4.0).
@@ -65,6 +66,10 @@ export const runCommand: MatchedHook<
     focus: true,
     closeOnEscape: true,
     rows: contentRows(features.length, statusLines, saveFailed),
+    columns: contentColumns(
+      features.map(feature => feature.description),
+      footerText,
+    ),
   })
 
   return {}

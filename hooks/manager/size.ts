@@ -14,3 +14,19 @@ export function clip(text: string, width: number): string {
 
   return `${text.slice(0, width - 1)}…`
 }
+
+// The body columns the docked pane asks for: its widest line (a description
+// indented four cells, or the footer) plus the two cells of side padding. The
+// engine grants between 24 columns and 45% of the terminal, and the inline
+// frame ignores it.
+export function contentColumns(
+  descriptions: string[],
+  footer: string,
+): number {
+  const widest = Math.max(
+    footer.length,
+    ...descriptions.map(description => description.length + 4),
+  )
+
+  return widest + 2
+}

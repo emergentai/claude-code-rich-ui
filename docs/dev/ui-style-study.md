@@ -36,6 +36,7 @@ A hook that returns its own tree for `AssistantMessage` replaces all of this (th
 Measured at several widths:
 - Below 110 columns the pane sits inline above the prompt in a rounded frame, and the frame supplies the padding.
 - From 110 columns in the fullscreen terminal it docks beside the transcript, with a divider and no padding: the text touched the divider. The pane now adds one cell of side padding when `placement` is `dock`, and reduces its clip width to match.
+- The dock took its default share of the terminal (57 of 130 columns, 90 of 180) for about 42 columns of content. `$.ui.open` takes `columns`, the body width the content wants when docked (the engine grants 24 to 45% of the terminal; inline ignores it), so the command now asks for its widest line plus padding: 44 columns at 130 and at 180.
 - The footer line is clipped to the pane width (it wrapped in the narrow dock).
 - Light theme (reproduced with `claude --settings '{"theme":"light"}'`): the focused row is drawn in reverse video, and the gray description nested inside the button label lost its contrast on top of it. The description now sits on its own dim line under the button (two rows per feature), so focus inverts only `[x] Name`. All colors are the engine's theme colors (the pane's own dim gray 241 in light), none fixed.
 - The first row has `autoFocus`, so Enter works as soon as the pane opens. Before, the footer said "Enter toggles" but Enter did nothing until Tab focused the row.
