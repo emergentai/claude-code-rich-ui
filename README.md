@@ -1,4 +1,4 @@
-# rich-ui
+# <img src="docs/assets/rich-ui.png" alt="rich-ui logo" width="56" height="56" align="absmiddle"> rich-ui
 
 **Claude Code, in nicer clothes.**
 
@@ -11,7 +11,7 @@ First up: mermaid diagrams, drawn right in the transcript instead of dumped as c
 
 ![rich-ui drawing a mermaid diagram in Claude Code](docs/assets/demo.gif)
 
-## Install
+## 📦 Install
 
 ```
 /plugin install rich-ui --marketplace emergentai/claude-code-rich-ui
@@ -25,7 +25,7 @@ early access, so it can shift between Claude Code releases. Tested on 2.1.309.
 Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 (Marketplaces tab) if you want new features as they land.
 
-## What you get
+## ✨ What you get
 
 | Feature | What it does |
 |---|---|
@@ -37,7 +37,7 @@ window.
 
 It all runs locally. No network calls, no telemetry.
 
-## Switch things off
+## 🎚️ Switch things off
 
 `/rich-ui` opens the feature list. Click a row, or Enter, to flip it; your choices are
 remembered. Turning a feature off puts the transcript back exactly as stock Claude Code
@@ -52,14 +52,14 @@ draws it, including diagrams already on screen.
 Claude Code deletes a plugin's saved data on uninstall by default, which here is just
 your on/off choices. (`claude plugin uninstall rich-ui --keep-data` keeps it.)
 
-## Coming next
+## 🗺️ Coming next
 
 Planned, not promised: rendered tables, a markdown preview pane, a context bar, inline
 edit diffs, image-quality diagrams. The bar for anything new is that it should help in
 most sessions and add no clutter; the longer version is in
 [`docs/FEATURES.md`](docs/FEATURES.md).
 
-## Docs and help
+## 📚 Docs and help
 
 [Usage, troubleshooting and FAQ](docs/usage.md) · [Report an issue](../../issues)
 
