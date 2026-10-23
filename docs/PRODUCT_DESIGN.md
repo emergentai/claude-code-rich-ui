@@ -100,7 +100,7 @@ open the toggle pane, one line on how to uninstall. Anything more belongs in
 **What it does:** When Claude's reply contains a complete fenced
 ` ```mermaid ` code block, the feature draws it as a text diagram (box-drawing
 characters) via `ui.render` instead of leaving it as raw code the user has to
-mentally parse or copy elsewhere. One press under the diagram swaps it for the
+mentally parse or copy elsewhere. One press on the row above the diagram swaps it for the
 original source and back.
 
 **Why this is the anchor feature:** It's the clearest, least controversial

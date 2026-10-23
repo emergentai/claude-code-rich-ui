@@ -163,10 +163,10 @@ Toggle: user presses a row in the pane, then `$.store` and `$.state` are written
 - Uninstall: `/plugin uninstall rich-ui`. The marketplace stays added until removed separately.
 - Official docs: mods are on by default from Claude Code 2.1.287 in the terminal. The README states that as the minimum and the exact version we tested against, recorded at release.
 
-## 9. Open items to verify before implementation
+## 9. Open items
 
-1. Where `$.store` persists and whether `/plugin uninstall` deletes it (the docs say the plugin data folder is deleted unless `--keep-data`).
-2. Whether the `claude plugin test` kit supports `$.store` and `$.state` as the core tests need.
-3. (Closed: a wrapper is impossible, see 4.0.)
-4. The exact `plugin.json` fields for the `types` contract and any minimum-version field. Also the `hooks.json` key: the engine's bundled authoring guidance uses `{ "modules": ["./register.tsx"] }`, while the public mods overview only says `hooks.json` points to the hooks module without naming the key, so `claude plugin validate` is the authority.
-5. Whether `/rich-ui` can open the pane at any terminal width when run explicitly (the reference says explicit opens seat at any width).
+1. Open: where `$.store` persists and whether `/plugin uninstall` deletes it (the docs say the plugin data folder is deleted unless `--keep-data`). Needs a marketplace install, so it waits until the repository is pushed (`verification-notes.md` item 8).
+2. Closed: the `claude plugin test` kit has no `$.store`, `$.state` or `$.clock` on the test's `$`; stateful behavior is tested through the mounted plugin with an in-memory store and clock supplied by the harness (section 6).
+3. Closed: a wrapper is impossible, see 4.0.
+4. Closed: `plugin.json` names `"types": "./types/index.d.ts"` (the contract must export only types), and `hooks/hooks.json` is `{ "modules": ["./register.tsx"] }`; `claude plugin validate` accepts both. No minimum-version field is used; the README states the minimum.
+5. Closed: `/rich-ui` opens the pane at any width when run explicitly (the narrow inline and the wide docked layouts were both seen).
