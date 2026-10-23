@@ -1,0 +1,14 @@
+{
+  "name": "claude-code-rich-ui",
+  "owner": {
+    "name": "Emergent AI"
+  },
+  "plugins": [
+    {
+      "name": "rich-ui",
+      "source": "./",
+      "description": "Richer Claude Code output, one toggle per feature."
+    }
+  ],
+  "description": "Richer Claude Code output, one toggle per feature."
+}
