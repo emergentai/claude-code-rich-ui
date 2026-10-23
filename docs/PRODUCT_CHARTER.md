@@ -1,4 +1,10 @@
-# claude-code-rich-ui — Product Design
+# claude-code-rich-ui — Product Charter
+
+This is the document that guides every future decision about rich-ui: what it is
+(summary), what it will and will not do (principles), how it is shaped
+(architecture) and how we know it works (success criteria). What ships and what
+is planned lives in [`FEATURES.md`](FEATURES.md); how it is built lives in
+`docs/dev/`.
 
 ## 1. Summary
 
@@ -53,13 +59,13 @@ independent functions. Packaging as one mod means one `plugin.json`, one
 ### 3.2 What a feature actually is
 
 A feature is a self-contained folder (e.g. `hooks/features/mermaid/`) that
-exports a feature object with its metadata and a `register` function adding
-its `on(event, matcher, hook)` hooks. The entry module registers every feature
-from a registry. Every hook a feature adds goes through a shared gate that
-checks the feature's enabled/disabled flag and short-circuits (`next(e)`
-unchanged) when off. Features never reach outside `$` and never import from
-each other — one feature's code changing or breaking cannot affect another's
-behavior.
+exports its metadata and the hook handlers it needs. The entry module lists
+every feature's hooks in one place and a registry lists the metadata the pane
+shows. Every handler a feature exports checks the feature's enabled/disabled
+flag first and short-circuits (`next(e)` unchanged) when off, and contains its
+own failures. Features never import from each other — one feature's code
+changing or breaking cannot affect another's behavior. (The exact wiring is
+dictated by the engine's module rules; see `docs/dev/architecture.md` 4.0.)
 
 ### 3.3 The control surface: `/rich-ui` pane
 
@@ -95,53 +101,13 @@ of a mermaid diagram rendering inline, one install command, one line on how to
 open the toggle pane, one line on how to uninstall. Anything more belongs in
 `docs/`.
 
-## 4. v1 Feature: Mermaid Diagram Rendering
+## 4. Features and backlog
 
-**What it does:** When Claude's reply contains a complete fenced
-` ```mermaid ` code block, the feature draws it as a text diagram (box-drawing
-characters) via `ui.render` instead of leaving it as raw code the user has to
-mentally parse or copy elsewhere. One press on the row above the diagram swaps it for the
-original source and back.
+What ships today, what is planned and what was rejected lives in
+[`FEATURES.md`](FEATURES.md). It changes often; this document does not. Every
+entry there has to pass the principles above, principle 1 first.
 
-**Why this is the anchor feature:** It's the clearest, least controversial
-instance of principle #1 — it is strictly additive (raw text is still there
-conceptually; we're just presenting it better) and nearly nobody is worse off
-seeing a diagram instead of mermaid source.
-
-**Scope for v1:**
-- Detect complete top-level mermaid fences in assistant replies, on the
-  terminal surface only.
-- Draw flowchart, sequence, state, class and ER diagrams as text; anything
-  else, anything that does not fit the window, and any unfinished fence stays
-  a normal code block.
-- Off switch via the `/rich-ui` pane — when off, blocks render as plain text
-  exactly as Claude Code would without the mod.
-- No network calls, no external services, no stored diagrams — pure local
-  rendering of content already present in the transcript.
-
-**Explicit non-goals for v1:** image-quality diagrams (planned as a follow-up),
-mermaid in files Claude writes or reads, editing diagrams, exporting,
-diagram history/gallery, non-mermaid diagram languages (e.g. PlantUML) — all
-future work. Full design: `docs/dev/mermaid-feature.md`.
-
-## 5. Backlog of Future Feature Candidates
-
-(Not committed, listed to validate the architecture generalizes; each would
-be its own feature module, each independently toggleable)
-
-- **Rendered tables.** Render markdown/JSON/CSV tables as aligned grids
-  instead of wrapped text.
-- **Markdown preview pane.** Specs, plans and READMEs Claude writes render as
-  formatted docs in a pane beside the chat.
-- **Context bar.** Thin stacked bar above the prompt showing how full the
-  context window is.
-- **Inline edit diffs.** Compact colored diff shown after each `Edit`/`Write`,
-  complementing the built-in `/diff` pane.
-
-Each candidate must pass principle #1 before being added — "does this improve
-UX in the large majority of sessions, not just some."
-
-## 6. Success Criteria
+## 5. Success Criteria
 
 - A new user can go from README to a rendered mermaid diagram in under two
   minutes, copying at most two commands.

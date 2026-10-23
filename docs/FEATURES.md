@@ -1,0 +1,74 @@
+# rich-ui: Features and backlog
+
+What ships, what is planned and what was turned down. The rules every entry has to
+pass are in [`PRODUCT_CHARTER.md`](PRODUCT_CHARTER.md): above all, a feature ships only
+if it improves the experience in the large majority of sessions, adds no clutter, and
+can be switched off on its own.
+
+## Shipped
+
+### Mermaid diagrams (v0.1.0)
+
+When Claude's reply contains a complete fenced `mermaid` code block, the feature draws
+it as a text diagram (box-drawing characters) instead of leaving raw code the reader
+has to parse in their head. One press on the row above the diagram swaps it for the
+original source and back.
+
+**Why it is the anchor feature.** It is the clearest instance of the first principle:
+strictly additive, and nearly nobody is worse off seeing a diagram instead of mermaid
+source.
+
+**Scope.**
+- Complete, top-level mermaid fences in assistant replies, on the terminal surface only.
+- Flowchart (including subgraphs), sequence, class, state and entity relationship
+  diagrams. Only these five. Everything else (gantt, pie, journey, mindmap, XY charts)
+  stays a normal code block; `xychart-beta` renders in the library but is deliberately
+  not allowed yet.
+- A diagram that does not fit the window (a flowchart is tried sideways first), and any
+  unfinished fence, stays a normal code block.
+- Off in `/rich-ui` and every diagram in the chat goes back to plain code, exactly as
+  Claude Code draws it without the mod.
+- No network calls, no external services, no stored diagrams: pure local rendering of
+  what is already in the transcript.
+
+**Not in v1.** Image-quality diagrams (the stated end goal; a spike ranks the path),
+mermaid in files Claude writes or reads, editing, exporting, a diagram gallery,
+other diagram languages such as PlantUML.
+
+Design: [`dev/mermaid-feature.md`](dev/mermaid-feature.md).
+
+## Backlog
+
+Not committed. Each would be its own feature, independently toggleable, and each must
+first pass the first principle: does it improve the experience in the large majority of
+sessions, not just some?
+
+- **Rendered tables.** Markdown, JSON and CSV tables as aligned grids instead of wrapped
+  text.
+- **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
+  formatted docs in a pane beside the chat.
+- **Context bar.** A thin stacked bar above the prompt showing how full the context
+  window is.
+- **Inline edit diffs.** A compact colored diff after each `Edit` or `Write`,
+  complementing the built-in `/diff` pane.
+- **Image-quality diagrams.** The follow-up to the shipped text diagrams. Path from the
+  spike: improve the bundled rasterizer, then try the `Raster` element, then offer host
+  tools such as macOS `qlmanage` as an opt-in. Terminals that cannot draw images keep the
+  text diagram as the fallback.
+- **More mermaid types.** XY charts first (the renderer already draws them), then
+  whatever the renderer gains.
+
+## Turned down
+
+- **Detailed view of Bash tool commands.** Sometimes useful, not usually, and people
+  prefer less clutter in a world of AI noise. This is the example that defines the first
+  principle.
+
+## Adding a feature
+
+1. Write the case for it against the first principle in a few lines here, under Backlog.
+2. Give it a design doc in `docs/dev/`, like the mermaid one.
+3. Build it as a folder under `hooks/features/` with its metadata and its handlers,
+   list it in the registry and add one `on(...)` line per hook in `hooks/register.tsx`
+   (see `dev/architecture.md` sections 4.0 to 4.3).
+4. Move it from Backlog to Shipped, and add it to the README's feature table.

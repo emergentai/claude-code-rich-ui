@@ -1,6 +1,6 @@
 # rich-ui: Plugin Architecture
 
-Status: draft for review. Companion docs: `PRODUCT_DESIGN.md` (what and why), and, to follow, the mermaid feature, manager pane and README docs.
+Status: draft for review. Companion docs: `PRODUCT_CHARTER.md` (what and why) and `FEATURES.md` (what ships and what is planned), and, to follow, the mermaid feature, manager pane and README docs.
 
 ## 1. Goals and non-goals
 

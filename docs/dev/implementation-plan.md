@@ -1,6 +1,6 @@
 # rich-ui v1: Implementation Plan
 
-Builds the v1 described in `PRODUCT_DESIGN.md` and the four dev docs: the `rich-ui` mod with a feature registry, a gate, persisted toggles, the `/rich-ui` pane and the mermaid feature.
+Builds the v1 described in `PRODUCT_CHARTER.md` and `FEATURES.md` and the four dev docs: the `rich-ui` mod with a feature registry, a gate, persisted toggles, the `/rich-ui` pane and the mermaid feature.
 
 How to read this plan:
 - Tasks are in dependency order. Each ends with a commit and leaves `main` working.
