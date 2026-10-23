@@ -100,3 +100,29 @@ test('desktop is left to the engine', async ($, on) => {
   expect(await ui.find({ type: 'Text', text: /engine/ })).toBeDefined()
   await ui.unmount()
 })
+
+test('the first block of a reply carries the bullet, later blocks do not', async ($, on) => {
+  await boot($, on)
+  const first = await $.ui.mount(message(reply(FLOW), ROOMY))
+  expect(await first.find({ type: 'Text', text: '⏺' })).toBeDefined()
+  await first.unmount()
+
+  const later = await $.ui.mount({
+    ...message(reply(FLOW), ROOMY),
+    props: { text: reply(FLOW), isFirstOfReply: false },
+  })
+  expect(await later.find({ type: 'Text', text: '⏺' })).toBeUndefined()
+  expect(await later.find({ key: 'toggle1' })).toBeDefined()
+  await later.unmount()
+})
+
+test('a summary row is left to the engine', async ($, on) => {
+  await boot($, on)
+  const ui = await $.ui.mount({
+    ...message(reply(FLOW), ROOMY),
+    props: { text: reply(FLOW), isFirstOfReply: true, isSummary: true },
+  })
+
+  expect(await ui.find({ type: 'Text', text: /engine/ })).toBeDefined()
+  await ui.unmount()
+})

@@ -11,6 +11,7 @@ export type PaneView = {
   status: StatusMap
   saveFailed: boolean
   width: number
+  isDocked: boolean
   version: string
   onToggle: (feature: Feature) => void
 }
@@ -22,10 +23,10 @@ export function buildPane(view: PaneView) {
   const { Box, Text, Button } = view.elements
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0}>
       <Text bold>rich-ui features</Text>
       <Text> </Text>
-      {view.features.map(feature => {
+      {view.features.map((feature, index) => {
         const isOn = view.enabled[feature.id] ?? feature.defaultEnabled
         const mark = isOn ? '[x]' : '[ ]'
         const room = view.width - mark.length - feature.name.length - 4
@@ -33,7 +34,12 @@ export function buildPane(view: PaneView) {
 
         return (
           <Box key={`row-${feature.id}`} flexDirection="column">
-            <Button key={feature.id} plain onPress={() => view.onToggle(feature)}>
+            <Button
+              key={feature.id}
+              plain
+              autoFocus={index === 0 ? true : undefined}
+              onPress={() => view.onToggle(feature)}
+            >
               {mark} {feature.name}{' '}
               <Text dimColor>{clip(feature.description, room)}</Text>
             </Button>
@@ -55,7 +61,9 @@ export function buildPane(view: PaneView) {
       })}
       <Text> </Text>
       {view.saveFailed && <Text color="warning">Couldn't save your choice</Text>}
-      <Text dimColor>Enter toggles · Esc closes · rich-ui {view.version}</Text>
+      <Text dimColor>
+        {clip(`Enter toggles · Esc closes · rich-ui ${view.version}`, view.width)}
+      </Text>
     </Box>
   )
 }

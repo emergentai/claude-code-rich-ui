@@ -11,7 +11,11 @@ export type DiagramResult = {
 // feature only reads lines, width and height from the text variant.
 export function renderDiagram(source: string): DiagramResult | null {
   try {
-    const raw = renderMermaidASCII(source, { useAscii: false, colorMode: 'none' })
+    const raw = renderMermaidASCII(source, {
+      useAscii: false,
+      colorMode: 'none',
+      paddingY: 1,
+    })
     const lines = raw.split('\n').map(line => line.replace(/\s+$/, ''))
     while (lines.length > 0 && lines[0] === '') lines.shift()
     while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop()

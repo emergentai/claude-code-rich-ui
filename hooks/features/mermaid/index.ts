@@ -43,6 +43,8 @@ export const renderAssistantMessage: MatchedHook<
 > = async ($, e, next) => {
   if (!isOn(await read($, enabledAtom), mermaid)) return next(e)
   if (e.surface !== 'terminal') return next(e)
+  // The terminal marks a summary row itself (a faint " · summary"); leave it.
+  if (e.props.isSummary) return next(e)
   const text = e.props.text
   if (!QUICK_CHECK.test(text)) return next(e)
 
@@ -77,6 +79,7 @@ export const renderAssistantMessage: MatchedHook<
         segments,
         viewport,
         requestId: e.requestId,
+        isFirstOfReply: e.props.isFirstOfReply,
         shown: await read($, shownAtom),
         onToggle: id => {
           void update($, shownAtom, map => ({ ...map, [id]: !map[id] }))

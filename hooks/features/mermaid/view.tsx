@@ -5,27 +5,12 @@ import type { Segment } from './detect'
 import { fitDiagram } from './fit'
 import type { Viewport } from './fit'
 
-const LINE_CHARS = /[─-╿■-◿←-⇿]/
-
-type Run = { text: string; isLine: boolean }
-
-function runsOf(line: string): Run[] {
-  const runs: Run[] = []
-  for (const ch of line) {
-    const isLine = LINE_CHARS.test(ch)
-    const last = runs[runs.length - 1]
-    if (last && last.isLine === isLine) last.text += ch
-    else runs.push({ text: ch, isLine })
-  }
-
-  return runs
-}
-
 export type ReplyView = {
   elements: Elements['terminal']
   segments: Segment[]
   viewport: Viewport
   requestId: string
+  isFirstOfReply: boolean
   shown: ShownMap
   onToggle: (id: string) => void
 }
@@ -51,23 +36,29 @@ export function buildReply(view: ReplyView) {
 
     return (
       <Box key={`d${i}`} flexDirection="column">
+        <Button key={`toggle${i}`} plain dimColor onPress={() => view.onToggle(id)}>
+          {isSource ? 'show diagram' : 'show source'}
+        </Button>
         {isSource ? (
           <Markdown text={segment.raw} />
         ) : (
-          lines.map(line => (
-            <Text>
-              {runsOf(line).map(run => (
-                <Text color={run.isLine ? 'subtle' : undefined}>{run.text}</Text>
-              ))}
-            </Text>
-          ))
+          lines.map(line => <Text>{line}</Text>)
         )}
-        <Button key={`toggle${i}`} plain onPress={() => view.onToggle(id)}>
-          {isSource ? 'show diagram' : 'show source'}
-        </Button>
       </Box>
     )
   })
 
-  return <Box flexDirection="column">{nodes}</Box>
+  // The frame the engine draws around an assistant block: a blank line above,
+  // the bullet in a two-cell column on the first block of a reply, the content
+  // indented past it, and one blank line between the block's parts.
+  return (
+    <Box flexDirection="row" marginTop={1}>
+      <Box width={2} flexShrink={0}>
+        {view.isFirstOfReply ? <Text color="text">⏺</Text> : <Text> </Text>}
+      </Box>
+      <Box flexDirection="column" flexGrow={1} flexShrink={1} gap={1}>
+        {nodes}
+      </Box>
+    </Box>
+  )
 }
