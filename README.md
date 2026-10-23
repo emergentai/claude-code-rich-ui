@@ -49,8 +49,9 @@ draws it, including diagrams already on screen.
 /plugin uninstall rich-ui
 ```
 
-Claude Code deletes a plugin's saved data on uninstall by default, which here is just
-your on/off choices. (`claude plugin uninstall rich-ui --keep-data` keeps it.)
+That removes the plugin. Your on/off choices are kept in Claude Code's plugin store
+(`~/.claude/plugins/store/rich-ui_*.json`), which an uninstall is not documented to
+clear, so a reinstall picks them up again. Delete that file if you want a clean slate.
 
 ## 🗺️ Coming next
 

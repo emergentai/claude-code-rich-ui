@@ -45,10 +45,13 @@ The two-step form also works, inside Claude Code:
 on in `/plugin` (Marketplaces tab), or update by hand with
 `claude plugin update rich-ui@claude-code-rich-ui`.
 
-**Uninstall.** `/plugin uninstall rich-ui` removes the plugin. Claude Code also
-deletes a plugin's saved data on uninstall by default; from a shell you can keep it
-with `claude plugin uninstall rich-ui --keep-data`. The marketplace stays added
-until you remove it with `claude plugin marketplace remove claude-code-rich-ui`.
+**Uninstall.** `/plugin uninstall rich-ui` removes the plugin (checked on a clean
+profile). The marketplace stays added until you remove it with
+`claude plugin marketplace remove claude-code-rich-ui`. Your on/off choices live in
+Claude Code's plugin store, `~/.claude/plugins/store/rich-ui_*.json`, apart from the
+plugin's data folder that Claude Code says an uninstall deletes, so they are likely to
+survive an uninstall and a reinstall picks them up; delete that file to start fresh.
+The shell form also accepts `--keep-data` for the data folder.
 
 ## Mermaid diagrams
 
