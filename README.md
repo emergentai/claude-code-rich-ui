@@ -1,6 +1,6 @@
 # <img src="docs/assets/rich-ui.png" alt="rich-ui logo" width="56" height="56" align="absmiddle">&nbsp;&nbsp;&nbsp;rich-ui
 
-### Claude Code, in nicer clothes.
+### Upgrade Claude Code's interface, one switch at a time.
 
 rich-ui is a Claude Code mod that upgrades the terminal interface itself, one feature
 at a time: things the stock UI shows as plain text get drawn properly. It never
