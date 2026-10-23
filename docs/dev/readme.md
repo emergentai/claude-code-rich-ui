@@ -1,6 +1,6 @@
 # rich-ui: README and User Docs
 
-Status: draft for review. This document designs the GitHub landing page (`README.md`) and the one user-docs page it links to (`docs/usage.md`). It contains the working copy for both. Nothing here is final until every command has been run on a clean Claude Code profile after v1 works.
+Status: `README.md` and `docs/usage.md` are written from this design (v0.1.0). Differences from the working copy below: the Requirements line names the tested version (2.1.309), the Use section lists the supported diagram types, and `docs/usage.md` documents the pane's behavior as built. What is still unverified is listed in section 7 and in `verification-notes.md`. This document designs the GitHub landing page (`README.md`) and the one user-docs page it links to (`docs/usage.md`). It contains the working copy for both. Nothing here is final until every command has been run on a clean Claude Code profile after v1 works.
 
 ## 1. Goals
 
@@ -135,4 +135,4 @@ Run on a clean Claude Code profile (no prior marketplaces, no rich-ui store data
 1. Final pitch choice (section 3).
 2. What survives uninstall (checks 4 and 5 above). The marketplace name is decided: `claude-code-rich-ui` (see `architecture.md` section 8); confirm it validates.
 3. The tested Claude Code version to print in Requirements (to be filled at release).
-4. Whether the GIF can show the diagram clearly at a README-friendly size.
+4. The GIF: the owner has recorded it; it goes at `docs/assets/demo.gif`, where the README already points (the folder exists with a `.gitkeep`). Until the file is added the README image is broken, so do not publish before adding it.
