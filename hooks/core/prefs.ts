@@ -1,11 +1,17 @@
-import { read, update } from 'claude-code'
-import type { EngineInterface } from 'claude-code'
+import { atom, update } from 'claude-code'
+import type { Hook } from 'claude-code'
 
 import type { EnabledMap } from '../../types'
-import { clearStatus } from './errors'
-import { enabledAtom, saveFailedAtom } from './state'
 
-const STORE_KEY = 'prefs'
+export const STORE_KEY = 'prefs'
+
+// The engine's module scan reads a state source only where it is written, so
+// each file that touches a value declares its atom (see core/state.ts).
+const enabledAtom = atom(
+  { plugin: 'rich-ui', key: 'enabled' } as const,
+  {} as EnabledMap,
+  { shape: 'enabled-1' },
+)
 
 export function parseStored(raw: unknown): EnabledMap {
   if (typeof raw !== 'object' || raw === null) return {}
@@ -21,35 +27,30 @@ export function parseStored(raw: unknown): EnabledMap {
   return out
 }
 
-export async function loadPrefs($: EngineInterface): Promise<void> {
-  const enabled = parseStored(await $.store.get(STORE_KEY))
-  await update($, enabledAtom, () => enabled)
+export function serialize(enabled: EnabledMap) {
+  return { v: 1, enabled }
 }
 
-export async function isEnabled(
-  $: EngineInterface,
-  id: string,
-  defaultEnabled: boolean,
-): Promise<boolean> {
-  const map = await read($, enabledAtom)
+// The flag a toggle would set: the opposite of the feature's effective flag.
+export function toggled(
+  enabled: EnabledMap,
+  feature: { id: string; defaultEnabled: boolean },
+): EnabledMap {
+  const current = enabled[feature.id] ?? feature.defaultEnabled
 
-  return map[id] ?? defaultEnabled
+  return { ...enabled, [feature.id]: !current }
 }
 
-export async function toggleFeature(
-  $: EngineInterface,
-  id: string,
-  defaultEnabled: boolean,
-): Promise<void> {
-  const next = !(await isEnabled($, id, defaultEnabled))
-  await update($, enabledAtom, map => ({ ...map, [id]: next }))
-  await clearStatus($, id)
-
-  const enabled = await read($, enabledAtom)
+// Loads the saved choices into state. An unreadable store means every feature
+// uses its default (an empty map).
+export const startSession: Hook<'session.start'> = async ($, e, next) => {
+  let stored: EnabledMap = {}
   try {
-    await $.store.set(STORE_KEY, { v: 1, enabled })
-    await update($, saveFailedAtom, () => false)
+    stored = parseStored(await $.store.get(STORE_KEY))
   } catch {
-    await update($, saveFailedAtom, () => true)
+    // keep the empty map
   }
+  await update($, enabledAtom, () => stored)
+
+  return next(e)
 }

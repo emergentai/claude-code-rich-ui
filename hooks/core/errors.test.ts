@@ -1,52 +1,45 @@
 import { expect, test } from 'claude-code/testing'
 
-import type { StatusMap } from '../../types'
-import { clearStatus, reportError, reportNote } from './errors'
-import { fakeEngine } from './test-harness'
+import { messageOf, withError, withNote, withoutStatus } from './errors'
 
-function status(peek: <T>(plugin: string, key: string) => T | undefined) {
-  return peek<StatusMap>('rich-ui', 'status') ?? {}
-}
+test('an error is recorded with a count and a time', async () => {
+  const map = withError({}, 'mermaid', 'boom', 5)
 
-test('a reported error lands after the timer runs', async () => {
-  const { $, flush, peek } = fakeEngine()
-
-  reportError($, 'mermaid', new Error('boom'))
-  expect(status(peek)['mermaid']).toBeUndefined()
-
-  await flush()
-  expect(status(peek)['mermaid']?.error?.message).toBe('boom')
-  expect(status(peek)['mermaid']?.error?.count).toBe(1)
+  expect(map['mermaid']?.error?.message).toBe('boom')
+  expect(map['mermaid']?.error?.count).toBe(1)
+  expect(map['mermaid']?.error?.at).toBe(5)
 })
 
-test('a repeated error raises the count', async () => {
-  const { $, flush, peek } = fakeEngine()
+test('a repeated error raises the count and keeps the latest message', async () => {
+  const map = withError(withError({}, 'mermaid', 'boom', 5), 'mermaid', 'again', 9)
 
-  reportError($, 'mermaid', new Error('boom'))
-  await flush()
-  reportError($, 'mermaid', new Error('boom again'))
-  await flush()
-
-  expect(status(peek)['mermaid']?.error?.count).toBe(2)
-  expect(status(peek)['mermaid']?.error?.message).toBe('boom again')
+  expect(map['mermaid']?.error?.count).toBe(2)
+  expect(map['mermaid']?.error?.message).toBe('again')
 })
 
 test('a note is kept once however often it is posted', async () => {
-  const { $, flush, peek } = fakeEngine()
+  const map = withNote(withNote({}, 'mermaid', 'size unknown'), 'mermaid', 'size unknown')
 
-  reportNote($, 'mermaid', 'size unknown')
-  reportNote($, 'mermaid', 'size unknown')
-  await flush()
-
-  expect(status(peek)['mermaid']?.notes.length).toBe(1)
+  expect(map['mermaid']?.notes.length).toBe(1)
 })
 
-test('clearing a feature removes its entry', async () => {
-  const { $, flush, peek } = fakeEngine()
+test('an error and a note live side by side', async () => {
+  const map = withNote(withError({}, 'mermaid', 'boom', 1), 'mermaid', 'a note')
 
-  reportNote($, 'mermaid', 'size unknown')
-  await flush()
-  await clearStatus($, 'mermaid')
+  expect(map['mermaid']?.error?.message).toBe('boom')
+  expect(map['mermaid']?.notes[0]).toBe('a note')
+})
 
-  expect(status(peek)['mermaid']).toBeUndefined()
+test('clearing a feature removes its entry and leaves the others', async () => {
+  const both = withNote(withNote({}, 'mermaid', 'a'), 'other', 'b')
+  const map = withoutStatus(both, 'mermaid')
+
+  expect(map['mermaid']).toBeUndefined()
+  expect(map['other']?.notes[0]).toBe('b')
+  expect(withoutStatus(map, 'missing')).toBe(map)
+})
+
+test('messageOf reads an Error or any other value', async () => {
+  expect(messageOf(new Error('x'))).toBe('x')
+  expect(messageOf('y')).toBe('y')
 })

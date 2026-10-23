@@ -1,70 +1,44 @@
-import { update } from 'claude-code'
-import type { EngineInterface } from 'claude-code'
+import type { FeatureStatus, StatusMap } from '../../types'
 
-import type { FeatureStatus } from '../../types'
-import { statusAtom } from './state'
+// Pure helpers over the status map. The engine's module scan rejects a function
+// that is handed `$`, so the state writes themselves are written inline in each
+// hook (`$.clock.after(0, ...)` then `update($, statusAtom, map => withError(...))`).
+// The writes are deferred because the engine refuses state writes while a
+// ui.render hook draws, and errors and notes are raised from render hooks.
 
 const EMPTY: FeatureStatus = { notes: [] }
 
-export async function addError(
-  $: EngineInterface,
-  id: string,
-  error: unknown,
-): Promise<void> {
-  const message = error instanceof Error ? error.message : String(error)
-  const at = await $.clock.now()
-  await update($, statusAtom, map => {
-    const previous = map[id] ?? EMPTY
-
-    return {
-      ...map,
-      [id]: {
-        ...previous,
-        error: { message, count: (previous.error?.count ?? 0) + 1, at },
-      },
-    }
-  })
+export function messageOf(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }
 
-export async function addNote(
-  $: EngineInterface,
+export function withError(
+  map: StatusMap,
   id: string,
-  text: string,
-): Promise<void> {
-  await update($, statusAtom, map => {
-    const previous = map[id] ?? EMPTY
-    if (previous.notes.includes(text)) return map
+  message: string,
+  at: number,
+): StatusMap {
+  const previous = map[id] ?? EMPTY
 
-    return { ...map, [id]: { ...previous, notes: [...previous.notes, text] } }
-  })
+  return {
+    ...map,
+    [id]: {
+      ...previous,
+      error: { message, count: (previous.error?.count ?? 0) + 1, at },
+    },
+  }
 }
 
-export async function clearStatus(
-  $: EngineInterface,
-  id: string,
-): Promise<void> {
-  await update($, statusAtom, map => {
-    if (!(id in map)) return map
-    const { [id]: _removed, ...rest } = map
+export function withNote(map: StatusMap, id: string, text: string): StatusMap {
+  const previous = map[id] ?? EMPTY
+  if (previous.notes.includes(text)) return map
 
-    return rest
-  })
+  return { ...map, [id]: { ...previous, notes: [...previous.notes, text] } }
 }
 
-// The engine refuses state writes while a ui.render hook draws, and errors and
-// notes are raised from render hooks, so these hand the write to a timer.
-export function reportError(
-  $: EngineInterface,
-  id: string,
-  error: unknown,
-): void {
-  void $.clock.after(0, () => addError($, id, error))
-}
+export function withoutStatus(map: StatusMap, id: string): StatusMap {
+  if (!(id in map)) return map
+  const { [id]: _removed, ...rest } = map
 
-export function reportNote(
-  $: EngineInterface,
-  id: string,
-  text: string,
-): void {
-  void $.clock.after(0, () => addNote($, id, text))
+  return rest
 }

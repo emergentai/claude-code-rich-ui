@@ -1,36 +1,30 @@
-import type { EngineInterface, On } from 'claude-code'
+import type { EnabledMap } from '../../types'
 
-import { reportError } from './errors'
-import { isEnabled } from './prefs'
+// The gate, as pure helpers. The engine's module scan allows only literal
+// `on("event", hook)` calls, forbids wrapping `on`, and rejects any function
+// that is handed `$`. So a gate cannot be a wrapper: every feature hook is an
+// exported const arrow that reads the flag and records failures inline, and uses
+// these to decide and to contain a throw.
 
-type Next = (e: unknown) => unknown
-type Hook = ($: EngineInterface, e: unknown, next: Next) => unknown
-type Loose = (...args: unknown[]) => unknown
-
-// Streaming (generator) hooks are not supported; v1 features do not use them.
-export function gateOn(
-  on: On,
+export function isOn(
+  enabled: EnabledMap,
   feature: { id: string; defaultEnabled: boolean },
-): On {
-  const gated = (...args: unknown[]) => {
-    const hook = args[args.length - 1] as Hook
-    const head = args.slice(0, -1)
+): boolean {
+  return enabled[feature.id] ?? feature.defaultEnabled
+}
 
-    const wrapped: Hook = async ($, e, next) => {
-      if (!(await isEnabled($, feature.id, feature.defaultEnabled))) {
-        return next(e)
-      }
-      try {
-        return await hook($, e, next)
-      } catch (error) {
-        reportError($, feature.id, error)
+// Runs the feature's work; if it throws, reports and falls back to the
+// engine's own behaviour (`next(e)` replays if the hook already called it).
+export async function guard<R>(
+  run: () => R | Promise<R>,
+  fallback: () => R | Promise<R>,
+  onError: (error: unknown) => void,
+): Promise<R> {
+  try {
+    return await run()
+  } catch (error) {
+    onError(error)
 
-        return next(e)
-      }
-    }
-
-    return (on as unknown as Loose)(...head, wrapped)
+    return fallback()
   }
-
-  return gated as unknown as On
 }
