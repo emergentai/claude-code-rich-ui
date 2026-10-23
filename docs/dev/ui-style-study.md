@@ -31,15 +31,14 @@ A hook that returns its own tree for `AssistantMessage` replaces all of this (th
 - `isSummary` rows are left to the engine (it adds its own faint " · summary" mark).
 - Tests: the first block of a reply has the bullet and later blocks do not; a summary row goes to the engine.
 
-## 4. The `/rich-ui` pane
+## 4. The `/rich-ui` manager: a band, not a Pane
 
-Measured at several widths:
-- Below 110 columns the pane sits inline above the prompt in a rounded frame, and the frame supplies the padding.
-- From 110 columns in the fullscreen terminal it docks beside the transcript, with a divider and no padding: the text touched the divider. The pane now adds one cell of side padding when `placement` is `dock`, and reduces its clip width to match.
-- The dock took its default share of the terminal (57 of 130 columns, 90 of 180) for about 42 columns of content. `$.ui.open` takes `columns`, the body width the content wants when docked (the engine grants 24 to 45% of the terminal; inline ignores it), so the command now asks for its widest line plus padding: 44 columns at 130 and at 180.
-- The footer line is clipped to the pane width (it wrapped in the narrow dock).
-- Light theme (reproduced with `claude --settings '{"theme":"light"}'`): the focused row is drawn in reverse video, and the gray description nested inside the button label lost its contrast on top of it. The description now sits on its own dim line under the button (two rows per feature), so focus inverts only `[x] Name`. All colors are the engine's theme colors (the pane's own dim gray 241 in light), none fixed.
-- The first row has `autoFocus`, so Enter works as soon as the pane opens. Before, the footer said "Enter toggles" but Enter did nothing until Tab focused the row.
+Findings:
+- A `Pane` is placed by the engine: docked beside the transcript in a fullscreen terminal of 110+ columns, otherwise inline above the prompt. A plugin cannot choose; `$.ui.open` has no placement option. The dock was a wide, tall strip for a few lines, and in a light-theme session it carried the engine's own dock chrome. Asking for a narrower dock (`columns`) was tried and rejected by the owner.
+- The `AbovePrompt` band is always above the prompt (the strip the engine uses for surveys, with its own `[-]` collapse mark), so the manager is a band now: `/rich-ui` sets a `managerOpen` state value, the band's `ui.render` hook draws while it is true (and yields to a survey), and a `close` button clears it.
+- Cost: a band cannot be given the keyboard by the plugin (`$.ui.focus` is denied with "that site does not hold the keys"; the band's `requestId` is `above-prompt`). Mouse clicks work; for the keyboard the person presses ctrl+x then Tab, after which Enter toggles the focused row. The band says so on its own line.
+- Light theme (reproduced with `claude --settings '{"theme":"light"}'`): the focused row is reverse video and a gray description nested in the button label lost its contrast. The description is on its own dim line, so focus inverts only `[x] Name`. Every color is the engine's theme color (secondary gray 241 in light, 246 in dark); none is fixed.
+- Unchanged earlier fixes: the first row has `autoFocus` (it takes the ring when the person focuses the band), and long lines are clipped to the band width.
 
 ## 5. Not yet verified
 

@@ -15,6 +15,7 @@ declare module 'claude-code' {
       status: Shaped<StatusMap>
       saveFailed: Shaped<boolean>
       shown: Shaped<ShownMap>
+      managerOpen: Shaped<boolean>
     }
   }
 }
