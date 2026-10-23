@@ -1,13 +1,13 @@
 # <img src="docs/assets/rich-ui.png" alt="rich-ui logo" width="56" height="56" align="absmiddle">&nbsp;&nbsp;&nbsp;rich-ui
 
-**Claude Code, in nicer clothes.**
+### Claude Code, in nicer clothes.
 
-rich-ui is a Claude Code mod that upgrades
-the terminal interface itself: things the stock UI shows as plain text get drawn
-properly, a feature at a time. It never changes what Claude says or does, only how it
-looks, and every feature has its own switch.
+rich-ui is a Claude Code mod that upgrades the terminal interface itself, one feature
+at a time: things the stock UI shows as plain text get drawn properly. It never
+changes what Claude says or does, only how it looks, and every feature has its own
+switch.
 
-First up: mermaid diagrams, drawn right in the transcript instead of dumped as code.
+> **First up:** mermaid diagrams, drawn right in the transcript instead of dumped as code.
 
 ![rich-ui drawing a mermaid diagram in Claude Code](docs/assets/demo.gif)
 
