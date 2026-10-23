@@ -19,7 +19,7 @@ Non-goals for v1: runtime extension by third parties, non-terminal surfaces (des
 | Toggle storage | Persisted in `$.store`, mirrored into `$.state` for drawing |
 | Toggle UI | `/rich-ui` pane only (no `/config` rows) |
 | Defaults | Each feature declares its own `defaultEnabled` |
-| Gating | Every hook checks its feature's flag on each call |
+| Gating | Every feature hook checks its feature's flag on each call, inline (see 4.3) |
 | Failures and notes | A failing feature is skipped; its error, and any note a feature posts about itself, is shown only inside the `/rich-ui` pane |
 | Language | TypeScript, tested with `claude plugin test`, type-checked with `tsc` |
 | Repo root | The repo root is the plugin |
@@ -37,14 +37,15 @@ claude-code-rich-ui/
     marketplace.json         # name "claude-code-rich-ui", one entry, source "./"
   hooks/
     hooks.json               # { "modules": ["./register.tsx"] }
-    register.tsx             # entry: builds the registry, registers all features
+    register.tsx             # entry: one literal on(...) line per hook
     core/
-      feature.ts             # Feature and FeatureContext types
-      registry.ts            # the list of shipped features
-      gate.ts                # gated `on` wrapper (flag check, error capture)
-      prefs.ts               # load/save/toggle state ($.store <-> $.state)
-      errors.ts              # per-feature status: errors and notes (session scoped)
-      version.ts             # plugin version string (tested against plugin.json)
+      feature.ts             # Feature metadata type
+      registry.ts            # the list of shipped features (for the pane)
+      gate.ts                # isOn (effective flag) and guard (contain a throw)
+      prefs.ts               # parse/serialize/toggle the saved choices (pure)
+      errors.ts              # pure helpers over the per-feature status map
+      state.ts               # comment only: why atoms are declared where used
+      version.ts             # plugin version string (checked by scripts/check-version.mjs)
     manager/                 # the /rich-ui command and pane (always on, not a feature)
     features/
       mermaid/               # first feature (see its own doc)
@@ -65,6 +66,16 @@ Rules:
 
 ## 4. Core pieces
 
+### 4.0 What the engine's module scan forces
+
+`claude plugin validate` and the loader scan the hooks module and every file it imports, and refuse the module when:
+- `on` is anything but a literal `on("<event>", [matcher,] hook)` call, with the hook a function literal or the name of an exported `const` arrow. `on` cannot be wrapped, passed to a function, or called in a loop.
+- `$` is passed as an argument anywhere (the `read`/`update`/`atom` library functions from `claude-code` are the exception). So no helper takes `$`; `$.noun.event(...)` is written where it is used.
+- A state source is not written in the file that reads or writes it (`read($, atom)` needs the `atom(...)` const in that same file), so atoms are declared per file.
+- An event has two unmatched `on` hooks (so one `session.start` handler does all start-up work).
+
+Everything below follows from these rules. This replaces the earlier design, in which `register(on, ctx)` handed each feature a gated `on`.
+
 ### 4.1 Feature contract
 
 ```ts
@@ -73,39 +84,40 @@ type Feature = {
   name: string               // shown in the pane
   description: string        // one line, shown in the pane
   defaultEnabled: boolean
-  register: (on: GatedOn, ctx: FeatureContext) => void
 }
 ```
 
-`register` receives a gated version of `on`, so a feature author cannot forget the flag check. `FeatureContext` carries the feature's own `id` and a `postNote(text)` function that records a status note for the pane (4.5); it exists so later needs (shared helpers, logging) do not change the signature.
+A feature is its metadata plus the hook handlers it exports (for example `mermaid` and `renderAssistantMessage` in `hooks/features/mermaid/index.ts`). Handlers are `const` arrow functions typed with `Hook` or `MatchedHook`. They never see `on`.
 
-### 4.2 Registry
+### 4.2 Registry and wiring
 
-`registry.ts` exports the ordered array of shipped features. `register.tsx` loops over it and calls each `feature.register` inside its own try/catch, so a feature that throws at load time cannot stop the others or the manager from loading. A load-time throw is recorded exactly like a hook failure (4.5).
+`register.tsx` has one literal `on(...)` line per hook, naming the exported handler. `registry.ts` is the ordered list of `Feature` metadata that the pane draws. Adding a feature means: a folder under `hooks/features/`, an entry in `registry.ts`, and one `on` line per hook in `register.tsx`. A handler cannot fail at load time (it is just a function), so the earlier load-failure recording is not needed; a handler that throws is contained by `guard` (4.3).
 
-### 4.3 Gated `on`
+### 4.3 The gate
 
-`gate.ts` wraps each hook a feature adds:
-1. Read the feature's flag from `$.state`. If off, return `next(e)` unchanged.
-2. If on, run the hook.
-3. Attach the engine's `.catch` handler: record the error against the feature id (4.5), then continue with `next(e)` so the rest of Claude Code behaves as if the feature were absent.
+There is no wrapper, because `on` cannot be wrapped. Each feature handler starts with the same inline pattern:
+1. `if (!isOn(await read($, enabledAtom), feature)) return next(e)` where `isOn` is `enabled[id] ?? defaultEnabled`.
+2. Do the work inside `guard(run, () => next(e), reportError)`. `guard` is pure: it runs `run`, and on a throw calls `reportError` and returns the fallback, so the rest of Claude Code behaves as if the feature were absent. (`next(e)` after a hook that already called `next` replays that call's result.)
+3. `reportError` and `postNote` are small closures written in the handler: they call `$.clock.after(0, ...)` and then `update($, statusAtom, map => withError(...))`. The write is deferred because the engine refuses state writes while a `ui.render` hook draws.
 
-v1 features use non-streaming hooks (`ui.render`, `session.start`). Streaming hooks (`turn.step`, `process.spawn`) need a generator form of the wrapper; it is out of scope until a feature needs it.
+View code never receives `$`: the handler resolves the elements (`$.ui.resolve(e)`), reads the state it needs, and passes plain data plus callbacks to a pure `buildReply` / `buildPane` function.
+
+v1 features use non-streaming hooks (`ui.render`, `session.start`). Streaming hooks are out of scope until a feature needs them.
 
 ### 4.4 State and persistence
 
 Two layers, one rule: `$.store` is the source of truth across sessions, `$.state` is what hooks and the pane read.
 - `$.store` key `prefs` holds `{ enabled: Record<featureId, boolean> }`.
 - `$.state` holds an `enabled` atom (the same map) and a `status` atom (errors and notes, 4.5).
-- On `session.start` the plugin hydrates `$.state` from `$.store`. A feature id missing from the store gets its `defaultEnabled`, so adding a feature later never flips anyone's existing choices.
-- A toggle (`toggleFeature(id)` in `prefs.ts`, called by the manager) writes `$.state` and `$.store` together and clears the feature's status entry. Writing `$.state` redraws the pane and every reader automatically.
+- On `session.start` the plugin loads `$.store` into the `enabled` atom, which holds only explicit choices. A feature's flag is `enabled[id] ?? defaultEnabled`, so adding a feature later never flips anyone's existing choices and a missing or unreadable store simply means defaults.
+- A toggle (the pane row's `onPress`, written inline in the manager's render handler) writes `$.state`, clears the feature's status entry and writes `$.store`. Writing `$.state` redraws the pane and every reader automatically.
 - If the `$.store` write fails, `$.state` stays as toggled so the choice holds for the session, and a `saveFailed` flag in `$.state` is set for the manager's footer (cleared by the next successful save).
 - Stored shapes use `Shaped` tags (`prefs-1`) so a future change of shape is declined and re-defaulted rather than misread after a reload.
 - Per the official docs, uninstalling from the last scope deletes the plugin's data folder and stored options unless `--keep-data` is passed (shell form only). Whether `$.store` lives there is unverified (section 9); we do not rely on preferences surviving uninstall, and a missing store simply hydrates every feature to its `defaultEnabled`.
 
 ### 4.5 Feature status: errors and notes
 
-`errors.ts` keeps, per feature id, a status entry in the session-scoped `status` atom. An entry is either an error (the last message, a count and a timestamp, recorded by the gate when a hook throws) or a note (a short text a feature posts about itself through `FeatureContext`, for example the mermaid feature's "Diagrams left as code: terminal size unknown").
+`errors.ts` keeps, per feature id, a status entry in the session-scoped `status` atom. An entry is either an error (the last message, a count and a timestamp, recorded by the gate when a hook throws) or a note (a short text a feature posts about itself, for example the mermaid feature's "Diagrams left as code: terminal size unknown").
 
 Both are shown only in the `/rich-ui` pane: a dim line under the affected feature's row while the entry stands. Nothing is toasted, logged to the transcript, or put in the status line. An entry is cleared when the user toggles that feature off and on, or when the session restarts. The engine's debug log still receives failures as usual.
 
@@ -121,17 +133,17 @@ The mermaid feature talks to rendering through one small interface returning eit
 
 ## 5. Data and event flow
 
-Session start: `register` runs, features register gated hooks, the manager registers `/rich-ui`; `session.start` hydrates state from `$.store`.
+Session start: `register` lists every hook; the single `session.start` handler loads the saved choices from `$.store` and registers `/rich-ui`.
 
-Normal event: engine event, then gated hook, then flag on and hook runs, or flag off and it passes through; a throw is recorded and the event continues.
+Normal event: engine event, then the feature's handler, which checks its flag: off passes the event through, on runs the work; a throw is recorded and the event continues.
 
 Toggle: user presses a row in the pane, then `$.store` and `$.state` are written, the pane redraws, and the next event sees the new flag. Output already on screen is not redrawn.
 
 ## 6. Testing strategy
 
 - `claude plugin validate .` and `tsc -p .` must pass before any commit.
-- Core: flag off passes through; flag on runs; a throwing hook is recorded and the event continues; a posted note is recorded and cleared by a toggle; defaults hydrate for unknown ids; a stored value of an older shape is declined; a failed `$.store` write keeps the toggle and sets `saveFailed`.
-- Registry: a feature that throws in `register` leaves other features and the manager working.
+- Core (pure helpers, unit-tested): `isOn` and `guard`; status helpers; saved-choice parse, serialize and toggle. Wired plugin (tests boot it under the kit with an in-memory store and clock): flag off passes through; flag on runs; a posted note is recorded and cleared by a toggle; defaults hydrate for unknown ids; a stored value of an older shape is declined; a failed `$.store` write keeps the toggle and sets `saveFailed`.
+- Tests: the kit's `$` has no `clock`, `store` or `state`, so stateful behavior is tested through the mounted plugin, and the harness (`hooks/core/test-harness.ts`) answers the clock, the store and the engine's drawing beneath it.
 - Every UI test mounts on the terminal surface only (the supported surface).
 - Each feature owns its own tests; the mermaid feature's are specified in its doc.
 
@@ -156,6 +168,6 @@ Toggle: user presses a row in the pane, then `$.store` and `$.state` are written
 
 1. Where `$.store` persists and whether `/plugin uninstall` deletes it (the docs say the plugin data folder is deleted unless `--keep-data`).
 2. Whether the `claude plugin test` kit supports `$.store` and `$.state` as the core tests need.
-3. That a gated wrapper type-checks cleanly across the overloads of `on` with matchers.
+3. (Closed: a wrapper is impossible, see 4.0.)
 4. The exact `plugin.json` fields for the `types` contract and any minimum-version field. Also the `hooks.json` key: the engine's bundled authoring guidance uses `{ "modules": ["./register.tsx"] }`, while the public mods overview only says `hooks.json` points to the hooks module without naming the key, so `claude plugin validate` is the authority.
 5. Whether `/rich-ui` can open the pane at any terminal width when run explicitly (the reference says explicit opens seat at any width).
