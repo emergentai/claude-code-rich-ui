@@ -37,11 +37,12 @@ Measured at several widths:
 - Below 110 columns the pane sits inline above the prompt in a rounded frame, and the frame supplies the padding.
 - From 110 columns in the fullscreen terminal it docks beside the transcript, with a divider and no padding: the text touched the divider. The pane now adds one cell of side padding when `placement` is `dock`, and reduces its clip width to match.
 - The footer line is clipped to the pane width (it wrapped in the narrow dock).
+- Light theme (reproduced with `claude --settings '{"theme":"light"}'`): the focused row is drawn in reverse video, and the gray description nested inside the button label lost its contrast on top of it. The description now sits on its own dim line under the button (two rows per feature), so focus inverts only `[x] Name`. All colors are the engine's theme colors (the pane's own dim gray 241 in light), none fixed.
 - The first row has `autoFocus`, so Enter works as soon as the pane opens. Before, the footer said "Enter toggles" but Enter did nothing until Tab focused the row.
 
 ## 5. Not yet verified
 
-- Light theme: no code uses a fixed color now, but nobody has looked at it. Please eyeball the diagram and the pane in a light theme.
+- Light theme: owner confirmed the diagram frame looks right (checks 2 and 3); the pane was fixed as above and re-captured in the light theme, owner re-check pending.
 - A reply whose very first block is a diagram, and a diagram inside a numbered list (the fence is not top-level, so it stays code by design).
 - Fullscreen versus non-fullscreen (the pane docks only in fullscreen; both were seen in tmux, the diagram frame was only compared in the fullscreen layout).
 

@@ -29,7 +29,6 @@ export function buildPane(view: PaneView) {
       {view.features.map((feature, index) => {
         const isOn = view.enabled[feature.id] ?? feature.defaultEnabled
         const mark = isOn ? '[x]' : '[ ]'
-        const room = view.width - mark.length - feature.name.length - 4
         const entry = view.status[feature.id]
 
         return (
@@ -40,9 +39,9 @@ export function buildPane(view: PaneView) {
               autoFocus={index === 0 ? true : undefined}
               onPress={() => view.onToggle(feature)}
             >
-              {mark} {feature.name}{' '}
-              <Text dimColor>{clip(feature.description, room)}</Text>
+              {mark} {feature.name}
             </Button>
+            <Text dimColor>{clip(`    ${feature.description}`, view.width)}</Text>
             {entry?.error && (
               <Text color="warning">
                 {clip(

@@ -1,10 +1,11 @@
-// header + blank + feature rows + status lines + blank + footer (+ save notice)
+// header + blank + two rows per feature (name, description) + status lines
+// + blank + footer (+ save notice)
 export function contentRows(
   featureCount: number,
   statusLines: number,
   saveFailed: boolean,
 ): number {
-  return featureCount + statusLines + 4 + (saveFailed ? 1 : 0)
+  return featureCount * 2 + statusLines + 4 + (saveFailed ? 1 : 0)
 }
 
 export function clip(text: string, width: number): string {

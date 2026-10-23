@@ -23,6 +23,7 @@ test('the pane lists each feature with a checkbox and a footer', async ($, on) =
   const row = await ui.find({ key: 'mermaid' })
   expect(row?.text).toContain('[x]')
   expect(row?.text).toContain('Mermaid diagrams')
+  expect(await ui.find({ type: 'Text', text: /Draw mermaid diagrams/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /Enter toggles/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /rich-ui 0\.1\.0/ })).toBeDefined()
   await ui.unmount()
