@@ -11,7 +11,7 @@ is planned lives in [`FEATURES.md`](FEATURES.md); how it is built lives in
 `claude-code-rich-ui` is a **mod** (a Claude Code plugin) that ships a curated
 collection of **features** — small, independently-toggleable enhancements
 built on Claude Code's native mods/hooks system — that make Claude Code's
-output richer and easier to read, without adding noise.
+interface nicer to use and easier to read, without adding noise.
 
 The mod itself does not render anything by its mere presence. It is a
 **distribution and control layer**: it bundles a set of features, lets the

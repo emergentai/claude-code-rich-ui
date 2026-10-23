@@ -7,8 +7,8 @@
     {
       "name": "rich-ui",
       "source": "./",
-      "description": "Richer Claude Code output, one toggle per feature."
+      "description": "A nicer Claude Code terminal UI, one switchable feature at a time."
     }
   ],
-  "description": "Richer Claude Code output, one toggle per feature."
+  "description": "A nicer Claude Code terminal UI, one switchable feature at a time."
 }
