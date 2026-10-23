@@ -8,7 +8,7 @@ import type { EnabledMap, ShownMap, StatusMap } from '../../../types'
 import { splitReply } from './detect'
 import { buildReply } from './view'
 
-// Declared here, not imported: see core/state.ts.
+// Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
 const enabledAtom = atom(
   { plugin: 'rich-ui', key: 'enabled' } as const,
   {} as EnabledMap,

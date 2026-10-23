@@ -44,7 +44,6 @@ claude-code-rich-ui/
       gate.ts                # isOn (effective flag) and guard (contain a throw)
       prefs.ts               # parse/serialize/toggle the saved choices (pure)
       errors.ts              # pure helpers over the per-feature status map
-      state.ts               # comment only: why atoms are declared where used
       version.ts             # plugin version string (checked by scripts/check-version.mjs)
     manager/                 # the /rich-ui command and pane (always on, not a feature)
     features/

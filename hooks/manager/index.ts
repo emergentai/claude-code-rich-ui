@@ -12,7 +12,7 @@ import { contentRows } from './size'
 const PANE_ID = 'rich-ui'
 
 // Declared here, not imported: the engine's module scan reads a state source
-// only where it is written (see core/state.ts).
+// only where it is written (docs/dev/architecture.md 4.0).
 const enabledAtom = atom(
   { plugin: 'rich-ui', key: 'enabled' } as const,
   {} as EnabledMap,
