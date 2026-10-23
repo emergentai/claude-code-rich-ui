@@ -6,12 +6,6 @@ rich-ui makes Claude Code's output richer and easier to read: diagrams drawn
 instead of dumped as code, and more on the way. Every feature has its own
 switch.
 
-<!--
-  DEMO GIF GOES HERE.
-  Save the recording as docs/assets/demo.gif (the path below), then delete this comment.
-  Target: under about 15 seconds, a diagram appearing and the source toggle, a readable
-  terminal size and theme, small enough to load quickly.
--->
 ![rich-ui drawing a mermaid diagram in Claude Code](docs/assets/demo.gif)
 
 ## Install
