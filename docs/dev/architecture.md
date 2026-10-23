@@ -169,7 +169,7 @@ Toggle: user presses a row in the pane, then `$.store` and `$.state` are written
 
 ## 9. Open items
 
-1. Mostly closed: `$.store` is `~/.claude/plugins/store/rich-ui_<source>-<hash>.json`, outside the plugin data folder the docs say an uninstall deletes, so saved choices likely survive uninstall (unproven; see `verification-notes.md` item 8). The README and usage page say so.
+1. Closed: `$.store` is `~/.claude/plugins/store/rich-ui_<source>-<hash>.json`, outside the plugin data folder the docs say an uninstall deletes, so saved choices survive an uninstall and a reinstall (confirmed in the manual run, `verification-notes.md` item 8). The README and usage page say so.
 2. Closed: the `claude plugin test` kit has no `$.store`, `$.state` or `$.clock` on the test's `$`; stateful behavior is tested through the mounted plugin with an in-memory store and clock supplied by the harness (section 6).
 3. Closed: a wrapper is impossible, see 4.0.
 4. Closed: `plugin.json` names `"types": "./types/index.d.ts"` (the contract must export only types), and `hooks/hooks.json` is `{ "modules": ["./register.tsx"] }`; `claude plugin validate` accepts both. No minimum-version field is used; the README states the minimum.

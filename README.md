@@ -50,8 +50,8 @@ draws it, including diagrams already on screen.
 ```
 
 That removes the plugin. Your on/off choices are kept in Claude Code's plugin store
-(`~/.claude/plugins/store/rich-ui_*.json`), which an uninstall is not documented to
-clear, so a reinstall picks them up again. Delete that file if you want a clean slate.
+(`~/.claude/plugins/store/rich-ui_*.json`), which an uninstall leaves alone, so a
+reinstall picks them up again. Delete that file if you want a clean slate.
 
 ## 🗺️ Coming next
 

@@ -49,8 +49,9 @@ on in `/plugin` (Marketplaces tab), or update by hand with
 profile). The marketplace stays added until you remove it with
 `claude plugin marketplace remove claude-code-rich-ui`. Your on/off choices live in
 Claude Code's plugin store, `~/.claude/plugins/store/rich-ui_*.json`, apart from the
-plugin's data folder that Claude Code says an uninstall deletes, so they are likely to
-survive an uninstall and a reinstall picks them up; delete that file to start fresh.
+plugin's data folder that Claude Code says an uninstall deletes. They survive an
+uninstall, and a reinstall picks them up (turn Mermaid off, uninstall, reinstall: it is
+still off); delete that file to start fresh.
 The shell form also accepts `--keep-data` for the data folder.
 
 ## Mermaid diagrams
