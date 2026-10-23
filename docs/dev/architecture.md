@@ -26,6 +26,7 @@ Non-goals for v1: runtime extension by third parties, non-terminal surfaces (des
 | Feature set | Closed: features live in this repo |
 | API drift | State a minimum tested Claude Code version in the README; no runtime check |
 | Name | Plugin `rich-ui`, repo `claude-code-rich-ui`, org `emergentai` |
+| Distribution | The repo is its own marketplace, named `claude-code-rich-ui` (see section 8) |
 
 ## 3. Repository layout
 
@@ -33,7 +34,7 @@ Non-goals for v1: runtime extension by third parties, non-terminal surfaces (des
 claude-code-rich-ui/
   .claude-plugin/
     plugin.json              # name "rich-ui", version, "types" pointer
-    marketplace.json         # one entry, source "./"
+    marketplace.json         # name "claude-code-rich-ui", one entry, source "./"
   hooks/
     hooks.json               # { "modules": ["./register.tsx"] }
     register.tsx             # entry: builds the registry, registers all features
@@ -142,8 +143,12 @@ Toggle: user presses a row in the pane, then `$.store` and `$.state` are written
 
 ## 8. Distribution and compatibility
 
-- `.claude-plugin/plugin.json` names the plugin `rich-ui`; `.claude-plugin/marketplace.json` lists it with source `./`.
-- Install: `/plugin install rich-ui --marketplace emergentai/claude-code-rich-ui` (official docs: valid in a session from Claude Code 2.1.275; the shell form `claude plugin install ... --marketplace ...` from 2.1.292). The documented two-step alternative is `/plugin marketplace add emergentai/claude-code-rich-ui` then `/plugin install rich-ui@<marketplace-name>`, where the name is the `name` field in `marketplace.json` (to be chosen).
+- Distribution model: the repo is its own marketplace (decided after comparing a shared org-wide marketplace repo, direct `--plugin-dir` use and the official directory). `.claude-plugin/plugin.json` names the plugin `rich-ui`; `.claude-plugin/marketplace.json` has marketplace `name` `claude-code-rich-ui` and one entry, `rich-ui`, with source `./`.
+- Why the marketplace is named `claude-code-rich-ui` and not `emergentai`: if an org-wide `emergentai` marketplace is ever created, a second marketplace with the same name from a different source would clash. The one-step install never shows the name, so a longer one costs users nothing.
+- Install: `/plugin install rich-ui --marketplace emergentai/claude-code-rich-ui` (official docs: valid in a session from Claude Code 2.1.275; the shell form `claude plugin install ... --marketplace ...` from 2.1.292). The documented two-step alternative is `/plugin marketplace add emergentai/claude-code-rich-ui` then `/plugin install rich-ui@claude-code-rich-ui`.
+- Auto-update is per marketplace and off by default for non-official ones. The README and `docs/usage.md` tell users how to turn it on (`/plugin`, Marketplaces tab). Every release sets or bumps `version` in `plugin.json`; if it is omitted the commit SHA is the version and every commit becomes an update.
+- Marketplace names are limited to letters, digits, `.`, `_`, `-`, and some names are reserved; `claude-code-rich-ui` is expected to be valid, confirmed with `claude plugin validate` (use `--strict` when CI exists).
+- Later options, not v1: list the plugin in Anthropic's official directory (needs a paid claude.ai plan and a review per version), or move to an org-wide marketplace repo if a second plugin appears.
 - Uninstall: `/plugin uninstall rich-ui`. The marketplace stays added until removed separately.
 - Official docs: mods are on by default from Claude Code 2.1.287 in the terminal. The README states that as the minimum and the exact version we tested against, recorded at release.
 

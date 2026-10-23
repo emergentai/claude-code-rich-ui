@@ -21,6 +21,7 @@ Status: draft for review. This document designs the GitHub landing page (`README
 | Caveats | One short "Requirements" block under Install |
 | User docs | One page, `docs/usage.md`: usage, troubleshooting, FAQ |
 | Org / repo / plugin | `emergentai` / `claude-code-rich-ui` / `rich-ui` |
+| Distribution | The repo is its own marketplace, named `claude-code-rich-ui` |
 | License | MIT (already in the repo) |
 
 ## 3. Pitch
@@ -62,6 +63,9 @@ diagram, you'll see it drawn.
 version 2.1.287 or later, tested on <version recorded at release>. The mods API
 is early access and can change between Claude Code releases.
 
+To get updates automatically, turn on auto-update for this marketplace in
+`/plugin` (Marketplaces tab).
+
 ## Use
 
 Type `/rich-ui` to open the feature list. Press a row to turn it on or off. Your
@@ -100,7 +104,7 @@ Notes on the copy:
 ## 5. `docs/usage.md` outline
 
 1. **Using rich-ui:** opening `/rich-ui`, what the checkboxes mean, that toggles affect new output only and persist across sessions.
-2. **Install from a shell:** `claude plugin install rich-ui --marketplace emergentai/claude-code-rich-ui` (Claude Code 2.1.292 or later; add `--scope user|project|local` to choose a scope, `--yes` to skip prompts). The two-step form also works: `/plugin marketplace add emergentai/claude-code-rich-ui`, then `/plugin install rich-ui@<marketplace-name>`. Uninstalling the plugin leaves the marketplace added; remove it with `claude plugin marketplace remove <marketplace-name>`, and keep a plugin's saved data on uninstall with `claude plugin uninstall rich-ui --keep-data`.
+2. **Install from a shell:** `claude plugin install rich-ui --marketplace emergentai/claude-code-rich-ui` (Claude Code 2.1.292 or later; add `--scope user|project|local` to choose a scope, `--yes` to skip prompts). The two-step form also works: `/plugin marketplace add emergentai/claude-code-rich-ui`, then `/plugin install rich-ui@claude-code-rich-ui`. Uninstalling the plugin leaves the marketplace added; remove it with `claude plugin marketplace remove claude-code-rich-ui`. Updates: auto-update is off by default for non-official marketplaces, so tell users to turn it on in `/plugin` (Marketplaces tab) or run `claude plugin update rich-ui@claude-code-rich-ui`. Keep a plugin's saved data on uninstall with `claude plugin uninstall rich-ui --keep-data`.
 3. **Mermaid diagrams:** what is drawn (flowchart, sequence, state, class, ER); that an unsupported type, an unfinished reply, or a diagram that does not fit stays as a code block; how the source toggle works.
 4. **Troubleshooting:** my diagram stays as code (check it is a supported type and the feature is on in `/rich-ui`; a diagram too big for the window, or a reply still being written, also stays as code; the pane shows a note only when the terminal size is unknown); a feature shows a warning in the pane (what it means, how to report it); `/rich-ui` is not found (plugin not installed or Claude Code too old; use `/plugin` to check); behavior after a Claude Code upgrade (early-access API; report with your version).
 5. **FAQ:** Does it work in the desktop app or VS Code (no, terminal only for now)? Does it send my data anywhere (no, everything runs locally, no network, no telemetry)? Why text and not images (works in every terminal with no extra install; image diagrams are planned)? How do I remove it (uninstall command)?
@@ -129,6 +133,6 @@ Run on a clean Claude Code profile (no prior marketplaces, no rich-ui store data
 ## 8. Open items
 
 1. Final pitch choice (section 3).
-2. What survives uninstall (checks 4 and 5 above). The marketplace `name` in `marketplace.json` is not yet chosen; it appears in the two-step install form (`rich-ui@<marketplace-name>`), so pick it before writing `docs/usage.md`.
+2. What survives uninstall (checks 4 and 5 above). The marketplace name is decided: `claude-code-rich-ui` (see `architecture.md` section 8); confirm it validates.
 3. The tested Claude Code version to print in Requirements (to be filled at release).
 4. Whether the GIF can show the diagram clearly at a README-friendly size.
