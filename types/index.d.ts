@@ -20,6 +20,17 @@ export type UsageSnapshot = {
   limits: UsageLimit[]
 }
 
+// What the markdown preview pane shows: the file it was last pointed at (by the
+// person's /preview or the last markdown file Claude wrote), its text, and why
+// there is none.
+export type PreviewState = {
+  path?: string
+  text?: string
+  isTruncated?: boolean
+  error?: string
+  lastWritten?: string
+}
+
 declare module 'claude-code' {
   interface PluginState {
     'rich-ui': {
@@ -28,6 +39,7 @@ declare module 'claude-code' {
       saveFailed: Shaped<boolean>
       shown: Shaped<ShownMap>
       usage: Shaped<UsageSnapshot>
+      preview: Shaped<PreviewState>
     }
   }
 }

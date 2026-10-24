@@ -55,13 +55,10 @@ sessions, not just some?
 - **Rendered tables.** Markdown, JSON and CSV tables as aligned grids instead of wrapped
   text.
 - **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
-  formatted docs in a pane beside the chat.
-- **Inline edit diffs.** A compact colored diff after each `Edit` or `Write`,
-  complementing the built-in `/diff` pane.
-- **Image-quality diagrams.** The follow-up to the shipped text diagrams. Path from the
-  spike: improve the bundled rasterizer, then try the `Raster` element, then offer host
-  tools such as macOS `qlmanage` as an opt-in. Terminals that cannot draw images keep the
-  text diagram as the fallback.
+  formatted docs in a pane beside the chat. First slice built on
+  `feature/markdown-preview` (on request with `/preview`; reference
+  [`features/markdown-preview.md`](features/markdown-preview.md)); automatic opening is
+  not done. Spike: [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 - **More mermaid types.** XY charts first (the renderer already draws them), then
   whatever the renderer gains.
 

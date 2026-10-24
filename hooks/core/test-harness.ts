@@ -32,7 +32,20 @@ export async function boot(
   const clock = mock.clock(on)
 
   on('command.register', () => ({ value: { command: 'rich-ui' } }))
-  on('ui.open', () => ({ value: { isPlaced: true } }))
+  const files = new Map<string, string>()
+  on('fs.read', (_, e) => {
+    const text = files.get(e.path)
+    if (text === undefined) throw new Error(`ENOENT: ${e.path}`)
+
+    return { value: text }
+  })
+  on('tool.call', () => ({ result: {}, text: 'ok' }) as never)
+  const opened: string[] = []
+  on('ui.open', (_, e) => {
+    opened.push(e.id)
+
+    return { value: { isPlaced: true } }
+  })
   on('ui.render', ($, e) => {
     const { Text } = $.ui.resolve(e)
 
@@ -49,5 +62,5 @@ export async function boot(
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  return { clock, saved, failSaves, status }
+  return { clock, saved, failSaves, status, files, opened }
 }

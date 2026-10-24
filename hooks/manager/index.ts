@@ -52,6 +52,10 @@ export const startSession: Hook<'session.start'> = async ($, e, next) => {
     name: 'rich-ui',
     description: 'Choose which rich-ui features are on',
   })
+  await $.command.register({
+    name: 'preview',
+    description: 'Show a markdown file, rendered, in a pane',
+  })
 
   return next(e)
 }
