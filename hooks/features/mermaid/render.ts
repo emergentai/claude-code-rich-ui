@@ -1,4 +1,9 @@
 import { renderMermaidAscii } from '../../vendor/zombie-mermaid.js'
+import { diagramKind } from './sanity'
+
+// With a row of padding the start marker of a state diagram is drawn over and
+// lost; two rows keep it.
+const STATE_PADDING_Y = 2
 
 export type DiagramResult = {
   kind: 'text'
@@ -14,7 +19,7 @@ export function renderDiagram(source: string): DiagramResult | null {
     const raw = renderMermaidAscii(source, {
       useAscii: false,
       colorMode: 'none',
-      paddingY: 1,
+      paddingY: diagramKind(source) === 'state' ? STATE_PADDING_Y : 1,
     })
     const lines = raw.split('\n').map(line => line.replace(/\s+$/, ''))
     while (lines.length > 0 && lines[0] === '') lines.shift()

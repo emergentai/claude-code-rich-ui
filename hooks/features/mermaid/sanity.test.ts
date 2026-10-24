@@ -28,6 +28,17 @@ test('unsupported and unknown headers are rejected', async () => {
   expect(diagramKind('')).toBe(null)
 })
 
+test('pie, C4 and architecture headers with no content are rejected', async () => {
+  expect(diagramKind('pie title Pets')).toBe(null)
+  expect(diagramKind('pie showData\n %% nothing yet')).toBe(null)
+  expect(diagramKind('C4Context')).toBe(null)
+  expect(diagramKind('C4Context\n title Only a title')).toBe(null)
+  expect(diagramKind('architecture-beta')).toBe(null)
+  expect(diagramKind('pie\n "a" : 1')).toBe('pie')
+  expect(diagramKind('C4Context\n Person(u, "User")')).toBe('c4')
+  expect(diagramKind('architecture-beta\n group g(cloud)[G]')).toBe('architecture')
+})
+
 test('front matter, comments and directives are skipped', async () => {
   const withFrontMatter = '---\ntitle: x\n---\ngraph TD\n A-->B'
   expect(diagramKind(withFrontMatter)).toBe('flowchart')

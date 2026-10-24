@@ -47,3 +47,10 @@ test('an architecture diagram renders', async () => {
   )
   expect(result?.lines.join('\n')).toContain('Srv')
 })
+
+test('a state diagram keeps its start and end markers', async () => {
+  const result = renderDiagram('stateDiagram-v2\n  [*] --> Idle\n  Idle --> Run: go\n  Run --> [*]')
+  const text = result?.lines.join('\n') ?? ''
+  expect(text).toContain('●')
+  expect(text).toContain('◉')
+})
