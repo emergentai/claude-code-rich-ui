@@ -1,4 +1,4 @@
-import { renderMermaidASCII } from '../../vendor/beautiful-mermaid.js'
+import { renderMermaidAscii } from '../../vendor/zombie-mermaid.js'
 
 export type DiagramResult = {
   kind: 'text'
@@ -11,7 +11,7 @@ export type DiagramResult = {
 // feature only reads lines, width and height from the text variant.
 export function renderDiagram(source: string): DiagramResult | null {
   try {
-    const raw = renderMermaidASCII(source, {
+    const raw = renderMermaidAscii(source, {
       useAscii: false,
       colorMode: 'none',
       paddingY: 1,

@@ -6,7 +6,4 @@ export interface AsciiRenderOptions {
   colorMode?: 'none' | 'ansi16' | 'ansi256' | 'truecolor' | 'html' | 'auto'
 }
 
-export function renderMermaidASCII(
-  text: string,
-  options?: AsciiRenderOptions,
-): string
+export function renderMermaidAscii(text: string, options?: AsciiRenderOptions): string

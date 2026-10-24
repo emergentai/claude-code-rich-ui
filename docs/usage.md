@@ -67,8 +67,12 @@ Supported diagram types:
 - class diagram
 - state diagram
 - entity relationship diagram
+- XY chart (`xychart-beta`)
+- pie chart
+- C4 diagram (`C4Context`, `C4Container`, `C4Component`, `C4Dynamic`, `C4Deployment`)
+- architecture diagram (`architecture-beta`)
 
-Everything else (gantt, pie, journey, mindmap, XY charts, and so on) is not drawn
+Everything else (gantt, journey, mindmap, timeline, gitGraph, and so on) is not drawn
 and stays a normal code block.
 
 A diagram also stays a code block when:
