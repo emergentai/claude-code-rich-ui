@@ -39,44 +39,6 @@ function withoutCode(text: string): string {
     .join('\n')
 }
 
-// Set before the label of a link the plugin answers, so it can be told from a
-// stock link. A no-break space keeps it on the line of the label after it.
-// Not U+29C9 (⧉): the engine's own marker for a link that points elsewhere than
-// it reads, and a label that holds it gets the target shown after it.
-export const LINK_MARK = '❐\u00a0'
-
-const LABELED = /(!?)\[([^\]]*)\](\(\s*(<[^>]+>|[^)\s]+)(?:\s+"[^"]*")?\s*\))/g
-
-// The reply text with LINK_MARK before the label of each link in `links`, for
-// drawing only. The targets stay as written, which is how the engine matches the
-// links it answers. Links in code fences and inline code are left as written.
-export function markPreviewLinks(text: string, links: readonly string[]): string {
-  const wanted = new Set(links)
-  let inFence = false
-
-  return text
-    .split('\n')
-    .map(line => {
-      if (/^\s*(```|~~~)/.test(line)) {
-        inFence = !inFence
-        return line
-      }
-      if (inFence) return line
-      const code = [...line.matchAll(/`[^`]*`/g)].map(m => [m.index, m.index + m[0].length] as const)
-
-      return line.replace(
-        LABELED,
-        (whole: string, bang: string, label: string, target: string, href: string, at: number) => {
-          if (bang === '!' || code.some(([from, to]) => at >= from && at < to)) return whole
-          if (!wanted.has(href.replace(/^<|>$/g, ''))) return whole
-
-          return `[${LINK_MARK}${label}]${target}`
-        },
-      )
-    })
-    .join('\n')
-}
-
 function bare(href: string): string {
   return href.replace(/[#?].*$/, '')
 }

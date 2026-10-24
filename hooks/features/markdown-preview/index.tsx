@@ -4,7 +4,7 @@ import type { Hook, MatchedHook } from 'claude-code'
 import type { EnabledMap, PreviewState } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
-import { clipText, describeError, markPreviewLinks, PANE_ID, pathFromHref, previewLinks } from './preview'
+import { clipText, describeError, PANE_ID, pathFromHref, previewLinks } from './preview'
 import { buildLinkedReply, buildPreview } from './view'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
@@ -76,7 +76,7 @@ export const renderLinkedReply: MatchedHook<
 
   return buildLinkedReply({
     elements: $.ui.resolve(e),
-    text: markPreviewLinks(text, links),
+    text,
     links,
     isFirstOfReply: e.props.isFirstOfReply,
     onLinkPress: href => {
