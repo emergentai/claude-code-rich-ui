@@ -67,3 +67,85 @@ test('flipDirection swaps top-down and left-right', async () => {
   expect(flipDirection('graph\nA-->B')).toBe('graph LR\nA-->B')
   expect(flipDirection('sequenceDiagram\nA->>B: hi')).toBe(null)
 })
+
+test('the other direction is not tried when the diagram overflows both ways', async () => {
+  let calls = 0
+  const lines = fitDiagram('graph TD\n A-->B', VIEWPORT, () => {
+    calls++
+
+    return fake(200, 100)
+  })
+  expect(lines).toBe(null)
+  expect(calls).toBe(1)
+})
+
+test('a result is kept per source and window size', async () => {
+  const source = 'graph TD\n Cache1-->Cache2'
+  const first = fitDiagram(source, { columns: 100, rows: 40 })
+  expect(first).not.toBe(null)
+  expect(fitDiagram(source, { columns: 100, rows: 40 })).toBe(first)
+  expect(fitDiagram(source, { columns: 100, rows: 41 })).not.toBe(first)
+})
+
+// A large four-subgraph flowchart. Drawing it sideways takes seconds and froze
+// the session on every redraw; it must now be given up on after one drawing, and
+// asking again must be instant.
+const BIG = `flowchart TB
+    subgraph Client["Frontend (React + Vite)"]
+        UI["AgentChat / ChatInterface<br/>ConversationSidebar"]
+        AUTH["useAuth + authConfig<br/>(MSAL, Entra ID)"]
+        CS["chatService.ts<br/>(SSE stream)"]
+        UI --> CS
+        UI --> AUTH
+        AUTH -->|"access token"| CS
+    end
+
+    subgraph Backend["Backend (ASP.NET Core, Container Apps)"]
+        JWT["JwtBearer auth<br/>+ scope policy"]
+        EP["Program.cs endpoints"]
+        SVC["AgentFrameworkService"]
+        CRED{"Credential"}
+        JWT --> EP --> SVC --> CRED
+        CRED -->|"OBO (user identity)"| PC
+        CRED -->|"Managed identity"| PC
+        PC["AIProjectClient<br/>ProjectResponsesClient"]
+    end
+
+    subgraph Foundry["Microsoft Foundry"]
+        AG["console-sense-ai agent<br/>(v2 Agents API)"]
+        CONV[("Server-managed<br/>conversations")]
+        WS["web_search tool"]
+        AG --> WS
+        AG <--> CONV
+    end
+
+    subgraph Dev["Agent & Eval Tooling"]
+        INS["agent/instructions.md"]
+        SYNC["scripts/sync_agent.py"]
+        EV["evals/mlflow_eval.py"]
+        SC["evals/score.py"]
+        ML[("MLflow<br/>mlflow.db / mlruns")]
+        INS <-->|"pull / push"| SYNC
+        EV --> SC
+        EV --> ML
+        SC --> ML
+    end
+
+    CS -->|"POST /api/chat/stream"| JWT
+    CS -->|"GET /api/conversations<br/>/api/agent, /api/files"| JWT
+    EP -.->|"SSE tokens + citations"| CS
+    PC -->|"Responses API"| AG
+    SYNC <-->|"agent version"| AG
+    EV -->|"queries agent"| AG
+`
+
+test('a very large flowchart stays code without a slow second drawing', async () => {
+  const viewport = { columns: 120, rows: 50 }
+  let started = Date.now()
+  expect(fitDiagram(BIG, viewport)).toBe(null)
+  expect(Date.now() - started < 1500).toBe(true)
+
+  started = Date.now()
+  expect(fitDiagram(BIG, viewport)).toBe(null)
+  expect(Date.now() - started < 50).toBe(true)
+})
