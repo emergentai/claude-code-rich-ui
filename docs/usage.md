@@ -16,6 +16,9 @@ rich-ui features
  [x] Markdown preview
      Open a markdown file Claude links to, rendered, in a pane
 
+ [ ] Aurora spinner
+     A slowly shifting gradient above the spinner while Claude works
+
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
 
@@ -67,6 +70,13 @@ or more, one line appears in the status row under the prompt, for example
 `context ██████░░ 70%  ·  5h 92% (resets in 1h 00m)`. A healthy session shows nothing.
 `/clear` resets it, and turning Status band off in `/rich-ui` hides it at once. Details:
 [`features/status-band.md`](features/status-band.md).
+
+## Aurora spinner
+
+Off until you turn it on in `/rich-ui`. While Claude works, a three-row gradient drifts above
+the spinner line and goes away when the turn ends. The spinner line itself (the verb, elapsed time,
+tokens, `esc to interrupt`) is untouched. In a window under 50 columns or 24 rows the stock
+spinner is drawn. Details: [`features/aurora-spinner.md`](features/aurora-spinner.md).
 
 ## Mermaid diagrams
 

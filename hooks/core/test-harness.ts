@@ -56,6 +56,25 @@ export async function boot(
 
     return h(Text, {}, 'engine') as RenderElement
   })
+  // Every Raster repaint, and how the engine answers it: `deny` set means "not
+  // mounted"; `delayMs` holds an answer back on the mock clock (a slow host).
+  const blits: { calls: { requestId: string; key: string; cells: string }[]; deny?: string; delayMs: number } = {
+    calls: [],
+    delayMs: 0,
+  }
+  on('ui.blit', async (_, e) => {
+    blits.calls.push({ requestId: e.requestId, key: e.key, cells: 'cells' in e ? e.cells : '' })
+    if (blits.delayMs > 0) await clock.sleep(blits.delayMs)
+
+    return { value: blits.deny === undefined ? {} : { deny: blits.deny } }
+  })
+  // The one /config row a feature reads: the theme.
+  const config = { theme: 'dark' as unknown }
+  on('config.list', () => ({
+    value: [
+      { key: 'theme', label: 'Theme', kind: 'choice', value: config.theme, provider: { kind: 'engine' }, isLocked: false },
+    ],
+  }) as never)
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   const status: { line: string | undefined } = { line: undefined }
   on('ui.status', (_, e) => {
@@ -63,9 +82,10 @@ export async function boot(
 
     return { value: undefined }
   })
+  on('turn.complete', (_, e) => ({ text: e.answer }))
   on('session.measure', (_, e) => ({ changed: e.changed }))
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  return { clock, saved, failSaves, status, files, opened, order }
+  return { clock, saved, failSaves, status, files, opened, order, blits, config }
 }

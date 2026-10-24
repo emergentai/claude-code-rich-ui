@@ -4,6 +4,7 @@ import type { Hook } from 'claude-code'
 import type { EnabledMap, UsageSnapshot } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
+import { stopAurora } from '../aurora-spinner/ticker'
 import { bandText, segmentsFor } from './band'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
@@ -57,6 +58,9 @@ export const recordUsage: Hook<'session.measure'> = async ($, e, next) => {
 // usage atom survives that handoff with its pre-clear reading, so it is reset
 // here instead of waiting on a session.measure that may not come soon.
 export const onSessionEnd: Hook<'session.end'> = async ($, e, next) => {
+  // The engine allows one unmatched session.end hook, so the aurora spinner's stop
+  // (every reason, /clear included) rides here; it is synchronous and cannot throw.
+  stopAurora()
   if (e.reason === 'clear') {
     await update($, usageAtom, () => ({ limits: [] }) as UsageSnapshot)
     await refreshStatus($)
