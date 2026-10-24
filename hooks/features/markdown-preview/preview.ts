@@ -68,8 +68,15 @@ export function describeError(error: unknown): string {
 }
 
 const IMG_TAG = /<img\b[^>]*>/gi
+const MD_IMAGE = /!\[([^\]]*)\]\(([^)\s]*)[^)]*\)/g
+const ENTITIES: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", '#39': "'" }
 
-// The preview is text only: an `<img>` becomes a line naming the picture.
+function nameOf(alt: string | undefined, src: string | undefined): string {
+  return alt?.trim() || src?.split(/[/?#]/).filter(Boolean).pop() || 'image'
+}
+
+// The preview is text only. In a heading a picture is decoration and is dropped;
+// anywhere else it becomes a line naming it. Entities such as `&nbsp;` are decoded.
 export function textImages(text: string): string {
   let inFence = false
   return text
@@ -77,12 +84,20 @@ export function textImages(text: string): string {
     .map(line => {
       if (/^\s*(```|~~~)/.test(line)) inFence = !inFence
       if (inFence) return line
-      return line.replace(IMG_TAG, tag => {
-        const alt = /\balt\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1]?.trim()
-        const src = /\bsrc\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1]?.trim()
-        const name = alt || src?.split(/[/?#]/).filter(Boolean).pop() || 'image'
-        return `[image: ${name}]`
-      })
+      const isHeading = /^\s{0,3}#{1,6}\s/.test(line)
+      const replace = (name: string) => (isHeading ? '' : `[image: ${name}]`)
+      const out = line
+        .replace(IMG_TAG, tag =>
+          replace(
+            nameOf(
+              /\balt\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1],
+              /\bsrc\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1],
+            ),
+          ),
+        )
+        .replace(MD_IMAGE, (_, alt: string, src: string) => replace(nameOf(alt, src)))
+        .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (_, name: string) => ENTITIES[name] ?? '')
+      return isHeading ? out.replace(/^(\s{0,3}#{1,6})\s+/, '$1 ').replace(/\s+$/, '') : out
     })
     .join('\n')
 }

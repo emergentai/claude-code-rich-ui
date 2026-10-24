@@ -38,3 +38,9 @@ test('an <img> becomes a text line naming the picture', () => {
   expect(textImages('<img src="docs/a/shot.png">')).toBe('[image: shot.png]')
   expect(textImages('```\n<img src="x.png">\n```')).toBe('```\n<img src="x.png">\n```')
 })
+
+test('images in a heading are dropped, markdown images name the picture, entities decode', () => {
+  expect(textImages('# <img src="a.png" alt="logo">&nbsp;&nbsp;&nbsp;rich-ui')).toBe('# rich-ui')
+  expect(textImages('![rich-ui drawing a diagram](docs/assets/demo.gif)')).toBe('[image: rich-ui drawing a diagram]')
+  expect(textImages('a &amp; b')).toBe('a & b')
+})
