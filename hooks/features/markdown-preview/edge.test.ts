@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { clipText, isPreviewHref, MAX_CHARS, pathFromHref, previewLinks, textImages } from './preview'
+import { clipText, isPreviewHref, LINK_MARK, markPreviewLinks, MAX_CHARS, pathFromHref, previewLinks, textImages } from './preview'
 import { fitTables } from './tables'
 
 const boxLines = (s: string) => s.split('\n').filter(l => /^[┌│├└]/.test(l))
@@ -244,4 +244,14 @@ test('the text after tables and images still fits the drawing limit', () => {
   const clipped = clipText(src).text
   const drawn = fitTables(textImages(clipped), 78)
   expect(drawn.length).toBeLessThan(100_000)
+})
+
+test('markPreviewLinks marks only answered links outside code', () => {
+  const m = LINK_MARK
+  expect(markPreviewLinks('[a](x.md) [b](y.txt)', ['x.md'])).toBe(`[a${m}](x.md) [b](y.txt)`)
+  expect(markPreviewLinks('[`a`](<x y.md> "t")', ['x y.md'])).toBe(`[\`a\`${m}](<x y.md> "t")`)
+  expect(markPreviewLinks('`[a](x.md)`', ['x.md'])).toBe('`[a](x.md)`')
+  expect(markPreviewLinks('```\n[a](x.md)\n```', ['x.md'])).toBe('```\n[a](x.md)\n```')
+  expect(markPreviewLinks('![a](x.md)', ['x.md'])).toBe('![a](x.md)')
+  expect(markPreviewLinks('[a](x.md) [a](x.md)', ['x.md'])).toBe(`[a${m}](x.md) [a${m}](x.md)`)
 })

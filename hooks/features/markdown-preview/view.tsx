@@ -39,7 +39,7 @@ export function buildPreview(view: PreviewView) {
         <Text dimColor>The file is longer than the preview shows; the rest is cut.</Text>
       )}
       <Text> </Text>
-      <Text dimColor>Esc closes · a link to the file in a reply reloads it</Text>
+      <Text dimColor>Esc closes · a ⧉ link in a reply reloads it</Text>
     </Box>
   )
 }

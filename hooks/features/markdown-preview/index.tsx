@@ -4,7 +4,7 @@ import type { Hook, MatchedHook } from 'claude-code'
 import type { EnabledMap, PreviewState } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
-import { clipText, describeError, PANE_ID, pathFromHref, previewLinks } from './preview'
+import { clipText, describeError, markPreviewLinks, PANE_ID, pathFromHref, previewLinks } from './preview'
 import { buildLinkedReply, buildPreview } from './view'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
@@ -63,6 +63,9 @@ export const renderLinkedReply: MatchedHook<
   if (!isOn(await read($, enabledAtom), markdownPreview)) return next(e)
   if (e.surface !== 'terminal') return next(e)
   if (e.props.isSummary) return next(e)
+  // A click reaches the plugin only in the fullscreen terminal; elsewhere the
+  // links stay as they were, and unmarked.
+  if (e.viewport?.isFullscreen === false) return next(e)
 
   const text = e.props.text
   if (MERMAID_FENCE.test(text)) return next(e)
@@ -73,7 +76,7 @@ export const renderLinkedReply: MatchedHook<
 
   return buildLinkedReply({
     elements: $.ui.resolve(e),
-    text,
+    text: markPreviewLinks(text, links),
     links,
     isFirstOfReply: e.props.isFirstOfReply,
     onLinkPress: href => {
