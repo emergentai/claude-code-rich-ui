@@ -23,17 +23,43 @@ export function buildPreview(view: PreviewView) {
       </Text>
       <Text> </Text>
       {state.error && <Text color="warning">{clip(state.error, view.width)}</Text>}
-      {!state.error && state.text === undefined && (
-        <Text dimColor>
-          No markdown file yet. Run /preview &lt;path&gt;, or let Claude write one.
-        </Text>
-      )}
       {state.text !== undefined && <Markdown text={state.text} />}
       {state.isTruncated && (
         <Text dimColor>The file is longer than the preview shows; the rest is cut.</Text>
       )}
       <Text> </Text>
-      <Text dimColor>Esc closes · /preview reloads</Text>
+      <Text dimColor>Esc closes · a link to the file in a reply reloads it</Text>
+    </Box>
+  )
+}
+
+export type LinkedReplyView = {
+  elements: Elements['terminal']
+  text: string
+  links: string[]
+  isFirstOfReply: boolean
+  onLinkPress: (href: string) => void
+}
+
+// An assistant reply drawn by the engine's Markdown, with the links to local
+// markdown files answered by the plugin. The frame is the engine's: a blank
+// line above and the bullet in a two-cell column on the first block of a reply.
+export function buildLinkedReply(view: LinkedReplyView) {
+  const { Box, Text, Markdown } = view.elements
+
+  return (
+    <Box flexDirection="row" marginTop={1}>
+      <Box width={2} flexShrink={0}>
+        {view.isFirstOfReply ? <Text color="text">⏺</Text> : <Text> </Text>}
+      </Box>
+      <Box flexDirection="column" flexGrow={1} flexShrink={1}>
+        <Markdown
+          key="reply"
+          text={view.text}
+          pressableLinks={view.links}
+          onLinkPress={link => view.onLinkPress(link.href)}
+        />
+      </Box>
     </Box>
   )
 }

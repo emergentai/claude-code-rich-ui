@@ -4,8 +4,8 @@ import type { Hook, MatchedHook } from 'claude-code'
 import type { EnabledMap, PreviewState } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
-import { clipText, describeError, isMarkdownPath, PANE_ID, pathFromArgs } from './preview'
-import { buildPreview } from './view'
+import { clipText, describeError, PANE_ID, pathFromHref, previewLinks } from './preview'
+import { buildLinkedReply, buildPreview } from './view'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
 const enabledAtom = atom(
@@ -19,17 +19,19 @@ const previewAtom = atom(
   { shape: 'preview-1' },
 )
 
+const MERMAID_FENCE = /^(?:`{3,}|~{3,})[ \t]*mermaid/im
+
 export const markdownPreview: Feature = {
   id: 'markdown-preview',
   name: 'Markdown preview',
-  description: 'Show markdown files Claude writes, rendered, in a pane (/preview)',
+  description: 'Open a markdown file Claude links to, rendered, in a pane',
   defaultEnabled: true,
 }
 
-// Remembers the last markdown file Claude wrote or edited, and refreshes the
-// pane's text when it is the file on show. The tool call itself is never held up
-// or changed: whatever goes wrong here is dropped.
-export const trackWrites: Hook<'tool.call'> = async ($, e, next) => {
+// Refreshes the pane's text when Claude writes or edits the markdown file on
+// show. The tool call itself is never held up or changed: whatever goes wrong
+// here is dropped.
+export const refreshOnWrite: Hook<'tool.call'> = async ($, e, next) => {
   const result = await next(e)
 
   try {
@@ -39,15 +41,10 @@ export const trackWrites: Hook<'tool.call'> = async ($, e, next) => {
     if ('isError' in result && result.isError) return result
 
     const path = e.file_path
-    if (!isMarkdownPath(path)) return result
+    if ((await read($, previewAtom)).path !== path) return result
 
-    const shown = await read($, previewAtom)
-    if (shown.path === path) {
-      const { text, isTruncated } = clipText(await $.fs.read(path))
-      await update($, previewAtom, () => ({ path, text, isTruncated, lastWritten: path }))
-    } else {
-      await update($, previewAtom, state => ({ ...state, lastWritten: path }))
-    }
+    const { text, isTruncated } = clipText(await $.fs.read(path))
+    await update($, previewAtom, () => ({ path, text, isTruncated }))
   } catch {
     // The preview is a convenience; it must not fail a tool call.
   }
@@ -55,45 +52,52 @@ export const trackWrites: Hook<'tool.call'> = async ($, e, next) => {
   return result
 }
 
-export const runPreview: MatchedHook<
-  'command.run',
-  { command: 'preview' }
-> = async ($, e) => {
-  if (!isOn(await read($, enabledAtom), markdownPreview)) {
-    return { text: 'Markdown preview is off. Turn it on in /rich-ui.' }
-  }
+// A reply that links to a local markdown file is drawn by the engine's Markdown
+// with those links answered here: pressing one opens the file in the pane. Only
+// a plain click in the fullscreen terminal reaches the plugin; elsewhere the
+// link behaves as before. A reply with a mermaid fence is left to that feature.
+export const renderLinkedReply: MatchedHook<
+  'ui.render',
+  { component: 'AssistantMessage' }
+> = async ($, e, next) => {
+  if (!isOn(await read($, enabledAtom), markdownPreview)) return next(e)
+  if (e.surface !== 'terminal') return next(e)
+  if (e.props.isSummary) return next(e)
 
-  const before = await read($, previewAtom)
-  const path = pathFromArgs(e.args) ?? before.path ?? before.lastWritten
-  if (path === undefined) {
-    await update($, previewAtom, () => ({}))
-  } else {
-    try {
-      const { text, isTruncated } = clipText(await $.fs.read(path))
-      await update($, previewAtom, state => ({
-        lastWritten: state.lastWritten,
-        path,
-        text,
-        isTruncated,
-      }))
-    } catch (error) {
-      await update($, previewAtom, state => ({
-        lastWritten: state.lastWritten,
-        path,
-        error: `Could not read ${path}: ${describeError(error)}`,
-      }))
-    }
-  }
+  const text = e.props.text
+  if (MERMAID_FENCE.test(text)) return next(e)
+  const links = previewLinks(text)
+  if (links.length === 0) return next(e)
 
-  await $.ui.open({
-    id: PANE_ID,
-    title: 'Markdown preview',
-    focus: true,
-    closeOnEscape: true,
-    columns: 80,
+  const cwd = await $.session.cwd()
+
+  return buildLinkedReply({
+    elements: $.ui.resolve(e),
+    text,
+    links,
+    isFirstOfReply: e.props.isFirstOfReply,
+    onLinkPress: href => {
+      void (async () => {
+        const path = pathFromHref(href, cwd)
+        try {
+          const { text: body, isTruncated } = clipText(await $.fs.read(path))
+          await update($, previewAtom, () => ({ path, text: body, isTruncated }))
+        } catch (error) {
+          await update($, previewAtom, () => ({
+            path,
+            error: `Could not read ${path}: ${describeError(error)}`,
+          }))
+        }
+        await $.ui.open({
+          id: PANE_ID,
+          title: 'Markdown preview',
+          focus: true,
+          closeOnEscape: true,
+          columns: 80,
+        })
+      })()
+    },
   })
-
-  return {}
 }
 
 export const renderPreview: MatchedHook<

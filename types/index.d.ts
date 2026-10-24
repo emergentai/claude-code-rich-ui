@@ -20,15 +20,13 @@ export type UsageSnapshot = {
   limits: UsageLimit[]
 }
 
-// What the markdown preview pane shows: the file it was last pointed at (by the
-// person's /preview or the last markdown file Claude wrote), its text, and why
-// there is none.
+// What the markdown preview pane shows: the file whose link was last pressed,
+// its text, and why there is none.
 export type PreviewState = {
   path?: string
   text?: string
   isTruncated?: boolean
   error?: string
-  lastWritten?: string
 }
 
 declare module 'claude-code' {

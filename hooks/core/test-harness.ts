@@ -39,6 +39,7 @@ export async function boot(
 
     return { value: text }
   })
+  on('session.cwd', () => ({ value: '/repo' }))
   on('tool.call', () => ({ result: {}, text: 'ok' }) as never)
   const opened: string[] = []
   on('ui.open', (_, e) => {
