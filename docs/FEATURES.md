@@ -64,6 +64,9 @@ sessions, not just some?
   text diagram as the fallback.
 - **More mermaid types.** XY charts first (the renderer already draws them), then
   whatever the renderer gains.
+- **Enhance links.** Make the links in Claude's replies more useful. Not scoped yet; one
+  gap already seen is that only markdown links can be answered by a plugin, so a path
+  written as plain text or in backticks is not clickable.
 
 ## Turned down
 
