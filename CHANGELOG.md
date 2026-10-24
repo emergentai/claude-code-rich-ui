@@ -2,6 +2,13 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## 0.2.1 - 2026-10-24
+
+### Fixed
+- Mermaid: a very large flowchart no longer freezes the session. It is no longer drawn a
+  second time sideways when it already overflows the window both ways, and drawn results
+  are kept per window size instead of being recomputed on every redraw. ([#6](https://github.com/emergentai/claude-code-rich-ui/pull/6))
+
 ## 0.2.0 - 2026-10-24
 
 ### Added
