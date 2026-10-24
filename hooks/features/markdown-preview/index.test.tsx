@@ -52,7 +52,7 @@ test('a file: link with escapes and a fragment is understood', async ($, on) => 
   files.set('/docs/a b.md', 'spaced')
   const ui = await $.ui.mount(message('[x](file:///docs/a%20b.md#top)') as never)
 
-  await ui.press({ key: 'reply', link: { href: 'file:///docs/a%20b.md' } } as never)
+  await ui.press({ key: 'reply', link: { href: 'file:///docs/a%20b.md#top' } } as never)
   const pane = await mountPane($)
 
   expect(await pane.find({ type: 'Markdown', text: 'spaced' })).toBeDefined()
@@ -65,7 +65,7 @@ test('a relative link is placed under the working directory', async ($, on) => {
   files.set('/repo/docs/rel.md', 'relative file')
   const ui = await $.ui.mount(message('[x](docs/rel.md)') as never)
 
-  await ui.press({ key: 'reply', link: { href: 'file:///repo/docs/rel.md' } } as never)
+  await ui.press({ key: 'reply', link: { href: 'docs/rel.md' } } as never)
   const pane = await mountPane($)
 
   expect(await pane.find({ type: 'Text', text: '/repo/docs/rel.md' })).toBeDefined()
@@ -274,7 +274,7 @@ test('a link the plugin answers carries a mark after its label, others do not', 
   await boot($, on)
   const ui = await $.ui.mount(message('[plan](/repo/plan.md) and [web](https://e.com/a.md) and `[c](/repo/c.md)`') as never)
 
-  expect(await ui.find({ type: 'Markdown', text: /\[plan\u00a0⧉\]\(file:\/\/\/repo\/plan\.md\)/ })).toBeDefined()
+  expect(await ui.find({ type: 'Markdown', text: /\[⧉\u00a0plan\]\(\/repo\/plan\.md\)/ })).toBeDefined()
   expect(await ui.find({ type: 'Markdown', text: /\[web\]\(https/ })).toBeDefined()
   expect(await ui.find({ type: 'Markdown', text: /`\[c\]\(\/repo\/c\.md\)`/ })).toBeDefined()
   await ui.unmount()

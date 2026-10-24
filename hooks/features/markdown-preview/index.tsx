@@ -73,12 +73,11 @@ export const renderLinkedReply: MatchedHook<
   if (links.length === 0) return next(e)
 
   const cwd = await $.session.cwd()
-  const shown = markPreviewLinks(text, links, cwd)
 
   return buildLinkedReply({
     elements: $.ui.resolve(e),
-    text: shown.text,
-    links: shown.links,
+    text: markPreviewLinks(text, links),
+    links,
     isFirstOfReply: e.props.isFirstOfReply,
     onLinkPress: href => {
       void (async () => {

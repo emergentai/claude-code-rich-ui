@@ -39,32 +39,20 @@ function withoutCode(text: string): string {
     .join('\n')
 }
 
-// Set after the label of a link the plugin answers, so it can be told from a
-// stock link. A no-break space keeps it on the line of the word before it.
-export const LINK_MARK = '\u00a0⧉'
+// Set before the label of a link the plugin answers, so it can be told from a
+// stock link. A no-break space keeps it on the line of the label after it.
+export const LINK_MARK = '⧉\u00a0'
 
 const LABELED = /(!?)\[([^\]]*)\](\(\s*(<[^>]+>|[^)\s]+)(?:\s+"[^"]*")?\s*\))/g
 
-// A file: URL for an absolute path, escaped as the engine's link check wants.
-export function fileUrl(path: string): string {
-  return `file://${path.split('/').map(encodeURIComponent).join('/')}`
-}
-
-// The reply text as it is drawn, and the targets to answer in it. The engine
-// cannot make a hyperlink of a relative path, so it draws "label (path)" with
-// the path in view; a file: URL it can, and draws the label alone. Each answered
-// link gets the file: URL of its file and LINK_MARK after its label. Links in
-// code fences and inline code are left as written.
-export function markPreviewLinks(
-  text: string,
-  links: readonly string[],
-  cwd: string,
-): { text: string; links: string[] } {
+// The reply text with LINK_MARK before the label of each link in `links`, for
+// drawing only. The targets stay as written, which is how the engine matches the
+// links it answers. Links in code fences and inline code are left as written.
+export function markPreviewLinks(text: string, links: readonly string[]): string {
   const wanted = new Set(links)
-  const urls = new Set<string>()
   let inFence = false
 
-  const marked = text
+  return text
     .split('\n')
     .map(line => {
       if (/^\s*(```|~~~)/.test(line)) {
@@ -76,20 +64,15 @@ export function markPreviewLinks(
 
       return line.replace(
         LABELED,
-        (whole: string, bang: string, label: string, _target: string, href: string, at: number) => {
+        (whole: string, bang: string, label: string, target: string, href: string, at: number) => {
           if (bang === '!' || code.some(([from, to]) => at >= from && at < to)) return whole
-          const written = href.replace(/^<|>$/g, '')
-          if (!wanted.has(written)) return whole
-          const url = fileUrl(pathFromHref(written, cwd))
-          urls.add(url)
+          if (!wanted.has(href.replace(/^<|>$/g, ''))) return whole
 
-          return `[${label}${LINK_MARK}](${url})`
+          return `[${LINK_MARK}${label}]${target}`
         },
       )
     })
     .join('\n')
-
-  return { text: marked, links: [...urls] }
 }
 
 function bare(href: string): string {

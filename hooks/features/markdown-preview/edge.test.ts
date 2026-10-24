@@ -246,17 +246,12 @@ test('the text after tables and images still fits the drawing limit', () => {
   expect(drawn.length).toBeLessThan(100_000)
 })
 
-test('markPreviewLinks marks only answered links outside code, and points them at file: URLs', () => {
+test('markPreviewLinks marks only answered links outside code', () => {
   const m = LINK_MARK
-  const run = (t: string, l: string[]) => markPreviewLinks(t, l, '/repo')
-  expect(run('[a](x.md) [b](y.txt)', ['x.md'])).toEqual({
-    text: `[a${m}](file:///repo/x.md) [b](y.txt)`,
-    links: ['file:///repo/x.md'],
-  })
-  expect(run('[`a`](<x y.md> "t")', ['x y.md']).text).toBe(`[\`a\`${m}](file:///repo/x%20y.md)`)
-  expect(run('`[a](x.md)`', ['x.md']).text).toBe('`[a](x.md)`')
-  expect(run('```\n[a](x.md)\n```', ['x.md']).text).toBe('```\n[a](x.md)\n```')
-  expect(run('![a](x.md)', ['x.md']).text).toBe('![a](x.md)')
-  expect(run('[a](x.md) [a](x.md)', ['x.md']).links).toEqual(['file:///repo/x.md'])
-  expect(run('[a](../docs/z.md#top)', ['../docs/z.md#top']).text).toBe(`[a${m}](file:///docs/z.md)`)
+  expect(markPreviewLinks('[a](x.md) [b](y.txt)', ['x.md'])).toBe(`[${m}a](x.md) [b](y.txt)`)
+  expect(markPreviewLinks('[`a`](<x y.md> "t")', ['x y.md'])).toBe(`[${m}\`a\`](<x y.md> "t")`)
+  expect(markPreviewLinks('`[a](x.md)`', ['x.md'])).toBe('`[a](x.md)`')
+  expect(markPreviewLinks('```\n[a](x.md)\n```', ['x.md'])).toBe('```\n[a](x.md)\n```')
+  expect(markPreviewLinks('![a](x.md)', ['x.md'])).toBe('![a](x.md)')
+  expect(markPreviewLinks('[a](x.md) [a](x.md)', ['x.md'])).toBe(`[${m}a](x.md) [${m}a](x.md)`)
 })
