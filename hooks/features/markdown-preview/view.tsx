@@ -2,7 +2,7 @@ import type { Elements } from 'claude-code'
 
 import type { PreviewState } from '../../../types'
 import { clip } from '../../manager/size'
-import { textImages } from './preview'
+import { clipText, textImages } from './preview'
 import { fitTables } from './tables'
 
 export type PreviewView = {
@@ -17,6 +17,12 @@ export type PreviewView = {
 export function buildPreview(view: PreviewView) {
   const { Box, Text, Markdown } = view.elements
   const { state } = view
+  // Tables grow when drawn, so the limit is applied to what is drawn.
+  const drawn =
+    state.text === undefined
+      ? undefined
+      : clipText(fitTables(textImages(state.text), view.width - (view.isDocked ? 2 : 0)))
+  const isCut = Boolean(state.isTruncated) || Boolean(drawn?.isTruncated)
 
   return (
     <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0}>
@@ -25,8 +31,8 @@ export function buildPreview(view: PreviewView) {
       </Text>
       <Text> </Text>
       {state.error && <Text color="warning">{clip(state.error, view.width)}</Text>}
-      {state.text !== undefined && <Markdown text={fitTables(textImages(state.text), view.width - (view.isDocked ? 2 : 0))} />}
-      {state.isTruncated && (
+      {drawn && <Markdown text={drawn.text} />}
+      {isCut && (
         <Text dimColor>The file is longer than the preview shows; the rest is cut.</Text>
       )}
       <Text> </Text>

@@ -15,13 +15,28 @@ const LINK = /(!?)\[[^\]]*\]\(\s*(<[^>]+>|[^)\s]+)(?:\s+"[^"]*")?\s*\)/g
 // Returned as written, which is how the engine matches the links it should answer.
 export function previewLinks(text: string): string[] {
   const found = new Set<string>()
-  for (const match of text.matchAll(LINK)) {
+  for (const match of withoutCode(text).matchAll(LINK)) {
     if (match[1] === '!') continue
     const href = (match[2] ?? '').replace(/^<|>$/g, '')
     if (isPreviewHref(href)) found.add(href)
   }
 
   return [...found]
+}
+
+// The text the engine reads as prose: code fences and inline code blanked out.
+function withoutCode(text: string): string {
+  let inFence = false
+  return text
+    .split('\n')
+    .map(line => {
+      if (/^\s*(```|~~~)/.test(line)) {
+        inFence = !inFence
+        return ''
+      }
+      return inFence ? '' : line.replace(/`[^`]*`/g, '')
+    })
+    .join('\n')
 }
 
 function bare(href: string): string {
@@ -58,7 +73,11 @@ export function pathFromHref(href: string, cwd: string): string {
 export function clipText(text: string): { text: string; isTruncated: boolean } {
   if (text.length <= MAX_CHARS) return { text, isTruncated: false }
 
-  return { text: text.slice(0, MAX_CHARS), isTruncated: true }
+  const cut = text.slice(0, MAX_CHARS)
+  // Not through the middle of an emoji's surrogate pair.
+  const half = /[\ud800-\udbff]$/.test(cut)
+
+  return { text: half ? cut.slice(0, -1) : cut, isTruncated: true }
 }
 
 export function describeError(error: unknown): string {
@@ -68,36 +87,63 @@ export function describeError(error: unknown): string {
 }
 
 const IMG_TAG = /<img\b[^>]*>/gi
-const MD_IMAGE = /!\[([^\]]*)\]\(([^)\s]*)[^)]*\)/g
+const MD_IMAGE = /!\[([^\]]*)\]\(\s*(<[^>]*>|(?:[^()\s]|\([^()]*\))*)(?:\s+"[^"]*")?\s*\)/g
 const ENTITIES: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", '#39': "'" }
 
 function nameOf(alt: string | undefined, src: string | undefined): string {
-  return alt?.trim() || src?.split(/[/?#]/).filter(Boolean).pop() || 'image'
+  const file = src?.replace(/^<|>$/g, '').replace(/[?#].*$/, '').split('/').filter(Boolean).pop()
+
+  return alt?.trim() || file || 'image'
 }
 
 // The preview is text only. In a heading a picture is decoration and is dropped;
 // anywhere else it becomes a line naming it. Entities such as `&nbsp;` are decoded.
+// Code fences and inline code are shown as written.
 export function textImages(text: string): string {
   let inFence = false
-  return text
-    .split('\n')
-    .map(line => {
-      if (/^\s*(```|~~~)/.test(line)) inFence = !inFence
-      if (inFence) return line
-      const isHeading = /^\s{0,3}#{1,6}\s/.test(line)
-      const replace = (name: string) => (isHeading ? '' : `[image: ${name}]`)
-      const out = line
-        .replace(IMG_TAG, tag =>
-          replace(
-            nameOf(
-              /\balt\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1],
-              /\bsrc\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1],
-            ),
-          ),
-        )
-        .replace(MD_IMAGE, (_, alt: string, src: string) => replace(nameOf(alt, src)))
-        .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (_, name: string) => ENTITIES[name] ?? '')
-      return isHeading ? out.replace(/^(\s{0,3}#{1,6})\s+/, '$1 ').replace(/\s+$/, '') : out
-    })
-    .join('\n')
+  const lines: string[] = []
+  let block: string[] = []
+  const flush = () => {
+    if (block.length === 0) return
+    // A tag may run over several lines: joined first, so it reads as one.
+    const joined = block.join('\n').replace(IMG_TAG, tag => tag.replace(/\s*\n\s*/g, ' '))
+    for (const line of joined.split('\n')) lines.push(prose(line))
+    block = []
+  }
+  for (const line of text.split('\n')) {
+    if (/^\s*(```|~~~)/.test(line)) {
+      if (!inFence) flush()
+      lines.push(line)
+      inFence = !inFence
+    } else if (inFence) lines.push(line)
+    else block.push(line)
+  }
+  flush()
+
+  return lines.join('\n')
+}
+
+function prose(line: string): string {
+  const isHeading = /^\s{0,3}#{1,6}\s/.test(line)
+  const replace = (name: string) => (isHeading ? '' : `[image: ${name}]`)
+  const out = line
+    .split(/(`[^`]*`)/)
+    .map((part, i) =>
+      i % 2 === 1
+        ? part
+        : part
+            .replace(IMG_TAG, tag =>
+              replace(
+                nameOf(
+                  /\balt\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1],
+                  /\bsrc\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1],
+                ),
+              ),
+            )
+            .replace(MD_IMAGE, (_, alt: string, src: string) => replace(nameOf(alt, src)))
+            .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (_, name: string) => ENTITIES[name] ?? ''),
+    )
+    .join('')
+
+  return isHeading ? out.replace(/^(\s{0,3}#{1,6})\s+/, '$1 ').replace(/\s+$/, '') : out
 }
