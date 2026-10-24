@@ -41,7 +41,7 @@ Decoded: a&nbsp;b &amp; c &lt;d&gt;. In code, untouched: `&lt;div&gt;` and `<img
 
 Scroll check: the lines below should scroll or be cut with a note, not break the pane.
 
-Line 1: filler text to make this file long enough to scroll.
+Changed Line 1: filler text to make this file long enough to scroll.
 
 Line 2: filler text to make this file long enough to scroll.
 

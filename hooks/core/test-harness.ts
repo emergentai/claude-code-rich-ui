@@ -33,7 +33,10 @@ export async function boot(
 
   on('command.register', () => ({ value: { command: 'rich-ui' } }))
   const files = new Map<string, string>()
+  // The order of reads and pane opens, for what must happen before an await.
+  const order: string[] = []
   on('fs.read', (_, e) => {
+    order.push('read')
     const text = files.get(e.path)
     if (text === undefined) throw new Error(`ENOENT: ${e.path}`)
 
@@ -44,6 +47,7 @@ export async function boot(
   const opened: string[] = []
   on('ui.open', (_, e) => {
     opened.push(e.id)
+    order.push('open')
 
     return { value: { isPlaced: true } }
   })
@@ -63,5 +67,5 @@ export async function boot(
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  return { clock, saved, failSaves, status, files, opened }
+  return { clock, saved, failSaves, status, files, opened, order }
 }

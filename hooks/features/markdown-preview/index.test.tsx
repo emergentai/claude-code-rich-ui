@@ -247,3 +247,24 @@ test('a link inside a code block in a reply is not answered', async ($, on) => {
   expect(await ui.find({ type: 'Text', text: 'engine' })).toBeDefined()
   await ui.unmount()
 })
+
+test('the pane is asked for before the file is read, while the press is being answered', async ($, on) => {
+  const { files, order } = await boot($, on)
+  files.set('/repo/plan.md', 'plan')
+  const { ui, pane } = await showFile($, '/repo/plan.md')
+
+  expect(order.indexOf('open')).toBeGreaterThanOrEqual(0)
+  expect(order.indexOf('open')).toBeLessThan(order.indexOf('read'))
+  await pane.unmount()
+  await ui.unmount()
+})
+
+test('a long path and a long error wrap instead of being cut', async ($, on) => {
+  await boot($, on)
+  const long = '/repo/' + 'deeply/'.repeat(30) + 'gone.md'
+  const { ui, pane } = await showFile($, long)
+
+  expect(await pane.find({ type: 'Text', text: new RegExp(`Could not read ${long.replace(/[.]/g, '\\.')}`) })).toBeDefined()
+  await pane.unmount()
+  await ui.unmount()
+})

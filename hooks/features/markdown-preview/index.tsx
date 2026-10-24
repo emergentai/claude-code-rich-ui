@@ -78,6 +78,18 @@ export const renderLinkedReply: MatchedHook<
     isFirstOfReply: e.props.isFirstOfReply,
     onLinkPress: href => {
       void (async () => {
+        // Asked before anything is awaited: a pane opened while a press is being
+        // answered is placed at any width, one opened after is placed only from
+        // 144 columns and otherwise waits undrawn.
+        const opened = await $.ui.open({
+          id: PANE_ID,
+          title: 'Markdown preview',
+          focus: true,
+          closeOnEscape: true,
+          columns: 80,
+        })
+        if (!opened.isPlaced) $.ui.toast(`Markdown preview could not open: ${opened.reason}`)
+
         const path = pathFromHref(href, cwd)
         try {
           const { text: body, isTruncated } = clipText(await $.fs.read(path))
@@ -88,13 +100,6 @@ export const renderLinkedReply: MatchedHook<
             error: `Could not read ${path}: ${describeError(error)}`,
           }))
         }
-        await $.ui.open({
-          id: PANE_ID,
-          title: 'Markdown preview',
-          focus: true,
-          closeOnEscape: true,
-          columns: 80,
-        })
       })()
     },
   })
