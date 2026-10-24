@@ -73,6 +73,9 @@ sessions, not just some?
 - **More mermaid types.** XY chart, pie, C4 and architecture shipped in 0.2.0. Gantt,
   mindmap, timeline, gitGraph and journey wait for a text renderer that draws them; we do
   not write our own. Research: [`dev/mermaid-diagram-types-research.md`](dev/mermaid-diagram-types-research.md).
+- **Enhance links.** Make the links in Claude's replies more useful. Not scoped yet; one
+  gap already seen is that only markdown links can be answered by a plugin, so a path
+  written as plain text or in backticks is not clickable.
 
 ## Turned down
 
