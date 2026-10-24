@@ -13,7 +13,10 @@ rich-ui features
  [x] Status band
      Show context and plan usage under the prompt when they run high
 
- Enter toggles · Esc closes · rich-ui 0.2.1
+ [x] Markdown preview
+     Open a markdown file Claude links to, rendered, in a pane
+
+ Enter toggles · Esc closes · rich-ui 0.3.0
 ```
 
 Press a row, or press Enter on it, to flip the feature. Esc closes the pane. The

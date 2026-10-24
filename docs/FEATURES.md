@@ -46,27 +46,42 @@ Not yet: model and cache segments, per-segment switches, colors.
 Reference: [`features/status-band.md`](features/status-band.md). Research:
 [`dev/status-band-research.md`](dev/status-band-research.md).
 
+### Markdown preview (v0.3.0)
+
+Click a link to a markdown file in one of Claude's replies and the file opens, rendered,
+in a pane beside the chat (or above the prompt in a narrow window). No command and
+nothing opens by itself. The pane follows the file when Claude edits it.
+
+- Tables are drawn fitted to the pane, images show as `[image: name]`, and a long file is
+  cut with a note.
+- Links in a reply that also holds a mermaid diagram are not clickable (rare, not planned).
+- Off in `/rich-ui` and links go back to stock.
+
+Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike:
+[`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
+
 ## Backlog
 
 Not committed. Each would be its own feature, independently toggleable, and each must
 first pass the first principle: does it improve the experience in the large majority of
 sessions, not just some?
 
-- **Rendered tables.** Markdown, JSON and CSV tables as aligned grids instead of wrapped
-  text.
-- **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
-  formatted docs in a pane beside the chat.
-- **Inline edit diffs.** A compact colored diff after each `Edit` or `Write`,
-  complementing the built-in `/diff` pane.
-- **Image-quality diagrams.** The follow-up to the shipped text diagrams. Path from the
-  spike: improve the bundled rasterizer, then try the `Raster` element, then offer host
-  tools such as macOS `qlmanage` as an opt-in. Terminals that cannot draw images keep the
-  text diagram as the fallback.
-- **More mermaid types.** XY charts first (the renderer already draws them), then
-  whatever the renderer gains.
+- **Rendered tables (JSON and CSV only).** Stock Claude Code already draws markdown
+  tables as grids and falls back to per-row records in narrow windows, so only JSON arrays
+  and CSV in code fences remain, and those look rare. Low priority; spike:
+  [`dev/tables-spike.md`](dev/tables-spike.md).
+- **More mermaid types.** XY chart, pie, C4 and architecture shipped in 0.2.0. Gantt,
+  mindmap, timeline, gitGraph and journey wait for a text renderer that draws them; we do
+  not write our own. Research: [`dev/mermaid-diagram-types-research.md`](dev/mermaid-diagram-types-research.md).
 
 ## Turned down
 
+- **Inline edit diffs.** Stock Claude Code already prints a coloured diff with context
+  after each `Edit` and `Write` (checked 2.1.310), so there is nothing to add. Spike:
+  [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
+- **Image-quality diagrams.** Pictures instead of text diagrams (by a bundled rasterizer,
+  the `Raster` element or a headless browser) are not wanted: text diagrams work in every
+  terminal and need nothing installed.
 - **Detailed view of Bash tool commands.** Sometimes useful, not usually, and people
   prefer less clutter in a world of AI noise. This is the example that defines the first
   principle.

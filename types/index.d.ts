@@ -20,6 +20,15 @@ export type UsageSnapshot = {
   limits: UsageLimit[]
 }
 
+// What the markdown preview pane shows: the file whose link was last pressed,
+// its text, and why there is none.
+export type PreviewState = {
+  path?: string
+  text?: string
+  isTruncated?: boolean
+  error?: string
+}
+
 declare module 'claude-code' {
   interface PluginState {
     'rich-ui': {
@@ -28,6 +37,7 @@ declare module 'claude-code' {
       saveFailed: Shaped<boolean>
       shown: Shaped<ShownMap>
       usage: Shaped<UsageSnapshot>
+      preview: Shaped<PreviewState>
     }
   }
 }
