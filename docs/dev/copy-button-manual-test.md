@@ -22,7 +22,7 @@ to see what was copied.
 | 9 | Watch a long reply with a code block stream | No row until the fence closes; nothing flickers in for the unfinished block. |
 | 10 | Click the button with the mouse and also Tab/Enter if the terminal focuses it | Copies either way. |
 | 11 | A terminal with no clipboard tool and no OSC 52 (e.g. old VTE, or SSH without forwarding) | Toast `Could not copy: no-clipboard` or success from OSC 52; note which. |
-| 12 | `/rich-ui`, turn "Copy code" off | New and old replies lose the row (the draw re-runs); turn it on and it returns. Everything else unchanged. |
+| 12 | `/rich-ui`, turn "Copy code" off | Replies drawn after the toggle have no row (note whether old ones change; unverified); turn it on and it returns. Everything else unchanged. |
 | 13 | Compare a reply with a block against stock (feature off) | Same text, spacing and wrapping; the only difference is the added row. |
 | 14 | Narrow window (40 columns) with three blocks | The row wraps to two lines at most; nothing overflows. |
 | 15 | Light and dark themes | The row is readable but quiet. |
