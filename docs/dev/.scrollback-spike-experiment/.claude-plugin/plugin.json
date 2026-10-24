@@ -1,0 +1,9 @@
+{
+  "name": "scrollback-spike",
+  "version": "0.0.0",
+  "description": "EXPERIMENT (not shipped): full output of a long Bash result in a pane. Part of docs/dev/scrollback-spike.md.",
+  "types": "./types/index.d.ts",
+  "author": {
+    "name": "Emergent AI"
+  }
+}

@@ -112,7 +112,8 @@ the reader something.
 ## Decisions
 
 Chosen to go forward: the copy button, the manager pane refresh, an enhance-links spike,
-the aurora spinner (off by default), and a new spike on scrollback and long tool output.
+the aurora spinner (off by default), and a new spike on scrollback and long tool output
+(done: [`scrollback-spike.md`](scrollback-spike.md); one candidate worth building, "Long output").
 Dropped: tool timing, the turn summary line, the compact nudge and the turn ribbon. The
 cost segment and the turn-finished notification stay in the backlog, not scheduled.
 
