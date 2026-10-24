@@ -111,3 +111,23 @@ test('running /rich-ui opens the pane without transcript text', async ($, on) =>
 
   expect(result.text).toBeUndefined()
 })
+
+test('toggling the status band clears and restores its line', async ($, on) => {
+  const { clock, status } = await boot($, on)
+  await $.session.measure({
+    context: { window: 200_000, percent: 80 },
+    rateLimits: [],
+    changed: ['context'],
+  } as never)
+  expect(status.line).toMatch(/80%/)
+
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await ui.press({ key: 'status-band' })
+  await clock.settle()
+  expect(status.line).toBeUndefined()
+
+  await ui.press({ key: 'status-band' })
+  await clock.settle()
+  expect(status.line).toMatch(/80%/)
+  await ui.unmount()
+})

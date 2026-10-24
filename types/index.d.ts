@@ -8,6 +8,18 @@ export type StatusMap = Record<string, FeatureStatus>
 
 export type ShownMap = Record<string, boolean>
 
+export type UsageLimit = {
+  kind: string
+  percentUsed: number
+  resetsAt?: string
+}
+
+// The last reading `session.measure` reported; empty until the first one.
+export type UsageSnapshot = {
+  contextPercent?: number
+  limits: UsageLimit[]
+}
+
 declare module 'claude-code' {
   interface PluginState {
     'rich-ui': {
@@ -15,6 +27,7 @@ declare module 'claude-code' {
       status: Shaped<StatusMap>
       saveFailed: Shaped<boolean>
       shown: Shaped<ShownMap>
+      usage: Shaped<UsageSnapshot>
     }
   }
 }
