@@ -27,7 +27,7 @@ bogus chart without throwing (the reason `sanity.ts` exists), the chart is a fix
 ~63 columns wide so `fit.ts` must be checked on narrow windows, and I only tried small
 charts.
 
-## 3. Everything else needs our own renderer
+## 3. Everything else has no library
 
 No library found covers the rest in text form from inside the mod sandbox:
 
@@ -41,12 +41,12 @@ No library found covers the rest in text form from inside the mod sandbox:
 
 Sandbox limits that shape any new renderer: no bare npm imports, files under 1,048,576
 bytes, no DOM, `process`, `require` or WebAssembly (`mermaid-feature.md` section 10).
-The current bundle is 84 KB, so there is room for hand-written renderers.
+The current bundle is 84 KB, so there is room for a larger library.
 
-## 4. Candidates, ranked by my judgment
+## 4. Candidates (what an own-renderer route would have cost; not pursued)
 
-I did not measure how often each type appears in Claude's replies; the order below is a
-judgment, which is enough since the aim is broad coverage.
+Kept for reference only: the owner does not want to write rendering code, so none of the
+hand-written rows below will be built. The ranking is judgment, not measured.
 
 | Type | Value | Effort | Notes |
 |---|---|---|---|
@@ -125,32 +125,34 @@ latency per diagram, and 5.5 MB of vendored JavaScript.
 **Implications for us.** (a) Try `@zombie-mermaid/ascii-renderer` 5.x as a drop-in
 replacement for `beautiful-mermaid`: it adds pie, C4 and architecture and is actively
 maintained, while ours has been quiet since February. (b) For gantt, mindmap, timeline,
-gitGraph and journey we write our own text renderers (section 4). The Chrome picture path
-is ruled out by the owner.
+gitGraph and journey no library draws text, and the owner has ruled out both our own
+renderers and the Chrome picture path, so they stay code blocks until a library adds them.
 
 ## 5. Recommendation
 
-Direction from the owner: picture rendering (the Chrome route above) is out, and there is
-no need to count types in transcripts first. The aim is to support as many types as make
-sense, all as text.
+Direction from the owner: no picture rendering, no counting types in transcripts, and no
+rendering code of our own. Coverage is whatever a maintained library draws as text; a type
+no library draws stays a code block.
 
 1. Spike swapping in `@zombie-mermaid/ascii-renderer` 5.x (section 4a): check it loads in
    the sandbox and that the five shipped types still look as good. If so, `xychart-beta`,
    `pie`, C4 and architecture come with it.
 2. Allow those types in `sanity.ts`, with width and malformed-body checks and tests.
-3. Write own text renderers for the types no library draws, one PR each, in this order:
-   `gantt`, `mindmap`, `timeline`, `gitGraph`, `journey`, then `quadrantChart`. Each
-   returns null on anything it doesn't understand so the block stays code.
-4. Skip sankey, block and requirement unless a library starts drawing them.
+3. Gantt, mindmap, timeline, gitGraph, journey, quadrant, sankey, block and requirement
+   stay code blocks for now. To widen further: watch the zombie-mermaid releases, and ask
+   upstream (<https://github.com/dfadler/zombie-mermaid>) for the types we want, since it
+   is actively maintained. Bumping the vendored bundle is the whole cost of picking up a
+   new type.
+4. Keep the allow-list in `sanity.ts` as the single place that decides what we draw, so a
+   renderer upgrade adds a type with a one-line change plus a test.
 
 ## 6. Open questions
 
-- Own renderers add maintenance and visual-quality risk that the library path avoided. The
-  fallback rule still applies: only draw what we can draw well, otherwise leave the code.
 - Does the zombie-mermaid renderer look as good as `beautiful-mermaid` on the five shipped
   types, and does it load in the mod sandbox?
-- Gantt needs date math and `after x` dependencies; gitGraph needs lane layout. Both are
-  the largest pieces of new code.
+- Are there other maintained text renderers that cover gantt, mindmap or timeline? I found
+  none; one more search of npm and GitHub before settling is cheap.
+- Is the maintainer open to adding more types, and how fast do releases land?
 
 ## 7. Not done
 
