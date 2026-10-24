@@ -130,10 +130,8 @@ timeline
    back to code instead of wrapping badly; widen it and they draw again.
 4. `/rich-ui`, turn Mermaid off: every block goes back to code; on again: they redraw.
 5. Light and dark themes: the lines are readable in both.
-6. Regression eye-check against the old renderer: state diagram (the start marker is
-   known to be missing), ER and class diagrams look sensible.
-7. Malformed input. An `xychart-beta` with an unclosed `bar [` should stay code (the
-   renderer throws). Known gap, checked outside the engine: a `pie`, `C4Context` or
-   `architecture-beta` fence with a header and no body does not throw and draws one to
-   three nearly empty rows instead of staying code. Note what you see; the fix is a body
-   check in `sanity.ts`.
+6. State diagram: the start marker `●` above the first state and the end marker `◉` are
+   both drawn. ER and class diagrams look sensible.
+7. Malformed input stays code and does not crash the reply: an `xychart-beta` with `bar [`
+   unclosed, and a `pie`, `C4Context` or `architecture-beta` fence with a header (or only
+   a title) and no content.

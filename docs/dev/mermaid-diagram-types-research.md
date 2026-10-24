@@ -146,9 +146,9 @@ and ran `claude plugin test`.
   - Sequence: more compact, no blank rows between messages.
   - Flowchart with a subgraph: the node inside the subgraph is placed inside it; ours drew
     a bare label and an edge crossing the border.
-  - State: one regression seen, the start marker `[*]` is not drawn (an arrow starts the
-    diagram); the end marker is drawn as `◉`. Ours drew both, though the start one looked
-    odd.
+  - State: one regression seen, the start marker `[*]` is not drawn. Cause (found later):
+    our `paddingY: 1` squeezes the start node so it is overwritten; `paddingY: 2` keeps
+    it, and the renderer now uses 2 for state diagrams.
 - Not checked: a larger flowchart or sequence set, wide diagrams under `fit.ts`, and the
   licence text beyond the package metadata (MIT).
 
