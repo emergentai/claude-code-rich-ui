@@ -52,18 +52,27 @@ Not committed. Each would be its own feature, independently toggleable, and each
 first pass the first principle: does it improve the experience in the large majority of
 sessions, not just some?
 
-- **Rendered tables.** Markdown, JSON and CSV tables as aligned grids instead of wrapped
-  text.
+- **Rendered tables (JSON and CSV only).** Stock Claude Code already draws markdown
+  tables as grids and falls back to per-row records in narrow windows, so only JSON arrays
+  and CSV in code fences remain, and those look rare. Low priority; spike:
+  [`dev/tables-spike.md`](dev/tables-spike.md).
 - **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
   formatted docs in a pane beside the chat. First slice built on
   `feature/markdown-preview`: click a link to a markdown file in a reply to open it (no
   command, no automatic opening; tables fitted to the pane, images as text; reference
   [`features/markdown-preview.md`](features/markdown-preview.md)). Spike: [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
-- **More mermaid types.** XY charts first (the renderer already draws them), then
-  whatever the renderer gains.
+- **More mermaid types.** XY chart, pie, C4 and architecture shipped in 0.2.0. Gantt,
+  mindmap, timeline, gitGraph and journey wait for a text renderer that draws them; we do
+  not write our own. Research: [`dev/mermaid-diagram-types-research.md`](dev/mermaid-diagram-types-research.md).
 
 ## Turned down
 
+- **Inline edit diffs.** Stock Claude Code already prints a coloured diff with context
+  after each `Edit` and `Write` (checked 2.1.310), so there is nothing to add. Spike:
+  [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
+- **Image-quality diagrams.** Pictures instead of text diagrams (by a bundled rasterizer,
+  the `Raster` element or a headless browser) are not wanted: text diagrams work in every
+  terminal and need nothing installed.
 - **Detailed view of Bash tool commands.** Sometimes useful, not usually, and people
   prefer less clutter in a world of AI noise. This is the example that defines the first
   principle.
