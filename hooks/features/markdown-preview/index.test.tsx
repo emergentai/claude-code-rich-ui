@@ -16,7 +16,6 @@ function message(text: string) {
     component: 'AssistantMessage',
     requestId: 'msg-1',
     props: { text, isFirstOfReply: true },
-    viewport: { columns: 120, rows: 40, isFullscreen: true },
   } as const
 }
 
@@ -267,16 +266,5 @@ test('a long path and a long error wrap instead of being cut', async ($, on) => 
 
   expect(await pane.find({ type: 'Text', text: new RegExp(`Could not read ${long.replace(/[.]/g, '\\.')}`) })).toBeDefined()
   await pane.unmount()
-  await ui.unmount()
-})
-
-test('off the fullscreen terminal the links are left to the engine, unmarked', async ($, on) => {
-  await boot($, on)
-  const ui = await $.ui.mount({
-    ...message('[plan](/repo/plan.md)'),
-    viewport: { columns: 100, rows: 40, isFullscreen: false },
-  } as never)
-
-  expect(await ui.find({ type: 'Text', text: 'engine' })).toBeDefined()
   await ui.unmount()
 })

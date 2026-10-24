@@ -1,7 +1,8 @@
 # Manual test: markdown preview
 
 The tests run under the engine's harness; none of this has been seen in a real terminal.
-A link click reaches the plugin only in a fullscreen terminal, so test there first.
+The fixture [`markdown-preview-fixture.md`](markdown-preview-fixture.md) holds the tricky cases
+(tables, images, entities, code, long content); open it from a link and check each section.
 
 ```
 claude --plugin-dir .
@@ -37,7 +38,7 @@ and a long one over 99000 characters.
 | 9 | A reply with a mermaid diagram and a markdown link | The diagram draws; the link is not clickable (known). |
 | 10 | `/rich-ui`, turn Markdown preview off, click a link | Nothing opens. Turn it on and it works again. |
 | 11 | A long reply with a link: compare its look with a reply without a link | Same text styling, tables and code blocks, bullet and indent; nothing missing or shifted. |
-| 12 | Main-screen (non-fullscreen) terminal | Clicking does nothing new; no errors. |
+| 12 | Main-screen (non-fullscreen) terminal | Clicking opens the pane the same way. |
 | 13 | Light and dark themes | Readable in both. |
 | 14 | Open `/rich-ui` while the preview pane is open | Both work; Esc closes each in turn. |
 

@@ -57,7 +57,7 @@ sessions, not just some?
 - **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
   formatted docs in a pane beside the chat. First slice built on
   `feature/markdown-preview`: click a link to a markdown file in a reply to open it (no
-  command, no automatic opening; reference
+  command, no automatic opening; tables fitted to the pane, images as text; reference
   [`features/markdown-preview.md`](features/markdown-preview.md)). Spike: [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 - **More mermaid types.** XY charts first (the renderer already draws them), then
   whatever the renderer gains.

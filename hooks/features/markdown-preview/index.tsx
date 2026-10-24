@@ -53,9 +53,8 @@ export const refreshOnWrite: Hook<'tool.call'> = async ($, e, next) => {
 }
 
 // A reply that links to a local markdown file is drawn by the engine's Markdown
-// with those links answered here: pressing one opens the file in the pane. Only
-// a plain click in the fullscreen terminal reaches the plugin; elsewhere the
-// link behaves as before. A reply with a mermaid fence is left to that feature.
+// with those links answered here: pressing one opens the file in the pane. A
+// reply with a mermaid fence is left to that feature.
 export const renderLinkedReply: MatchedHook<
   'ui.render',
   { component: 'AssistantMessage' }
@@ -63,9 +62,6 @@ export const renderLinkedReply: MatchedHook<
   if (!isOn(await read($, enabledAtom), markdownPreview)) return next(e)
   if (e.surface !== 'terminal') return next(e)
   if (e.props.isSummary) return next(e)
-  // A click reaches the plugin only in the fullscreen terminal; elsewhere the
-  // links stay as they were, and unmarked.
-  if (e.viewport?.isFullscreen === false) return next(e)
 
   const text = e.props.text
   if (MERMAID_FENCE.test(text)) return next(e)
