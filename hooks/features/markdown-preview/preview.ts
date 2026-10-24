@@ -45,13 +45,26 @@ export const LINK_MARK = '\u00a0⧉'
 
 const LABELED = /(!?)\[([^\]]*)\](\(\s*(<[^>]+>|[^)\s]+)(?:\s+"[^"]*")?\s*\))/g
 
-// The reply text with LINK_MARK after the label of each link in `links`, for
-// drawing only. Links in code fences and inline code are left as written.
-export function markPreviewLinks(text: string, links: readonly string[]): string {
+// A file: URL for an absolute path, escaped as the engine's link check wants.
+export function fileUrl(path: string): string {
+  return `file://${path.split('/').map(encodeURIComponent).join('/')}`
+}
+
+// The reply text as it is drawn, and the targets to answer in it. The engine
+// cannot make a hyperlink of a relative path, so it draws "label (path)" with
+// the path in view; a file: URL it can, and draws the label alone. Each answered
+// link gets the file: URL of its file and LINK_MARK after its label. Links in
+// code fences and inline code are left as written.
+export function markPreviewLinks(
+  text: string,
+  links: readonly string[],
+  cwd: string,
+): { text: string; links: string[] } {
   const wanted = new Set(links)
+  const urls = new Set<string>()
   let inFence = false
 
-  return text
+  const marked = text
     .split('\n')
     .map(line => {
       if (/^\s*(```|~~~)/.test(line)) {
@@ -63,15 +76,20 @@ export function markPreviewLinks(text: string, links: readonly string[]): string
 
       return line.replace(
         LABELED,
-        (whole: string, bang: string, label: string, target: string, href: string, at: number) => {
+        (whole: string, bang: string, label: string, _target: string, href: string, at: number) => {
           if (bang === '!' || code.some(([from, to]) => at >= from && at < to)) return whole
-          if (!wanted.has(href.replace(/^<|>$/g, ''))) return whole
+          const written = href.replace(/^<|>$/g, '')
+          if (!wanted.has(written)) return whole
+          const url = fileUrl(pathFromHref(written, cwd))
+          urls.add(url)
 
-          return `[${label}${LINK_MARK}]${target}`
+          return `[${label}${LINK_MARK}](${url})`
         },
       )
     })
     .join('\n')
+
+  return { text: marked, links: [...urls] }
 }
 
 function bare(href: string): string {
