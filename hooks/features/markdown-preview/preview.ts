@@ -66,3 +66,23 @@ export function describeError(error: unknown): string {
 
   return message.length > 200 ? `${message.slice(0, 199)}…` : message
 }
+
+const IMG_TAG = /<img\b[^>]*>/gi
+
+// The preview is text only: an `<img>` becomes a line naming the picture.
+export function textImages(text: string): string {
+  let inFence = false
+  return text
+    .split('\n')
+    .map(line => {
+      if (/^\s*(```|~~~)/.test(line)) inFence = !inFence
+      if (inFence) return line
+      return line.replace(IMG_TAG, tag => {
+        const alt = /\balt\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1]?.trim()
+        const src = /\bsrc\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1]?.trim()
+        const name = alt || src?.split(/[/?#]/).filter(Boolean).pop() || 'image'
+        return `[image: ${name}]`
+      })
+    })
+    .join('\n')
+}

@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { isPreviewHref, pathFromHref, previewLinks } from './preview'
+import { isPreviewHref, pathFromHref, previewLinks, textImages } from './preview'
 
 test('only links to local markdown files are picked out', () => {
   const text = [
@@ -31,4 +31,10 @@ test('a link becomes an absolute path', () => {
   expect(pathFromHref('/abs/a.md', '/repo')).toBe('/abs/a.md')
   expect(pathFromHref('file:///abs/a%20b.md#top', '/repo')).toBe('/abs/a b.md')
   expect(pathFromHref('../x.md?raw=1', '/repo/sub')).toBe('/repo/x.md')
+})
+
+test('an <img> becomes a text line naming the picture', () => {
+  expect(textImages('<img src="docs/a/shot.png" alt="Status band" width="400"/>')).toBe('[image: Status band]')
+  expect(textImages('<img src="docs/a/shot.png">')).toBe('[image: shot.png]')
+  expect(textImages('```\n<img src="x.png">\n```')).toBe('```\n<img src="x.png">\n```')
 })

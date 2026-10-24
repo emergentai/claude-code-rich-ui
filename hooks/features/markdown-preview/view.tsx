@@ -2,6 +2,7 @@ import type { Elements } from 'claude-code'
 
 import type { PreviewState } from '../../../types'
 import { clip } from '../../manager/size'
+import { textImages } from './preview'
 import { fitTables } from './tables'
 
 export type PreviewView = {
@@ -19,12 +20,12 @@ export function buildPreview(view: PreviewView) {
 
   return (
     <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0}>
-      <Text bold color="text">
+      <Text dimColor>
         {clip(state.path ?? 'Markdown preview', view.width)}
       </Text>
       <Text> </Text>
       {state.error && <Text color="warning">{clip(state.error, view.width)}</Text>}
-      {state.text !== undefined && <Markdown text={fitTables(state.text, view.width - (view.isDocked ? 2 : 0))} />}
+      {state.text !== undefined && <Markdown text={fitTables(textImages(state.text), view.width - (view.isDocked ? 2 : 0))} />}
       {state.isTruncated && (
         <Text dimColor>The file is longer than the preview shows; the rest is cut.</Text>
       )}
