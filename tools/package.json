@@ -10,7 +10,7 @@
     "validate": "claude plugin validate .."
   },
   "devDependencies": {
-    "beautiful-mermaid": "1.1.3",
+    "@zombie-mermaid/ascii-renderer": "5.9.1",
     "esbuild": "0.28.2",
     "typescript": "7.0.2"
   }

@@ -1,4 +1,13 @@
-export type DiagramKind = 'flowchart' | 'sequence' | 'state' | 'class' | 'er'
+export type DiagramKind =
+  | 'flowchart'
+  | 'sequence'
+  | 'state'
+  | 'class'
+  | 'er'
+  | 'xychart'
+  | 'pie'
+  | 'c4'
+  | 'architecture'
 
 const HEADERS: Array<[RegExp, DiagramKind]> = [
   [/^(?:graph|flowchart)\b/, 'flowchart'],
@@ -6,6 +15,10 @@ const HEADERS: Array<[RegExp, DiagramKind]> = [
   [/^stateDiagram(?:-v2)?\b/, 'state'],
   [/^classDiagram\b/, 'class'],
   [/^erDiagram\b/, 'er'],
+  [/^xychart(?:-beta)?\b/, 'xychart'],
+  [/^pie\b/, 'pie'],
+  [/^C4(?:Context|Container|Component|Dynamic|Deployment)\b/, 'c4'],
+  [/^architecture(?:-beta)?\b/, 'architecture'],
 ]
 
 export function diagramKind(source: string): DiagramKind | null {

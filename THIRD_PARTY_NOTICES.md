@@ -1,10 +1,11 @@
 # Third-party notices
 
-rich-ui bundles beautiful-mermaid 1.1.3 (MIT) in hooks/vendor/beautiful-mermaid.js, built by tools/build-vendor.mjs.
+rich-ui bundles @zombie-mermaid/ascii-renderer 5.9.1 with @zombie-mermaid/core and @zombie-mermaid/mermaid-parser (all MIT) in hooks/vendor/zombie-mermaid.js, built by tools/build-vendor.mjs. The renderer continues beautiful-mermaid (Craft Docs) and its ASCII engine derives from mermaid-ascii by Alexander Grooff.
 
 MIT License
 
 Copyright (c) 2026 Craft Docs
+Copyright (c) 2026 Dustin Fadler
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
