@@ -52,8 +52,10 @@ Not committed. Each would be its own feature, independently toggleable, and each
 first pass the first principle: does it improve the experience in the large majority of
 sessions, not just some?
 
-- **Rendered tables.** Markdown, JSON and CSV tables as aligned grids instead of wrapped
-  text.
+- **Rendered tables (JSON and CSV only).** Stock Claude Code already draws markdown
+  tables as grids and falls back to per-row records in narrow windows, so only JSON arrays
+  and CSV in code fences remain, and those look rare. Low priority; spike:
+  [`dev/tables-spike.md`](dev/tables-spike.md).
 - **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
   formatted docs in a pane beside the chat.
 - **Inline edit diffs.** A compact colored diff after each `Edit` or `Write`,
