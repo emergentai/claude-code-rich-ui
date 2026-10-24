@@ -1,7 +1,7 @@
 # Scrollback spike experiment (not shipped)
 
-A throwaway mod that wraps the result of a long Bash call with a button, and opens the
-whole output in a pane with scrolling, line numbers and a copy button. It exists to settle
+A throwaway mod that adds a button under the group line of a Bash call whose output the
+engine cut (fullscreen only), and opens the whole output in a pane with scrolling, line numbers and a copy button. It exists to settle
 feasibility questions for [`../scrollback-spike.md`](../scrollback-spike.md); it is not a
 rich-ui feature, is not listed in the registry and is not loaded by `hooks/register.tsx`.
 
@@ -10,5 +10,5 @@ rich-ui.
 
 ```
 claude plugin test docs/dev/.scrollback-spike-experiment
-claude --plugin-dir <repo>/docs/dev/.scrollback-spike-experiment    # by hand
+CLAUDE_CODE_NO_FLICKER=1 claude --plugin-dir <repo>/docs/dev/.scrollback-spike-experiment    # by hand
 ```

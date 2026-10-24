@@ -5,9 +5,6 @@
 // 100000 characters (docs/features/markdown-preview.md), and a tree of rows
 // costs more to build than one string.
 export const MAX_ROWS = 2000
-// The button is offered from this many lines. The stock collapse point is not
-// verified (docs/dev/scrollback-spike.md), so this is a guess to be tuned.
-export const OFFER_FROM_LINES = 12
 
 const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]|\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)/g
 
@@ -61,16 +58,53 @@ export function lineCount(text: string): number {
   return text === '' ? 0 : splitLines(text).length
 }
 
-export type OfferInput = {
-  lines: number
+// The part of a ToolGroup call this needs (the engine's ToolGroupCall).
+export type CallLike = {
+  tool: string
+  tool_use_id?: string
+  input?: unknown
+  isRunning: boolean
   isErrored: boolean
-  isExpanded: boolean
+  isInterrupted: boolean
+  output?: unknown
 }
 
-// A long result that the stock view shows folded, not an error (its text is the
-// error's), and not under ctrl+o, which shows everything already.
-export function shouldOffer(input: OfferInput): boolean {
-  return !input.isErrored && !input.isExpanded && input.lines >= OFFER_FROM_LINES
+export type Offer = {
+  id: string
+  source: OutputSource
+  // What the button says: the command, shortened, and the size.
+  label: string
+}
+
+export function commandOf(input: unknown): string {
+  if (typeof input !== 'object' || input === null) return ''
+  const command = (input as { command?: unknown }).command
+
+  return typeof command === 'string' ? command.replace(/\s+/g, ' ').trim() : ''
+}
+
+function shorten(text: string, max: number): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1)}…`
+}
+
+// A Bash call that finished, did not fail, and whose output the engine cut (it
+// kept the whole output in a file). Nothing else is offered: stock folds every
+// call into a group line and one click shows what it holds, so only the part past
+// the cut is out of reach. Checked on 2.1.310 in tmux (docs/dev/scrollback-spike.md).
+export function offerFor(call: CallLike): Offer | undefined {
+  if (call.tool !== 'Bash') return undefined
+  if (call.isRunning || call.isErrored || call.isInterrupted) return undefined
+  if (call.tool_use_id === undefined) return undefined
+  const source = bashSource(call.output)
+  if (source?.path === undefined) return undefined
+  const command = commandOf(call.input)
+  const size = source.size === undefined ? '' : ` (${describeSize(source.size)})`
+
+  return {
+    id: call.tool_use_id,
+    source,
+    label: `full output${command === '' ? '' : `: ${shorten(command, 40)}`}${size}`,
+  }
 }
 
 export type Clipped = { rows: string[]; total: number; isCut: boolean }
@@ -80,10 +114,6 @@ export function clipRows(text: string, max = MAX_ROWS): Clipped {
   if (lines.length <= max) return { rows: lines, total: lines.length, isCut: false }
 
   return { rows: lines.slice(0, max), total: lines.length, isCut: true }
-}
-
-export function buttonLabel(lines: number): string {
-  return `view all ${lines.toLocaleString('en-US')} lines`
 }
 
 export function describeSize(bytes: number): string {

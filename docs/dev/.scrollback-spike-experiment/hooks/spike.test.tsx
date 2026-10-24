@@ -53,13 +53,32 @@ const settle = () => new Promise<void>(done => setTimeout(done, 20))
 
 const lines = (n: number) => Array.from({ length: n }, (_, i) => `line ${i + 1}`).join('\n') + '\n'
 
-function result(output: unknown, props: Record<string, unknown> = {}) {
+const CUT = { stdout: lines(40), stderr: '', persistedOutputPath: '/out/full.txt', persistedOutputSize: 348894 }
+
+type Call = Record<string, unknown>
+
+function bash(id: string, output: unknown, extra: Call = {}): Call {
+  return {
+    tool: 'Bash',
+    tool_use_id: id,
+    input: { command: 'seq 1 60000' },
+    isRunning: false,
+    isErrored: false,
+    isInterrupted: false,
+    output,
+    ...extra,
+  }
+}
+
+// What the engine draws for Bash in fullscreen: a group of calls.
+function group(calls: Call[], fullscreen = true) {
   return {
     plugin: 'scrollback-spike',
     surface: 'terminal',
-    component: 'ToolResult',
-    requestId: 'toolu_1',
-    props: { tool: 'Bash', tool_use_id: 'toolu_1', output, isErrored: false, isExpanded: false, ...props },
+    component: 'ToolGroup',
+    requestId: 'collapsed-1',
+    viewport: { rows: 40, columns: 120, isFullscreen: fullscreen },
+    props: { calls, isActive: false, isExpanded: false },
   } as never
 }
 
@@ -71,51 +90,66 @@ const PANE = {
   props: { title: 'Output', isFocused: true, bodyColumns: 100, placement: 'dock', scroll: { offset: 0, bodyRows: 30 }, view: {} },
 } as never
 
-test('a long result keeps the engine row and gains one button', async ($, on) => {
+test('a call whose output was cut keeps the engine line and gains one button', async ($, on) => {
   await boot($, on)
-  const ui = await $.ui.mount(result({ stdout: lines(40), stderr: '' }))
+  const ui = await $.ui.mount(group([bash('t1', CUT)]))
 
   expect(await ui.find({ type: 'Text', text: 'engine' })).toBeDefined()
-  expect(await ui.find({ type: 'Button', key: 'full-toolu_1' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', key: 'full-t1' })).toBeDefined()
   await ui.unmount()
 })
 
-test('short, errored, expanded, non-Bash and empty results are the engine alone', async ($, on) => {
+test('whole, failed, running, interrupted, other-tool and empty calls get no button', async ($, on) => {
   await boot($, on)
+  const whole = { stdout: lines(500), stderr: '' }
   const cases = [
-    result({ stdout: lines(3), stderr: '' }),
-    result({ stdout: lines(40), stderr: '' }, { isErrored: true }),
-    result({ stdout: lines(40), stderr: '' }, { isExpanded: true }),
-    result({ stdout: lines(40), stderr: '' }, { tool: 'Grep' }),
-    result({ stdout: '', stderr: '' }),
-    result('plain string'),
+    [bash('a', whole)],
+    [bash('b', CUT, { isErrored: true })],
+    [bash('c', CUT, { isRunning: true })],
+    [bash('d', CUT, { isInterrupted: true })],
+    [bash('e', CUT, { tool: 'Grep' })],
+    [bash('f', { stdout: '', stderr: '' })],
+    [bash('g', 'plain string')],
+    [bash('h', CUT, { tool_use_id: undefined })],
   ]
-  for (const one of cases) {
-    const ui = await $.ui.mount(one)
+  for (const calls of cases) {
+    const ui = await $.ui.mount(group(calls))
     expect(await ui.find({ type: 'Button' })).toBeUndefined()
     expect(await ui.find({ type: 'Text', text: 'engine' })).toBeDefined()
     await ui.unmount()
   }
 })
 
-test('the exact threshold shows the button and one line fewer does not', async ($, on) => {
+test('a group of several calls gets a button for each cut one only', async ($, on) => {
   await boot($, on)
-  const at = await $.ui.mount(result({ stdout: lines(12), stderr: '' }))
-  expect(await at.find({ type: 'Button' })).toBeDefined()
-  await at.unmount()
-  const under = await $.ui.mount(result({ stdout: lines(11), stderr: '' }))
-  expect(await under.find({ type: 'Button' })).toBeUndefined()
-  await under.unmount()
+  const ui = await $.ui.mount(
+    group([bash('a', CUT), bash('b', CUT, { isErrored: true }), bash('c', CUT), bash('d', { stdout: 'x', stderr: '' })]),
+  )
+
+  expect(await ui.find({ type: 'Button', key: 'full-a' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', key: 'full-b' })).toBeUndefined()
+  expect(await ui.find({ type: 'Button', key: 'full-c' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', key: 'full-d' })).toBeUndefined()
+  await ui.unmount()
+})
+
+test('outside fullscreen, or on another surface, the group is the engine alone', async ($, on) => {
+  await boot($, on)
+  const classic = await $.ui.mount(group([bash('a', CUT)], false))
+  expect(await classic.find({ type: 'Button' })).toBeUndefined()
+  await classic.unmount()
+
+  const desktop = await $.ui.mount({ ...(group([bash('a', CUT)]) as object), surface: 'desktop' } as never)
+  expect(await desktop.find({ type: 'Button' })).toBeUndefined()
+  await desktop.unmount()
 })
 
 test('the pane is asked for before the file is read, and shows the whole output', async ($, on) => {
   const { order, files } = await boot($, on)
   files.set('/out/full.txt', lines(500))
-  const ui = await $.ui.mount(
-    result({ stdout: lines(40), stderr: '', persistedOutputPath: '/out/full.txt', persistedOutputSize: 4000 }),
-  )
+  const ui = await $.ui.mount(group([bash('t1', CUT)]))
 
-  await ui.press({ key: 'full-toolu_1' } as never)
+  await ui.press({ key: 'full-t1' } as never)
   const pane = await $.ui.mount(PANE)
 
   expect(order.slice(0, 2)).toEqual(['open', 'read'])
@@ -125,26 +159,11 @@ test('the pane is asked for before the file is read, and shows the whole output'
   await ui.unmount()
 })
 
-test('without a kept file the pane shows what the plugin holds, with no read', async ($, on) => {
-  const { order } = await boot($, on)
-  const ui = await $.ui.mount(result({ stdout: lines(30), stderr: 'warn\n' }))
-
-  await ui.press({ key: 'full-toolu_1' } as never)
-  const pane = await $.ui.mount(PANE)
-
-  expect(order).toEqual(['open'])
-  expect(await pane.find({ type: 'Text', text: /Bash · 31 lines/ })).toBeDefined()
-  await pane.unmount()
-  await ui.unmount()
-})
-
 test('a kept file that cannot be read falls back to the cut text and says so', async ($, on) => {
   await boot($, on)
-  const ui = await $.ui.mount(
-    result({ stdout: lines(30), stderr: '', persistedOutputPath: '/gone.txt' }),
-  )
+  const ui = await $.ui.mount(group([bash('t1', { ...CUT, stdout: lines(30), persistedOutputPath: '/gone.txt' })]))
 
-  await ui.press({ key: 'full-toolu_1' } as never)
+  await ui.press({ key: 'full-t1' } as never)
   const pane = await $.ui.mount(PANE)
 
   expect(await pane.find({ type: 'Text', text: /could not be read/ })).toBeDefined()
@@ -153,11 +172,28 @@ test('a kept file that cannot be read falls back to the cut text and says so', a
   await ui.unmount()
 })
 
+test('pressing the button of another call switches the pane to that output', async ($, on) => {
+  const { files } = await boot($, on)
+  files.set('/out/a.txt', lines(7))
+  files.set('/out/b.txt', lines(9))
+  const ui = await $.ui.mount(
+    group([bash('a', { ...CUT, persistedOutputPath: '/out/a.txt' }), bash('b', { ...CUT, persistedOutputPath: '/out/b.txt' })]),
+  )
+
+  await ui.press({ key: 'full-a' } as never)
+  await ui.press({ key: 'full-b' } as never)
+  const pane = await $.ui.mount(PANE)
+
+  expect(await pane.find({ type: 'Text', text: /Bash · 9 lines/ })).toBeDefined()
+  await pane.unmount()
+  await ui.unmount()
+})
+
 test('a very long output is cut to the row cap, and copy still takes all of it', async ($, on) => {
   const { files, copied } = await boot($, on)
   files.set('/out/big.txt', lines(6000))
-  const ui = await $.ui.mount(result({ stdout: lines(40), stderr: '', persistedOutputPath: '/out/big.txt' }))
-  await ui.press({ key: 'full-toolu_1' } as never)
+  const ui = await $.ui.mount(group([bash('t1', { ...CUT, persistedOutputPath: '/out/big.txt' })]))
+  await ui.press({ key: 'full-t1' } as never)
   const pane = await $.ui.mount(PANE)
 
   expect(await pane.find({ type: 'Text', text: /Showing the first 2,000 of 6,000 lines/ })).toBeDefined()
@@ -171,9 +207,12 @@ test('a very long output is cut to the row cap, and copy still takes all of it',
 })
 
 test('copy strips colour codes and then the pane says copied', async ($, on) => {
-  const { copied } = await boot($, on)
-  const ui = await $.ui.mount(result({ stdout: `\u001b[32mgreen\u001b[0m\n${lines(20)}`, stderr: '' }))
-  await ui.press({ key: 'full-toolu_1' } as never)
+  const { copied, files } = await boot($, on)
+  const ui = await $.ui.mount(
+    group([bash('t1', { stdout: `\u001b[32mgreen\u001b[0m\n${lines(20)}`, stderr: '', persistedOutputPath: '/p.txt' })]),
+  )
+  files.set('/p.txt', `\u001b[32mgreen\u001b[0m\n${lines(20)}`)
+  await ui.press({ key: 'full-t1' } as never)
   const pane = await $.ui.mount(PANE)
 
   await pane.press({ key: 'copy' } as never)
@@ -188,13 +227,16 @@ test('copy strips colour codes and then the pane says copied', async ($, on) => 
 // there and a press that the engine refuses does not break the pane; that they
 // move the window is in the manual test.
 test('top and bottom are drawn and a refused scroll does not break the pane', async ($, on) => {
-  await boot($, on)
-  const ui = await $.ui.mount(result({ stdout: lines(30), stderr: '' }))
-  await ui.press({ key: 'full-toolu_1' } as never)
+  const { files } = await boot($, on)
+  files.set('/out/full.txt', lines(30))
+  const ui = await $.ui.mount(group([bash('t1', CUT)]))
+  await ui.press({ key: 'full-t1' } as never)
   const pane = await $.ui.mount(PANE)
 
   expect(await pane.find({ type: 'Button', key: 'top' })).toBeDefined()
   expect(await pane.find({ type: 'Button', key: 'end' })).toBeDefined()
+  // Repeated below the lines, because the buttons scroll away with them.
+  expect(await pane.find({ type: 'Button', key: 'copy-end' })).toBeDefined()
   await pane.press({ key: 'end' } as never)
   await settle()
   expect(await pane.find({ type: 'Text', text: /line 30/ })).toBeDefined()
@@ -202,13 +244,9 @@ test('top and bottom are drawn and a refused scroll does not break the pane', as
   await ui.unmount()
 })
 
-test('a pane with nothing chosen says so, and another surface is the engine', async ($, on) => {
+test('a pane with nothing chosen says so', async ($, on) => {
   await boot($, on)
   const pane = await $.ui.mount(PANE)
   expect(await pane.find({ type: 'Text', text: 'Nothing to show.' })).toBeDefined()
   await pane.unmount()
-
-  const other = await $.ui.mount({ ...(result({ stdout: lines(40), stderr: '' }) as object), surface: 'desktop' } as never)
-  expect(await other.find({ type: 'Button' })).toBeUndefined()
-  await other.unmount()
 })

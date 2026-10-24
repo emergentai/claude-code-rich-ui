@@ -13,13 +13,20 @@ docs and issues read on 2026-10-24. The mods API is early access; re-check after
 - Stock fullscreen mode (`/tui fullscreen`, the default for new users since 6 May 2026)
   already answers most of the scrollback complaints. What is left is small.
 - The one real gap a plugin can fill: **a long Bash result is cut to 30,000 characters
-  before anyone sees it, and the rest is only a file on disk.** A plugin can read that file
-  and show the whole output in a pane with its own scrolling, line numbers and a copy
-  button. This was prototyped and works in the test harness; the probe against the real
-  engine showed the data is there (below).
-- It is **not a "most sessions" feature**. It helps in sessions that run commands with long
-  output. Its clutter cost is one dim button row, shown only under a result that stock also
-  folds. Build it as its own toggle, and decide its default after the hand test.
+  before anyone sees it, and the rest is only a file on disk.** Stock's expanded view shows
+  the cut text (6,221 lines ending mid-number for `seq 1 60000`) with no note and no copy
+  button. A plugin can read that file and show the whole output in a pane with its own
+  scrolling, line numbers and a copy button. **Built as an experiment and tried in tmux on
+  2.1.310: it works** (section 5).
+- It **fails the "helps in most sessions" bar**: output past 30,000 characters is rare. It
+  passes the clutter bar, because the button is offered only for a call whose output was
+  cut, so almost every session shows nothing new. A cheap, harmless extra, not a headline
+  feature.
+- **The site matters.** In fullscreen stock folds every Bash call into a `ToolGroup` line
+  ("Ran 1 shell command") and never draws a standalone `ToolResult` for it. My first
+  prototype wrapped `ToolResult` and its button never appeared; the working one wraps
+  `ToolGroup`. In the classic renderer the mouse is not captured, so a button could not be
+  pressed there and the feature must stay off outside fullscreen.
 - Collapsing results, a prompt outline and a search pane all duplicate stock or fight the
   engine. Keeping a permission dialog's context visible is mostly not possible from a plugin.
 
@@ -77,9 +84,9 @@ the #34354 page.
 
 | Site | Props that matter here | Notes |
 |---|---|---|
-| `ToolResult` | `tool`, `tool_use_id`, `output` (the tool's record, `{stdout, stderr, ...}` for Bash), `isErrored`, `isExpanded`, `onScreen` | Wrap with `await next(e)` (the engine's row is a node you can nest), rewrite `output`, or return a tree that replaces the row. A hook that draws a compact row passes `isExpanded === true` through so `Ctrl+o` still shows all. |
+| `ToolResult` | `tool`, `tool_use_id`, `output` (the tool's record, `{stdout, stderr, ...}` for Bash), `isErrored`, `isExpanded`, `onScreen` | Wrap with `await next(e)` (the engine's row is a node you can nest), rewrite `output`, or return a tree that replaces the row. **Not drawn for Bash in fullscreen** (see below); drawn in the classic renderer. A hook that draws a compact row passes `isExpanded === true` through so `Ctrl+o` still shows all. |
 | `ToolUse` | `tool`, `input`, `isRunning`, `isErrored`, `isInterrupted`, `output`, `isExpanded` | Same three moves. |
-| `ToolGroup` | `calls[]` (each with `input`, `output`), `isActive`, `isExpanded` | The "Read 3 files, ran 2 commands" fold. Setting `isExpanded` unfolds it. In the fullscreen `Ctrl+o` transcript no group is drawn. |
+| `ToolGroup` | `calls[]` (each with `tool_use_id`, `input`, `output`, `isRunning`, `isErrored`, `isInterrupted`), `isActive`, `isExpanded` | **Where fullscreen draws every Bash call**: one line, "Ran 1 shell command" or "Ran 3 shell commands", folded or expanded. Wrap it to add rows under the line. `e.viewport.isFullscreen` says which renderer. |
 | `CommandOutput` | `command`, `args`, `text` | Slash-command output rows only. |
 | `AssistantMessage`, `UserMessage` | `text`, `onScreen` | Per message. `requestId` is what `$.ui.scroll({ to: { requestId } })` takes. |
 | `AbovePrompt` | `maxRows`, `scroll` | Shares its space with the slash menu and surveys (see the status-band note in `status-band-research.md`). |
@@ -110,7 +117,22 @@ reachable by a plugin, one file read away.**
 The 30,000 limit is the engine's `BASH_MAX_OUTPUT_LENGTH` (default 30000, clamped 4000 to
 128000, from the bundled env-var text). `ToolResult.output` is documented as "the same
 [record] `tool.call` resolved as `result`", so the interactive render hook should see the
-same fields, but I only ran the probe headless (see "Not verified").
+same fields; the interactive fullscreen run confirmed it for `ToolGroup.calls[i].output`.
+
+### Where a Bash result is really drawn (checked in tmux, 2.1.310)
+
+Debug-log lines from the experiment's hooks (`claude --debug-file`), and the screen:
+
+| Renderer | What stock draws for `seq 1 60000` | Hook that is called |
+|---|---|---|
+| Fullscreen (`CLAUDE_CODE_NO_FLICKER=1`) | One line, `Ran 1 shell command`, whatever the length; a click or `Ctrl+o` expands to the raw lines (the cut text, about 6,200 lines) | `ToolGroup` (id `collapsed-toolu_...`, `calls=1`). **`ToolResult` was never called** (0 log lines). |
+| Classic (`CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1`) | `Bash(seq 1 60000)` with three lines, then `… +6219 lines (ctrl+o to expand)` | `ToolUse` and a standalone `ToolResult` |
+
+So there is **no per-result fold threshold in the fullscreen default view**: the whole call
+folds into the group line and one click shows everything. In the interactive fullscreen
+session the group's `calls[0].output` carried `persistedOutputPath`, so the headless probe's
+finding holds interactively. The classic renderer captures no mouse: a click on the button
+there did nothing.
 
 Other tools: `Read` results are file contents the user can open and stock draws them as one
 line; `Grep`/`Glob`/`Edit`/`Write` results are compact. MCP, WebFetch and Agent results are
@@ -121,22 +143,23 @@ the other long ones; I did not probe how they are cut.
 "Cost per draw" is the work added each time the engine draws the row (a resize redraws every
 visible hooked row).
 
-### A. Full output in a pane, with copy (prototyped)
+### A. Full output in a pane, with copy (prototyped, works in tmux)
 
-A long Bash result keeps the engine's row and gains one dim button, `[ view full output
-(340.7 KiB) ]`. Pressing it opens a pane (asked for first, inside the press) and reads the
-persisted file. The pane has a header, `[ copy all ]` `[ top ]` `[ bottom ]`, and the lines
-with a number gutter. It draws the first 2,000 rows and says so; copy takes all of the text
-with colour codes removed.
+In fullscreen, under the group line of a Bash call whose output the engine cut, one dim button:
+`[ full output: seq 1 60000 (340.7 KiB) ]`. A group of three commands gets a button for each
+cut call. Pressing it opens a pane (asked for first, inside the press) and reads the
+persisted file. The pane has a header, `[ copy all ]` `[ top ]` `[ bottom ]` (hotkeys `c`,
+`t`, `b` while it has focus; the row is repeated under the lines because the buttons scroll
+away with them) and the lines with a number gutter. It draws the first 2,000 rows and says
+so; copy takes all of the text with colour codes removed.
 
 | Question | Answer |
 |---|---|
-| Data available | Yes: `output.stdout`/`stderr` inline (to 30,000 chars), `persistedOutputPath` for the rest. Falls back to the cut text with a note when the file cannot be read. |
-| Cost per draw | Every `ToolResult` draw calls the hook. Non-Bash results return at once. A Bash result splits at most 30,000 characters into lines to count them: 0.2 to 0.3 ms for the worst case (6,222 lines, measured in the harness). Pane: builds up to 2,000 `Text` rows per draw; the row slicing is cheap but the engine's layout of that tree is **not measured** (needs a real terminal). One file read per press, not per draw. |
-| Clutter in the common case | One row under a Bash result of 12 lines or more (the threshold is a guess, below). A session full of long `git log` or test output shows a button under each. Nothing in sessions without long output. Errors and `Ctrl+o` are left to the engine. |
-| Stock does it? | Partly. Click to expand and `Ctrl+o` show a folded result; `[` and `v` hand the conversation to the scrollback or the editor. As far as I can tell none shows the part past 30,000 characters (stock's expanded view starts from the same cut result; **unverified**), and there is no "copy this result" button. |
-| Wins | The only candidate that shows something stock cannot. Pairs with the copy-button idea (#1 in `feature-ideas.md`): one copy convention. |
-| Risks | Inline pane (narrow window, classic renderer): the doc says an inline frame "fits the tree", so 2,000 rows may swamp the screen; the prototype does not cap by `placement` yet. Pane rows are plain text, so wide lines are cut with an ellipsis (`truncate-end`), not wrapped. A file that Claude Code deletes (session cleanup) turns into the fallback note. |
+| Data available | Yes. `ToolGroup.calls[i].output` has `stdout`/`stderr` inline (to 30,000 chars) and `persistedOutputPath` / `persistedOutputSize` for the rest. Seen in a real fullscreen session. Falls back to the cut text with a note when the file cannot be read. |
+| Cost per draw | Every `ToolGroup` draw calls the hook. It maps the group's calls through `offerFor`: a tool-name compare, and for a Bash call a field read; no line splitting, because the cut flag is `persistedOutputPath`. Groups with no cut call return `next(e)` at once. The pane builds up to 2,000 `Text` rows per draw (row slicing 0.2 to 0.3 ms for 6,222 lines in the harness). In tmux, a 2,000-row pane opened and scrolled with no visible lag; I did not time it. One file read per press, not per draw. |
+| Clutter in the common case | None in a session without a cut output: the offer rule is "finished, not failed, output cut". That also means it helps rarely (see section 6). Stock's own group line is untouched. |
+| Stock does it? | No. Stock's expanded view shows the cut text with no note and no way to reach the rest or copy it (confirmed by hand test, also visible in the classic `+6219 lines` view). |
+| Risks | The offer depends on `persistedOutputPath` staying a declared field. Pane rows are plain text, so a wide line is cut with an ellipsis (`truncate-end`), not wrapped. A file that Claude Code cleans up turns into the fallback note. In a narrow window (90 columns) the pane opens inline as a bordered box above the prompt; the engine caps its height (about 7 lines of text, then scrolls), so a 2,000-row tree does not swamp the screen, and `b` scrolled it to the end. |
 
 Prototype and tests: `docs/dev/.scrollback-spike-experiment/` (section 5).
 
@@ -227,47 +250,81 @@ tests as part of rich-ui (the test runner takes every `*.test.ts(x)` under the f
 
 | File | Role |
 |---|---|
-| `hooks/output.ts` | pure: Bash record to text and file path, ANSI strip, line count, the offer rule, row cap, labels |
-| `hooks/spike.tsx` | the `ToolResult` wrap and the pane |
-| `hooks/output.test.ts` | 9 unit tests (edge cases below) |
-| `hooks/spike.test.tsx` | 10 harness tests of the wrap, the press, the pane, copy |
+| `hooks/output.ts` | pure: Bash record to text and file path, ANSI strip, line count, the offer rule (`offerFor`), row cap, labels |
+| `hooks/spike.tsx` | the `ToolGroup` wrap (fullscreen only) and the pane |
+| `hooks/output.test.ts` | 11 unit tests |
+| `hooks/spike.test.tsx` | 11 harness tests of the wrap, the press, the pane, copy |
 | `types/index.d.ts` | the one state key (`scrollback-spike.shown`) |
 
 Run (from the repo root):
 
 ```
-claude plugin test docs/dev/.scrollback-spike-experiment      # 19 pass
+claude plugin test docs/dev/.scrollback-spike-experiment      # 22 pass
 claude plugin validate docs/dev/.scrollback-spike-experiment
 cd docs/dev/.scrollback-spike-experiment && ../../../tools/node_modules/.bin/tsc -p .
 ```
 
-What the tests settle:
+### How the first version failed, and what it taught
 
-- A wrapped `ToolResult` keeps the engine's row (`await next(e)` nests) and adds a keyed
-  `Button`; nothing is added for short, errored, `Ctrl+o`-expanded, non-Bash, empty or
-  string results, the 12-line boundary included, nor on other surfaces.
-- The press asks for the pane **before** the file is read (order `open`, `read`), which the
-  placement rule needs.
-- The pane shows the whole 500-line file, not the cut text; a file that cannot be read
-  falls back to the cut text with a note; a 6,000-line file is cut to 2,000 rows with a
-  note while **copy still takes all 6,000**; copy strips colour codes.
-- Edge cases in the pure tests: stdout and stderr joined, stderr alone, CRLF and lone CR,
-  trailing newline, ANSI colour and OSC 8 link codes, non-ASCII text, a non-Bash record, a
-  non-string size.
-- Not settled by the harness: that `$.ui.scroll` moves the pane. The harness has no laid-out
-  window, so `top` and `bottom` are only checked to draw and not to break the pane. This is
-  in the hand test.
+The first version wrapped `ToolResult` and passed 19 harness tests, because the harness
+mounts whatever site a test names. In a real fullscreen terminal the button never appeared:
+stock folds every Bash call into a `ToolGroup`, so `ToolResult` is not drawn for it. Lesson
+for the real feature: a harness test proves a hook is right *if called*; only a real session
+shows which site stock draws. Check with `$.ui.log(..., { to: 'debug' })` and
+`claude --debug-file`.
+
+### What the harness tests settle
+
+- A `ToolGroup` with a cut Bash call keeps the engine's line (`await next(e)` nests) and adds
+  a keyed `Button` per such call; none for whole outputs, failed, running or interrupted
+  calls, other tools, empty or string outputs, a call without an id; none outside fullscreen
+  or on another surface.
+- The press asks for the pane **before** the file is read (order `open`, `read`).
+- The pane shows the whole file, not the cut text; a file that cannot be read falls back to
+  the cut text with a note; a 6,000-line file is cut to 2,000 rows with a note while **copy
+  still takes all 6,000**; copy strips colour codes; a second call's button switches the
+  pane; the buttons are repeated under the lines.
+- Pure edge cases: stdout and stderr joined, stderr alone, CRLF and lone CR, trailing
+  newline, ANSI colour and OSC 8 link codes, non-ASCII text, non-Bash and non-string records,
+  label shortening, size formatting.
+- Not settled by the harness: that `$.ui.scroll` moves the pane (the harness has no laid-out
+  window). Settled in tmux below.
+
+### What the tmux run settled (2.1.310, 130 and 90 columns)
+
+Driven with `tmux send-keys` (typing prompts, SGR mouse clicks) and `capture-pane`, with
+`pbpaste` to read the clipboard.
+
+- Fullscreen, 130 columns: the pane **docks** at the right (the press opened it at that
+  width). Header `Bash · 60,000 lines`; the first lines are `1 1`, `2 2` (gutter, then text).
+- `b` jumps to row 2,000 and the "Showing the first 2,000 of 60,000 lines" note, `t` back to the
+  top, `c` puts **all 60,000 lines** on the clipboard (348,894 bytes) and the label becomes
+  `[ copied ]`. The wheel moves the window. `Esc` closes the pane. Clicking `[ bottom ]` works
+  until the buttons scroll out of view, which is why the row is repeated and keyed.
+- Three Bash calls in one turn (`printf red...; seq 1 40000`, `seq 1 40000; exit 1`, `ls
+  /nonexistent_dir 2>&1; seq 1 40000; true`): one group line, **two buttons** (the call that
+  exited 1 gets none). The `red` line pastes as plain `red`, with no escape codes. The `ls`
+  error line is in the stream and truncated with an ellipsis in the pane. Pressing the other
+  button switches the pane to that call's 40,001 lines.
+- `seq 1 40` (whole output): no button. `Ctrl+o` kept the buttons.
+- 90 columns: the pane opens inline, bordered, and `b` scrolls it.
+- Classic renderer: the engine draws `Bash(...)` + three lines + `+6219 lines`; the mouse is
+  not captured, so a click on a button did nothing. The feature therefore does not offer the
+  button outside fullscreen.
 
 ## 6. Recommendation, ranked
 
-1. **Build A as a small feature, "Long output"**, own toggle, text only. Do it after the hand
-   test below confirms the three open points (row cost, inline pane, stock's own limit).
-   Decide the default then: on is defensible because the button only appears where stock
-   folds, but it is not a most-sessions feature, so default off is the safe call if the
-   button row is noticed in everyday use. Fold the copy button for code blocks and this one
+1. **Candidate A as a cheap backlog item, not a headline feature.** It is the only thing found
+   that shows what stock cannot, it adds nothing in sessions without a cut output, and it
+   works. But output past 30,000 characters is rare, so it fails the "helps in most
+   sessions" test in `FEATURES.md`. If built, give it its own toggle row; default on is
+   harmless because of the zero clutter, but say so plainly in the README as a rarely
+   used extra. Fold the copy button for code blocks (#1 in `feature-ideas.md`) and this one
    into one "copy" convention.
-2. **Extras on A** (path, open in editor, filter) only if the hand test shows people want
-   to leave the pane for the file.
+2. **A wider offer (copy for any long result)** would help more sessions but adds a button
+   under ordinary long outputs, which is the clutter the first principle forbids, and stock
+   already expands them in one click. Not recommended unless hand use shows people struggle to
+   copy a long result.
 3. **Permission context**: try `$.ui.notice` by hand; build nothing until it proves useful.
 4. **Do not build**: collapse/summary replacement (B), prompt outline (C), search pane (D),
    answered-prompt record (F).
@@ -278,46 +335,38 @@ change.
 
 ## 7. Not verified
 
-- **Stock's fold**: how many lines a Bash result shows before it folds, and what its
-  expanded view shows for a result past 30,000 characters. I could not find the constant in
-  the bundled source (it is minified) and did not drive a real terminal. `OFFER_FROM_LINES`
-  (12) is a guess to be replaced with the observed value.
-- That the interactive `ToolResult.output` carries `persistedOutputPath` like the headless
-  `tool.call` result. The API text says it is the same record.
-- Layout cost and look of a 2,000-row pane; `Text` row truncation with wide characters;
-  inline-pane behaviour with a tall tree; focus and the wheel in the pane.
-- `$.ui.scroll` to the top and bottom of the pane (the harness cannot).
-- Any behaviour in the classic renderer (`/tui default`).
-- MCP, WebFetch and Agent result sizes.
+- The permission dialog candidates (E, F): nothing was run. `$.ui.notice` has not been tried.
+- MCP, WebFetch and Agent result sizes, and whether they are persisted the same way.
+- Layout cost of a 2,000-row pane was only watched, not timed.
+- Wide characters in pane rows (CJK, emoji) under `truncate-end`.
+- Light themes and other terminals (only tmux inside one terminal; fullscreen, 130 and 90
+  columns, and classic).
+- Whether `persistedOutputPath` files are removed while a session is still open.
+- How an output of exactly 30,000 characters is flagged (not persisted: probably no button).
 
 ## 8. What to test by hand
 
-Use a real terminal. Load only the experiment (not rich-ui, so nothing else wraps results):
+Real terminal, only the experiment loaded (not rich-ui):
 
 ```
-claude --plugin-dir /Users/kavinsingh/EmergentAI/claude-code-rich-ui-wt/docs-scrollback-spike/docs/dev/.scrollback-spike-experiment
+CLAUDE_CODE_NO_FLICKER=1 claude --plugin-dir /Users/kavinsingh/EmergentAI/claude-code-rich-ui-wt/docs-scrollback-spike/docs/dev/.scrollback-spike-experiment
 ```
 
-Run it in fullscreen (`/tui fullscreen` once), at 120+ columns, then narrow it to about 90,
-then try `/tui default`. Ask Claude to run each command with the Bash tool:
+Ask Claude to run each command with the Bash tool. Already seen in tmux (see section 5); worth
+a look by eye for how it feels:
 
 | Ask for | Expect |
 |---|---|
-| `seq 1 40` | The engine's result, folded as usual, plus `[ view all 40 lines ]`. Note how many lines stock shows before folding and tell me (replaces the guess of 12). |
-| `seq 1 5` | Nothing added. |
-| `seq 1 60000` | A button saying `view full output (340.7 KiB)`. Press it: the pane opens at once, line 1 is `1`, bottom of the first 2,000 rows is 2000, the footer says "first 2,000 of 60,000 lines". |
-| Same, then `[ copy all ]` and paste into an editor | All 60,000 lines (last line `60000`), button reads `[ copied ]`. |
-| Pane: wheel, `PgDn`, `[ top ]`, `[ bottom ]` | The window moves. If the buttons do nothing, say so. |
-| `printf '\033[31mred\033[0m\n'; seq 1 30` | Pane and clipboard show `red` with no escape codes. |
-| `ls /nonexistent; seq 1 30` | Stderr and stdout both appear. |
-| A failing long command, e.g. `seq 1 40; exit 1` | No button (errors are left to stock). |
-| `Ctrl+o` on a long result | No button (everything is already shown). |
-| Press the button on a second long result | The pane switches to that output. |
-| Narrow window / classic renderer | Where the pane opens, and whether a long output swamps the screen. |
-| `Esc` in the pane | It closes. |
+| `seq 1 5` and `seq 1 40` | `Ran 1 shell command` and nothing else. |
+| `seq 1 60000` | Under the group line a dim `[ full output: seq 1 60000 (340.7 KiB) ]`. Click it: the pane opens beside the chat at 110+ columns; line 1 is `1`. |
+| In the pane: `b`, `t`, `c`, the wheel, `Esc` | End of the first 2,000 rows, top, clipboard holds all 60,000 lines and the button reads `copied`, the window moves, the pane closes. |
+| Click `Ran 1 shell command` to expand | The button stays under the group. |
+| `seq 1 40000; exit 1` | No button. |
+| Narrow the window to about 90 columns, press the button | Pane opens above the prompt as a box; `b` scrolls it. |
+| Run it with `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` | No button anywhere. |
 
-Report: the stock fold size, whether `persistedOutputPath` was present (the button label
-shows a size only then), anything that flickers or lags with the 2,000-row pane.
+Look for: flicker or lag while scrolling the 2,000-row pane, a button that is hard to hit,
+and whether the dim button under the group line looks like clutter to you.
 
 ## Appendix A: the probe
 
@@ -329,3 +378,15 @@ the result of `$.fs.read(persistedOutputPath)` to a JSON file. Run as
 Bash tool exactly once to run: seq 1 60000 ..."`. Output of the 60,000-line run:
 `stdoutLen 30000`, `stdoutLines 6222`, `persistedOutputSize 348894`, read-back length
 348894 with tail `59999\n60000\n`.
+
+## Appendix B: the tmux recipe
+
+```
+tmux new-session -d -s S -x 130 -y 40 -c <empty dir> \
+  "CLAUDE_CODE_NO_FLICKER=1 claude --plugin-dir <experiment> --permission-mode bypassPermissions --debug-file <log>"
+tmux send-keys -t S Up Enter                       # trust the folder on first run
+tmux send-keys -t S -l 'Use the Bash tool exactly once to run: seq 1 60000 ...'; tmux send-keys -t S Enter
+tmux capture-pane -t S -p                          # read the screen
+tmux send-keys -t S -l $'\e[<0;COL;ROWM\e[<0;COL;ROWm'   # click (1-based); the layout shifts when a pane docks, so re-read rows
+tmux send-keys -t S -l $'\e[<65;COL;ROWM'          # wheel down
+```

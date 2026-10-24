@@ -8,8 +8,8 @@ import {
   gutter,
   lineCount,
   MAX_ROWS,
-  OFFER_FROM_LINES,
-  shouldOffer,
+  commandOf,
+  offerFor,
   splitLines,
   stripAnsi,
 } from './output'
@@ -52,12 +52,44 @@ test('colour codes and links are stripped, other text is kept', () => {
   expect(stripAnsi('tab\there 日本語 🙂')).toBe('tab\there 日本語 🙂')
 })
 
-test('the button is offered from the threshold, never for errors or ctrl+o', () => {
-  const base = { lines: OFFER_FROM_LINES, isErrored: false, isExpanded: false }
-  expect(shouldOffer(base)).toBe(true)
-  expect(shouldOffer({ ...base, lines: OFFER_FROM_LINES - 1 })).toBe(false)
-  expect(shouldOffer({ ...base, isErrored: true })).toBe(false)
-  expect(shouldOffer({ ...base, isExpanded: true })).toBe(false)
+const CALL = {
+  tool: 'Bash',
+  tool_use_id: 't1',
+  input: { command: 'seq 1 60000' },
+  isRunning: false,
+  isErrored: false,
+  isInterrupted: false,
+  output: { stdout: 'x', stderr: '', persistedOutputPath: '/p/o.txt', persistedOutputSize: 348894 },
+}
+
+test('only a finished, successful Bash call whose output was cut is offered', () => {
+  expect(offerFor(CALL)?.id).toBe('t1')
+  expect(offerFor(CALL)?.source.path).toBe('/p/o.txt')
+  expect(offerFor({ ...CALL, output: { stdout: 'x', stderr: '' } })).toBeUndefined()
+  expect(offerFor({ ...CALL, isErrored: true })).toBeUndefined()
+  expect(offerFor({ ...CALL, isRunning: true })).toBeUndefined()
+  expect(offerFor({ ...CALL, isInterrupted: true })).toBeUndefined()
+  expect(offerFor({ ...CALL, tool: 'Read' })).toBeUndefined()
+  expect(offerFor({ ...CALL, tool_use_id: undefined })).toBeUndefined()
+  expect(offerFor({ ...CALL, output: undefined })).toBeUndefined()
+})
+
+test('the label names the command, shortened, and the size', () => {
+  expect(offerFor(CALL)?.label).toBe('full output: seq 1 60000 (340.7 KiB)')
+  const long = offerFor({ ...CALL, input: { command: `echo ${'a'.repeat(100)}` } })
+  expect(long?.label.length).toBeLessThan(70)
+  expect(long?.label).toContain('…')
+  expect(offerFor({ ...CALL, input: undefined })?.label).toBe('full output (340.7 KiB)')
+  expect(offerFor({ ...CALL, output: { ...CALL.output, persistedOutputSize: undefined } })?.label).toBe(
+    'full output: seq 1 60000',
+  )
+})
+
+test('a command is read from the input, its whitespace folded', () => {
+  expect(commandOf({ command: 'a\n  b\tc' })).toBe('a b c')
+  expect(commandOf({ command: 5 })).toBe('')
+  expect(commandOf(null)).toBe('')
+  expect(commandOf('x')).toBe('')
 })
 
 test('rows are cut at the cap and the true total is kept', () => {
