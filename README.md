@@ -30,6 +30,7 @@ Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 | Feature | What it does |
 |---|---|
 | Mermaid diagrams | Complete mermaid blocks in Claude's replies are drawn as text diagrams. A dim `show source` line above each one swaps it back to the code. |
+| Status band | A line under the prompt shows context and plan usage, only when they run high. |
 
 Flowcharts (subgraphs included), sequence, class, state and ER diagrams are drawn. Any
 other type stays the code block it always was, and so does anything too big for your

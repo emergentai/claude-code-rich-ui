@@ -46,6 +46,7 @@ export async function boot(
     return { value: undefined }
   })
   on('session.measure', (_, e) => ({ changed: e.changed }))
+  on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
   return { clock, saved, failSaves, status }

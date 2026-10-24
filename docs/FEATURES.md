@@ -37,6 +37,15 @@ other diagram languages such as PlantUML.
 
 Design: [`dev/mermaid-feature.md`](dev/mermaid-feature.md).
 
+### Status band
+
+A single line under the prompt showing context fullness and plan usage (5h, 7d, spend)
+only when they run high; a healthy session shows nothing. Off in `/rich-ui` clears it.
+Not yet: model and cache segments, per-segment switches, colors.
+
+Reference: [`features/status-band.md`](features/status-band.md). Research:
+[`dev/status-band-research.md`](dev/status-band-research.md).
+
 ## Backlog
 
 Not committed. Each would be its own feature, independently toggleable, and each must
@@ -47,12 +56,6 @@ sessions, not just some?
   text.
 - **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
   formatted docs in a pane beside the chat.
-- **Status band.** One quiet row above the prompt that shows context fullness, plan
-  usage, model and prompt-cache state only when they carry information, with each
-  segment on its own switch. Status bands are the most common kind of mod, so the aim
-  is to do it with fewer rows, theme-true colors and no clutter on healthy sessions.
-  Replaces the earlier "context bar" entry (context is the likely first segment).
-  Research: [`dev/status-band-research.md`](dev/status-band-research.md).
 - **Inline edit diffs.** A compact colored diff after each `Edit` or `Write`,
   complementing the built-in `/diff` pane.
 - **Image-quality diagrams.** The follow-up to the shipped text diagrams. Path from the

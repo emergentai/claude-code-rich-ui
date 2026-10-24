@@ -67,15 +67,15 @@ test('bar fills in proportion and stays inside its cells', () => {
   expect(bar(150)).toBe('████████')
 })
 
-test('the line joins the segments and is empty when nothing runs high', () => {
+test('the line joins the segments as plain text and is empty when nothing runs high', () => {
   const segments = segmentsFor(
     {
       contextPercent: 70,
-      limits: [{ kind: 'five_hour', percentUsed: 80, resetsAt: '2026-10-23T11:00:00Z' }],
+      limits: [{ kind: 'five_hour', percentUsed: 92, resetsAt: '2026-10-23T11:00:00Z' }],
     },
     NOW,
   )
 
-  expect(bandText(segments)).toBe('context ██████░░ 70%  ·  5h 80% (resets in 1h 00m)')
+  expect(bandText(segments)).toBe('context ██████░░ 70%  ·  5h 92% (resets in 1h 00m)')
   expect(bandText([])).toBeUndefined()
 })

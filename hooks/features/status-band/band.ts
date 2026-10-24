@@ -82,8 +82,11 @@ function rank(kind: string): number {
   return index === -1 ? LIMIT_ORDER.length : index
 }
 
-// The whole line for the engine's status row under the prompt: plain text, so
-// the engine's own styling and theme apply. Empty when nothing runs high.
+// The whole line for the engine's status row under the prompt: plain text, no
+// icon of our own. `$.ui.status` takes text only (no color/level), and the
+// engine already labels and frames this row itself, so isWarning is read by
+// callers (e.g. for a future styled surface) but never drawn here as a glyph.
+// Empty when nothing runs high.
 export function bandText(segments: Segment[]): string | undefined {
   if (segments.length === 0) return undefined
 

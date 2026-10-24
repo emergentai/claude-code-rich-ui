@@ -30,6 +30,13 @@ export const statusBand: Feature = {
 // and carries a collapse mark. The engine raises session.measure when a figure
 // moves, which is when the line is rewritten. The manager clears or restores it
 // when the feature is toggled (manager/index.ts).
+async function refreshStatus($: Parameters<Hook<'session.measure'>>[0]) {
+  const isShown = isOn(await read($, enabledAtom), statusBand)
+  $.ui.status(
+    isShown ? bandText(segmentsFor(await read($, usageAtom), await $.clock.now())) : undefined,
+  )
+}
+
 export const recordUsage: Hook<'session.measure'> = async ($, e, next) => {
   const snapshot: UsageSnapshot = {
     contextPercent: e.context.percent,
@@ -40,11 +47,20 @@ export const recordUsage: Hook<'session.measure'> = async ($, e, next) => {
     })),
   }
   await update($, usageAtom, () => snapshot)
+  await refreshStatus($)
 
-  const isShown = isOn(await read($, enabledAtom), statusBand)
-  $.ui.status(
-    isShown ? bandText(segmentsFor(snapshot, await $.clock.now())) : undefined,
-  )
+  return next(e)
+}
+
+// /clear ends the session under reason 'clear' and the process goes on under
+// a new session id with no session.start (docs: SessionEndInput.reason). The
+// usage atom survives that handoff with its pre-clear reading, so it is reset
+// here instead of waiting on a session.measure that may not come soon.
+export const onSessionEnd: Hook<'session.end'> = async ($, e, next) => {
+  if (e.reason === 'clear') {
+    await update($, usageAtom, () => ({ limits: [] }) as UsageSnapshot)
+    await refreshStatus($)
+  }
 
   return next(e)
 }
