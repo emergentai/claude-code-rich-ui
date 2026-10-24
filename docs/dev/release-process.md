@@ -27,7 +27,7 @@ version number lives in the files and the tag (`v0.2.0`), not in a branch name. 
    anything reviewers should look at, and how it was checked, including whether it was
    run in a real session.
 5. Merge into `release` once it is reviewed and checks pass. Feature PRs do
-   **not** touch the version number or `CHANGELOG.md`: those belong to the release branch,
+   **not** touch the version number or `CHANGELOG.md`: those belong to `release` at cut time,
    which keeps parallel feature PRs from conflicting on them.
 
 A feature that is not ready when the release is cut stays unmerged (or is reverted from
