@@ -46,7 +46,7 @@ The current bundle is 84 KB, so there is room for hand-written renderers.
 ## 4. Candidates, ranked by my judgment
 
 I did not measure how often each type appears in Claude's replies; the order below is a
-judgment, and the first step should be to count real transcripts.
+judgment, which is enough since the aim is broad coverage.
 
 | Type | Value | Effort | Notes |
 |---|---|---|---|
@@ -125,34 +125,34 @@ latency per diagram, and 5.5 MB of vendored JavaScript.
 **Implications for us.** (a) Try `@zombie-mermaid/ascii-renderer` 5.x as a drop-in
 replacement for `beautiful-mermaid`: it adds pie, C4 and architecture and is actively
 maintained, while ours has been quiet since February. (b) For gantt, mindmap, timeline,
-gitGraph and journey the choice is our own text renderers (section 4) or this Chrome
-picture path as an opt-in, kept as the fallback for terminals without images. They are not
-exclusive: text where we can draw it well, picture where the user has opted in.
+gitGraph and journey we write our own text renderers (section 4). The Chrome picture path
+is ruled out by the owner.
 
 ## 5. Recommendation
 
-1. Count the mermaid types in real transcripts first (a one-off script over
-   `~/.claude/projects/**/*.jsonl`) so the order above rests on data.
-2. Spike swapping in `@zombie-mermaid/ascii-renderer` 5.x (section 4a): check it loads in
-   the sandbox and that the five shipped types still look as good. If so, `xychart-beta`
-   and `pie` come with it, plus C4 and architecture.
-3. Ship `xychart-beta` and `pie` (allow-list plus width and malformed-body checks).
-4. For gantt, mindmap, timeline: write small own text renderers, one PR each, or take the
-   opt-in Chrome picture route; decide after step 1 shows which types matter.
-5. Revisit `gitGraph` and `journey` only if the count shows they appear.
+Direction from the owner: picture rendering (the Chrome route above) is out, and there is
+no need to count types in transcripts first. The aim is to support as many types as make
+sense, all as text.
+
+1. Spike swapping in `@zombie-mermaid/ascii-renderer` 5.x (section 4a): check it loads in
+   the sandbox and that the five shipped types still look as good. If so, `xychart-beta`,
+   `pie`, C4 and architecture come with it.
+2. Allow those types in `sanity.ts`, with width and malformed-body checks and tests.
+3. Write own text renderers for the types no library draws, one PR each, in this order:
+   `gantt`, `mindmap`, `timeline`, `gitGraph`, `journey`, then `quadrantChart`. Each
+   returns null on anything it doesn't understand so the block stays code.
+4. Skip sankey, block and requirement unless a library starts drawing them.
 
 ## 6. Open questions
 
-- Is the first-principle test met for these? A pie or gantt in a reply is rarer than a
-  flowchart; the "large majority of sessions" bar may only be met by the existing five
-  plus pie and gantt.
-- Own renderers add maintenance and visual-quality risk that the library path avoided.
-  Is a worse-looking diagram better than the code block? The fallback rule says only draw
-  what we can draw well.
-- Does `beautiful-mermaid` upstream plan more types? Not checked; look at its issue
-  tracker before writing renderers it may ship.
+- Own renderers add maintenance and visual-quality risk that the library path avoided. The
+  fallback rule still applies: only draw what we can draw well, otherwise leave the code.
+- Does the zombie-mermaid renderer look as good as `beautiful-mermaid` on the five shipped
+  types, and does it load in the mod sandbox?
+- Gantt needs date math and `after x` dependencies; gitGraph needs lane layout. Both are
+  the largest pieces of new code.
 
 ## 7. Not done
 
 I did not run anything inside the mod sandbox, did not run the Chrome picture path of
-claude-rich-terminal, did not evaluate the npm `mermaid-ascii` package, did not measure type frequency, and wrote no renderer code.
+claude-rich-terminal (ruled out), did not evaluate the npm `mermaid-ascii` package, did not measure type frequency, and wrote no renderer code.
