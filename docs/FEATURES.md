@@ -60,6 +60,17 @@ nothing opens by itself. The pane follows the file when Claude edits it.
 Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike:
 [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 
+### Manager pane refresh (not yet released)
+
+`/rich-ui` looks finished: a block-letter banner with a gradient (terminal only), real
+`● on` / `○ off` switches, rows that lighten under the mouse, a small `error` or `note`
+tag on a feature that has something to say, a divider and consistent gutters. The keys
+are as before (Enter toggles, Tab walks the rows, Esc closes). Polish of the one screen
+every user opens, not a toggleable feature: the manager has no switch of its own.
+
+Reference: [`features/manager-refresh.md`](features/manager-refresh.md). Manual check:
+[`dev/manager-refresh-manual-test.md`](dev/manager-refresh-manual-test.md).
+
 ## Backlog
 
 Not committed. Each would be its own feature, independently toggleable, and each must

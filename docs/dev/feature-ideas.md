@@ -116,6 +116,14 @@ the aurora spinner (off by default), and a new spike on scrollback and long tool
 Dropped: tool timing, the turn summary line, the compact nudge and the turn ribbon. The
 cost segment and the turn-finished notification stay in the backlog, not scheduled.
 
+## Outcome: manager pane refresh
+
+Built on `feature/manager-refresh`: banner, pills, hover, chips, divider, gutters. Left
+out on purpose: tabs (a three-row feature list has nothing to put in Status or About, and
+a second view costs a row of chrome the inline pane cannot spare), the "what's new" strip
+(the module cannot read the changelog at run time, and a copy would have to be kept in sync
+by hand), a border of our own (the engine already frames the pane) and any animation.
+
 ## Suggested order
 
 1. Copy button on code blocks (small, broad, safe).

@@ -1,0 +1,53 @@
+# Manager pane refresh
+
+A visual pass on `/rich-ui`, the pane that turns features on and off. It is not a feature
+with a switch: the manager is always present. Behaviour and keys are unchanged.
+
+## What you see
+
+```
+ ▀     █           ▀
+ █▀▀ █ █▀▀ █▀▄ ▄▄▄ █ █ █
+ █   █ █▄▄ █ █     █▄█ █                                    3 of 3 on
+ ──────────────────────────────────────────────────────────────────
+ ● on   Mermaid diagrams                                       note
+        Draw mermaid diagrams as text diagrams
+        Diagrams left as code: terminal size unknown
+ ○ off  Status band
+        Show context and plan usage under the prompt when they run high
+ ● on   Markdown preview
+        Open a markdown file Claude links to, rendered, in a pane
+ Enter toggles · Esc closes · rich-ui 0.3.0
+```
+
+- **Banner.** "rich-ui" in half-block type with an orange-to-violet gradient, three rows,
+  drawn once as a `Raster` (terminal only). In a pane under about 35 columns it is a bold
+  title in the same three rows. On the right, a dim `N of M on`.
+- **Switches.** `● on ` (green, bold) and `○ off` (dim). The shape carries the state, so
+  it reads without colour.
+- **Hover.** The row under the mouse lightens and its description brightens. The focused
+  row keeps the engine's reverse video.
+- **Chip.** `error` (red) or `note` (amber) beside a feature's name only when it has a
+  status entry; the detail lines stay under the description. A healthy feature has none.
+- **Layout.** One divider under the header, a one-cell gutter everywhere (two when docked),
+  no border of our own because the engine frames the pane.
+
+## Not done, and why
+
+Tabs, a "what's new" strip, a border, animation: see "Outcome" in
+[`../dev/feature-ideas.md`](../dev/feature-ideas.md).
+
+## Limits
+
+The pane opens with a fixed number of rows (`contentRows`). An inline pane is capped by
+the terminal's height: at 40 terminal rows 11 content rows fit, which is exactly the three
+features today. More features or status lines will need a scroll or a shorter header.
+
+## Code
+
+| File | Role |
+|---|---|
+| `hooks/manager/banner.ts` | the banner's Raster cells and gradient (pure) |
+| `hooks/manager/pane.tsx` | the pane tree: header, pills, chips, hover, footer |
+| `hooks/manager/size.ts` | `contentRows`, `clip` |
+| `hooks/manager/index.ts` | unchanged: state, toggle, `$.ui.open` |

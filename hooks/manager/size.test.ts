@@ -2,10 +2,12 @@ import { expect, test } from 'claude-code/testing'
 
 import { clip, contentRows } from './size'
 
-test('content rows cover header, feature rows, status, spacers and footer', async () => {
-  expect(contentRows(1, 0, false)).toBe(6)
-  expect(contentRows(2, 3, false)).toBe(11)
-  expect(contentRows(1, 0, true)).toBe(7)
+test('content rows cover banner, dividers, feature rows, status and footer', async () => {
+  // 3 banner + 1 divider + 1 footer = 5, plus two rows a feature
+  expect(contentRows(1, 0, false)).toBe(7)
+  expect(contentRows(2, 3, false)).toBe(12)
+  expect(contentRows(1, 0, true)).toBe(8)
+  expect(contentRows(0, 0, false)).toBe(5)
 })
 
 test('clip leaves short text alone and cuts long text with an ellipsis', async () => {

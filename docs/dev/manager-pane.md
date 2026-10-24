@@ -1,10 +1,10 @@
 # rich-ui: Manager Pane
 
-Status: implemented in v0.1.0 and checked in a real terminal (`verification-notes.md`, `ui-style-study.md`). Depends on `architecture.md` (state, persistence, feature status) and the feature metadata defined there.
+Status: implemented in v0.1.0, refreshed after 0.3.0 (section 3, and [`../features/manager-refresh.md`](../features/manager-refresh.md)) and checked in a real terminal (`verification-notes.md`, `ui-style-study.md`). Depends on `architecture.md` (state, persistence, feature status) and the feature metadata defined there.
 
 ## 1. What it is
 
-`/rich-ui` opens a small pane listing every feature with a checkbox. Pressing a row turns that feature on or off immediately. Esc closes the dialog. It is the only control surface for the plugin: there are no subcommands, flags or settings rows elsewhere.
+`/rich-ui` opens a small pane listing every feature with an on/off switch. Pressing a row turns that feature on or off immediately. Esc closes the dialog. It is the only control surface for the plugin: there are no subcommands, flags or settings rows elsewhere.
 
 The manager is core, not a feature. It has no toggle of its own and is always present while the plugin is installed.
 
@@ -21,38 +21,37 @@ Out of v1: reset to defaults, number hotkeys, per-feature settings, and any way 
 ## 3. Layout
 
 ```
-rich-ui features
-
- [x] Mermaid diagrams
-     Draw mermaid diagrams as text diagrams
-     Diagrams left as code: terminal size unknown
- [ ] Rendered tables
-     Draw markdown tables as aligned grids
-
- Enter toggles · Esc closes · rich-ui 0.1.0
+ ▀     █           ▀
+ █▀▀ █ █▀▀ █▀▄ ▄▄▄ █ █ █          (banner: 3 rows of half blocks)
+ █   █ █▄▄ █ █     █▄█ █                        3 of 3 on
+ ────────────────────────────────────────
+ ● on   Mermaid diagrams            note
+        Draw mermaid diagrams as text diagrams
+        Diagrams left as code: terminal size unknown
+ ○ off  Status band
+        Show context and plan usage under the prompt when they run high
+ Enter toggles · Esc closes · rich-ui 0.3.0
 ```
 
-(The second feature is shown only to illustrate a longer list; v1 ships one feature.)
-
-Elements, top to bottom:
-1. Header: "rich-ui features" in bold, in the theme's `text` color, then a blank line.
-2. Per feature, a plain `Button` whose label is the checkbox glyph (`[x]` on, `[ ]` off) and the feature name, in the theme's `text` color. The whole row is one press target and keeps its own `key` equal to the feature id; the first row has `autoFocus` so Enter works as soon as the pane opens. Under it, the description on its own line, indented four cells, in a dim `Text`. The description is not part of the button because focus draws the button in reverse video, and a gray description inside it lost its contrast in the light theme.
-3. Under that, zero or more status lines, indented to align with the description. Notes are dim. Errors use the theme's `warning` color. Status lines are plain text and not pressable.
-4. A blank line, the save-failure line when set, and a dim footer: "Enter toggles · Esc closes · rich-ui <version>".
+Elements, top to bottom, all inside a one-cell gutter (plus one more when docked, because the dock supplies none):
+1. Header, 3 rows: a `Raster` banner of "rich-ui" in half-block pixel type with a left-to-right orange-to-violet gradient (`banner.ts`), and on the right a dim `N of M on` summary. The Raster's colours are raw (it is the one place the pane leaves the theme keys; both ends are mid-tone so they read on light and dark). When the pane is too narrow for banner and summary (under about 35 columns) the header is a bold `rich-ui` on the middle row of the same 3 rows, so `contentRows` does not change with width.
+2. A divider: a row of `─` in the theme's `text` colour, dimmed.
+3. Per feature, a keyed `Box` (`row-<id>`, a hover scope with `backgroundColor: subtle`) holding: a plain `Button` (key = feature id, so tests and presses are unchanged) whose children are a fixed-width pill and the name; a status chip beside it only when the feature has an error (`error`, theme `error`) or a note (`note`, theme `warning`); the description on its own dim line indented under the name, which brightens on hover (`hover={{ dimColor: false }}`); then the status lines as before. The pill is `● on ` in `success` (bold) or `○ off` in `inactive`: the glyph carries the state without colour. Focus still draws the button in reverse video; the description stays outside the button for the contrast reason in the old design.
+4. The save-failure line when set, and the dim footer `Enter toggles · Esc closes · rich-ui <version>`.
 
 Rules:
-- Every line of text has an explicit theme color (`text`, `warning`, or `dimColor`). The engine paints the pane background from Claude's theme but draws uncolored text in the terminal's own default, which is wrong when the two disagree (found in the light-theme check).
-- When `placement` is `dock` the body adds one cell of side padding (the dock supplies none) and lines are clipped to the narrower width. Inline, the frame supplies the padding.
-- Descriptions are one line. Any line wider than the pane's body width is cut at the edge with an ellipsis; the checkbox and name always remain visible.
-- A status line is shown only while its entry stands (cleared on the feature's off/on toggle or on session restart, see `architecture.md` 4.5). The text of an error entry is the feature name plus a short message, for example "Mermaid diagrams: failed 2 times, last error: <message>".
-- The pane never shows anything for a feature that is healthy and has no note.
+- Every text colour is a theme key or `dimColor`; only the banner is raw.
+- Any line wider than the body is cut with an ellipsis; the pill and name always remain visible.
+- No border of our own: the engine frames the pane (inline and docked), and a second frame would spend two rows and columns. A healthy feature has no chip and no status line.
+- No tabs and no "what's new" strip (see the PR for why). No timers, no `$.ui.blit`: the banner is static, so nothing redraws on its own.
+- The pane is as tall as `contentRows`: 3 + 1 + 2 per feature + status lines + save line + 1. An inline pane is capped by the terminal height (seen: 11 content rows at 40 terminal rows), so the layout spends no row on decoration below the list; with more features than fit, the footer is what is cut first.
 
 ## 4. Behavior
 
 ### 4.1 Opening
 
 - The plugin registers the command `rich-ui` at `session.start`.
-- `command.run` for `rich-ui` calls `$.ui.open` with id `rich-ui`, title "rich-ui", `focus: true`, `closeOnEscape: true` and `rows` set to the content height (header, spacer, two rows per feature, their status lines, spacer, footer, plus one when the save-failure line shows). It answers `{}`: the command's `text` is optional, so nothing extra is added to the transcript.
+- `command.run` for `rich-ui` calls `$.ui.open` with id `rich-ui`, title "rich-ui", `focus: true`, `closeOnEscape: true` and `rows` set to the content height (`contentRows`: banner, divider, two rows per feature, their status lines, footer, plus one when the save-failure line shows). It answers `{}`: the command's `text` is optional, so nothing extra is added to the transcript.
 - `holdToasts` is left off so the pane does not suppress other plugins' notifications.
 - Opening an already open pane re-sends the title and size; it does not create a second pane.
 - `focus` is only a request. If the user has text in the composer when they run the command it cannot be: the pane then opens without the keyboard and can be focused by click or the engine's focus chord.
@@ -74,6 +73,7 @@ The pane is drawn by a `ui.render` hook on component `Pane` with `requestId` `ri
 hooks/manager/
   index.ts          # exported handlers: startSession, runCommand, renderPane
   pane.tsx          # buildPane: the tree from plain data and callbacks
+  banner.ts         # the banner's Raster cells (pure)
   size.ts           # contentRows (for `rows`) and clip
   *.test.ts(x)      # tests beside each file
 hooks/core/
@@ -93,7 +93,7 @@ The footer's version cannot be read from `plugin.json` at run time (the module m
 ## 7. Testing
 
 Automated (`claude plugin test`, terminal surface):
-- Rows: one per registry feature, checkbox matches the flag, description dim and cut when narrow.
+- Rows: one per registry feature, pill matches the flag (`● on` / `○ off`), description dim and cut when narrow; banner Raster present, replaced by a plain title when narrow; `N of M on` summary; `error`/`note` chip only with a status entry; first row autofocus; row maths (`contentRows`).
 - Press: toggles the flag in `$.state` and writes `$.store`; clears that feature's status; other features unchanged.
 - Status: a note renders dim under its row, an error renders in the warning color, a healthy feature shows none.
 - Footer: shows the version; equality with `.claude-plugin/plugin.json` is checked by `tools/check-version.mjs`.
