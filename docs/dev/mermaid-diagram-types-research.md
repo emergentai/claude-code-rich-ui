@@ -66,13 +66,80 @@ tests for the happy path, malformed input and a narrow window. All of it sits be
 same Mermaid switch, since one switch per feature is a charter rule; per-type switches
 are not needed.
 
+## 4a. How xiaolai/claude-rich-terminal does it
+
+Repo: <https://github.com/xiaolai/claude-rich-terminal> (plugin `rich-terminal` 1.0.0, MIT).
+Read at its only commit (`d20c34a`). Same idea as ours (Mermaid in replies plus a status
+line), with three differences that matter here.
+
+**1. A different text renderer, and a newer one.** It vendors `@zombie-mermaid/ascii-renderer`
+4.0.0 (272 KB bundled), which describes itself as the maintained continuation of
+`beautiful-mermaid`. The current release is 5.9.1 (published 2026-10-23). I installed 5.9.1
+in a scratch folder and ran the same probe as section 2:
+
+| Type | beautiful-mermaid 1.1.3 (ours) | zombie ascii-renderer 5.9.1 |
+|---|---|---|
+| flowchart, sequence, state, class, ER, `xychart-beta` | renders | renders (output differs in size: ER sample 16x17 vs our 7x28) |
+| **pie** | fails | **renders** as a stacked bar with a percentage legend |
+| **C4** (`C4Context`) | fails | **renders** |
+| **architecture-beta** | not tried | **renders** (grouped boxes with arrows) |
+| gantt, journey, mindmap, gitGraph, timeline, quadrant, sankey, block, requirement | fails | fails |
+
+So swapping the renderer gets pie, C4 and architecture for free, but not the types people
+ask for next. Its README says pie stays source in text mode because it is pinned to 4.0.0;
+5.x has since added it. Package sizes: ascii-renderer 200 KB plus parser 52 KB plus core
+30 KB unminified, so well inside our 800 KB budget. I did not compare flowchart or
+sequence output quality side by side, check whether 5.9.1 loads in the mod sandbox, or
+read its licence file beyond the package metadata.
+
+**2. Pictures for the rest, via headless Chrome.** For gantt, mindmap, timeline, gitGraph,
+journey and pie it draws no text at all. Instead, when the terminal speaks the kitty
+graphics protocol (Ghostty, kitty) and the user has turned on "images" and Chrome,
+Chromium, Edge or Brave exists, it:
+1. writes a small HTML page that loads a bundled `mermaid.min.js` (mermaid 12.1.0, 5.5 MB,
+   outside `hooks/`) with a strict CSP that blocks the network,
+2. runs `chrome --headless --dump-dom` to read the diagram's size from the page title,
+3. runs `chrome --headless --screenshot` to write a PNG, one Chrome at a time, cached per
+   diagram and theme, with a fresh file name each time so a failed screenshot can't
+   pass off an old file,
+4. shows it with the engine's `<Image source={{ file, format: 'png' }}>` element.
+It uses `$.process.spawn`, `$.fs` and `$.env` (to detect Ghostty and kitty), so the engine
+allows more than our feature has used. In text mode these types stay source. Images are off
+by default; the user enables them in plugin config (`images`, `imageTheme`, `browser`).
+A separate `/rich open` opens the same Mermaid 12 renderer in the browser as a zoomable page.
+
+This is the "image-quality diagrams" path our own backlog describes (`FEATURES.md`:
+bundled rasterizer, then `Raster`, then host tools). It confirms the host-tool route works
+today, and it gets every Mermaid type with exact upstream fidelity. The costs are the
+ones it states itself: only two terminals, needs a browser installed, about 1.5 s of
+latency per diagram, and 5.5 MB of vendored JavaScript.
+
+**3. Other details worth borrowing.**
+- Diagrams inside quotes and lists are handled, with a fallback to rendering the whole
+  Markdown when a diagram can't be lifted out (`needsWholeMarkdown`). Ours skips nested
+  fences.
+- A placeholder is shown while a fence is still open or the picture is being drawn.
+- ctrl+o shows the source; the stored message is never changed.
+- A private cache folder checked for ownership and mode 700 before use.
+
+**Implications for us.** (a) Try `@zombie-mermaid/ascii-renderer` 5.x as a drop-in
+replacement for `beautiful-mermaid`: it adds pie, C4 and architecture and is actively
+maintained, while ours has been quiet since February. (b) For gantt, mindmap, timeline,
+gitGraph and journey the choice is our own text renderers (section 4) or this Chrome
+picture path as an opt-in, kept as the fallback for terminals without images. They are not
+exclusive: text where we can draw it well, picture where the user has opted in.
+
 ## 5. Recommendation
 
 1. Count the mermaid types in real transcripts first (a one-off script over
    `~/.claude/projects/**/*.jsonl`) so the order above rests on data.
-2. Ship `xychart-beta` (allow-list plus width and malformed-body checks).
-3. Write small own renderers for `pie`, then `gantt` and `mindmap`/`timeline`, one PR each.
-4. Revisit `gitGraph` and `journey` only if the count shows they appear.
+2. Spike swapping in `@zombie-mermaid/ascii-renderer` 5.x (section 4a): check it loads in
+   the sandbox and that the five shipped types still look as good. If so, `xychart-beta`
+   and `pie` come with it, plus C4 and architecture.
+3. Ship `xychart-beta` and `pie` (allow-list plus width and malformed-body checks).
+4. For gantt, mindmap, timeline: write small own text renderers, one PR each, or take the
+   opt-in Chrome picture route; decide after step 1 shows which types matter.
+5. Revisit `gitGraph` and `journey` only if the count shows they appear.
 
 ## 6. Open questions
 
@@ -87,5 +154,5 @@ are not needed.
 
 ## 7. Not done
 
-I did not run anything inside the mod sandbox, did not evaluate the npm `mermaid-ascii`
-package, did not measure type frequency, and wrote no renderer code.
+I did not run anything inside the mod sandbox, did not run the Chrome picture path of
+claude-rich-terminal, did not evaluate the npm `mermaid-ascii` package, did not measure type frequency, and wrote no renderer code.
