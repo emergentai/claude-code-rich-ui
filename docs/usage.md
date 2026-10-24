@@ -13,7 +13,7 @@ rich-ui features
  [x] Status band
      Show context and plan usage under the prompt when they run high
 
- Enter toggles · Esc closes · rich-ui 0.2.0
+ Enter toggles · Esc closes · rich-ui 0.2.1
 ```
 
 Press a row, or press Enter on it, to flip the feature. Esc closes the pane. The
