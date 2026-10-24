@@ -1,6 +1,7 @@
 import { expect, test } from 'claude-code/testing'
 
 import { boot } from '../core/test-harness'
+import { VERSION } from '../core/version'
 
 const PANE = {
   plugin: 'rich-ui',
@@ -25,7 +26,7 @@ test('the pane lists each feature with a checkbox and a footer', async ($, on) =
   expect(row?.text).toContain('Mermaid diagrams')
   expect(await ui.find({ type: 'Text', text: /Draw mermaid diagrams/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /Enter toggles/ })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /rich-ui 0\.1\.0/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: new RegExp(`rich-ui ${VERSION.replace(/\./g, '\\.')}`) })).toBeDefined()
   await ui.unmount()
 })
 
@@ -110,4 +111,24 @@ test('running /rich-ui opens the pane without transcript text', async ($, on) =>
   const result = await $.command.run({ command: 'rich-ui' } as never)
 
   expect(result.text).toBeUndefined()
+})
+
+test('toggling the status band clears and restores its line', async ($, on) => {
+  const { clock, status } = await boot($, on)
+  await $.session.measure({
+    context: { window: 200_000, percent: 80 },
+    rateLimits: [],
+    changed: ['context'],
+  } as never)
+  expect(status.line).toMatch(/80%/)
+
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await ui.press({ key: 'status-band' })
+  await clock.settle()
+  expect(status.line).toBeUndefined()
+
+  await ui.press({ key: 'status-band' })
+  await clock.settle()
+  expect(status.line).toMatch(/80%/)
+  await ui.unmount()
 })

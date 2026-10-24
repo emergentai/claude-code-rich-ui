@@ -10,7 +10,10 @@ rich-ui features
  [x] Mermaid diagrams
      Draw mermaid diagrams as text diagrams
 
- Enter toggles · Esc closes · rich-ui 0.1.0
+ [x] Status band
+     Show context and plan usage under the prompt when they run high
+
+ Enter toggles · Esc closes · rich-ui 0.2.0
 ```
 
 Press a row, or press Enter on it, to flip the feature. Esc closes the pane. The
@@ -54,6 +57,14 @@ uninstall, and a reinstall picks them up (turn Mermaid off, uninstall, reinstall
 still off); delete that file to start fresh.
 The shell form also accepts `--keep-data` for the data folder.
 
+## Status band
+
+When the context window is 60% full or more, or a plan limit (5h, 7d, spend) is at 75%
+or more, one line appears in the status row under the prompt, for example
+`context ██████░░ 70%  ·  5h 92% (resets in 1h 00m)`. A healthy session shows nothing.
+`/clear` resets it, and turning Status band off in `/rich-ui` hides it at once. Details:
+[`features/status-band.md`](features/status-band.md).
+
 ## Mermaid diagrams
 
 When Claude's reply contains a complete mermaid code block, rich-ui draws it as a
@@ -67,8 +78,12 @@ Supported diagram types:
 - class diagram
 - state diagram
 - entity relationship diagram
+- XY chart (`xychart-beta`)
+- pie chart
+- C4 diagram (`C4Context`, `C4Container`, `C4Component`, `C4Dynamic`, `C4Deployment`)
+- architecture diagram (`architecture-beta`)
 
-Everything else (gantt, pie, journey, mindmap, XY charts, and so on) is not drawn
+Everything else (gantt, journey, mindmap, timeline, gitGraph, and so on) is not drawn
 and stays a normal code block.
 
 A diagram also stays a code block when:

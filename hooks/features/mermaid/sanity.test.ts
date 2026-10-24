@@ -10,13 +10,33 @@ test('each supported header is recognised', async () => {
   expect(diagramKind('stateDiagram\n [*] --> A')).toBe('state')
   expect(diagramKind('classDiagram\n class A')).toBe('class')
   expect(diagramKind('erDiagram\n A ||--o{ B : has')).toBe('er')
+  expect(diagramKind('xychart-beta\n bar [1]')).toBe('xychart')
+  expect(diagramKind('xychart\n bar [1]')).toBe('xychart')
+  expect(diagramKind('pie title Pets\n "a": 1')).toBe('pie')
+  expect(diagramKind('pie showData\n "a": 1')).toBe('pie')
+  expect(diagramKind('C4Context\n Person(a, "A")')).toBe('c4')
+  expect(diagramKind('C4Container\n Person(a, "A")')).toBe('c4')
+  expect(diagramKind('architecture-beta\n service s(server)[S]')).toBe('architecture')
 })
 
 test('unsupported and unknown headers are rejected', async () => {
   expect(diagramKind('gantt\n title x')).toBe(null)
-  expect(diagramKind('pie\n "a": 1')).toBe(null)
+  expect(diagramKind('mindmap\n root')).toBe(null)
+  expect(diagramKind('timeline\n 2020 : a')).toBe(null)
+  expect(diagramKind('pieces of eight')).toBe(null)
   expect(diagramKind('hello world')).toBe(null)
   expect(diagramKind('')).toBe(null)
+})
+
+test('pie, C4 and architecture headers with no content are rejected', async () => {
+  expect(diagramKind('pie title Pets')).toBe(null)
+  expect(diagramKind('pie showData\n %% nothing yet')).toBe(null)
+  expect(diagramKind('C4Context')).toBe(null)
+  expect(diagramKind('C4Context\n title Only a title')).toBe(null)
+  expect(diagramKind('architecture-beta')).toBe(null)
+  expect(diagramKind('pie\n "a" : 1')).toBe('pie')
+  expect(diagramKind('C4Context\n Person(u, "User")')).toBe('c4')
+  expect(diagramKind('architecture-beta\n group g(cloud)[G]')).toBe('architecture')
 })
 
 test('front matter, comments and directives are skipped', async () => {

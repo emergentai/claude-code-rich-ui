@@ -6,41 +6,21 @@ import { build } from 'esbuild'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
-const outfile = join(root, 'hooks/vendor/beautiful-mermaid.js')
+const outfile = join(root, 'hooks/vendor/zombie-mermaid.js')
 const LIMIT = 800 * 1024
-
-const elkStub = `export default class ELK {
-  constructor() {}
-  layout() { throw new Error('elk stubbed') }
-}`
 
 await build({
   stdin: {
-    contents: `export { renderMermaidASCII } from 'beautiful-mermaid'`,
+    contents: `export { renderMermaidAscii } from '@zombie-mermaid/ascii-renderer'`,
     resolveDir: here,
     loader: 'js',
   },
   bundle: true,
   format: 'esm',
-  platform: 'browser',
+  platform: 'neutral',
   minify: true,
   legalComments: 'none',
   outfile,
-  plugins: [
-    {
-      name: 'stub-elk',
-      setup(b) {
-        b.onResolve({ filter: /^elkjs/ }, () => ({
-          path: 'elk-stub',
-          namespace: 'stub',
-        }))
-        b.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({
-          contents: elkStub,
-          loader: 'js',
-        }))
-      },
-    },
-  ],
 })
 
 const size = statSync(outfile).size
