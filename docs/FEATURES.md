@@ -46,6 +46,20 @@ Not yet: model and cache segments, per-segment switches, colors.
 Reference: [`features/status-band.md`](features/status-band.md). Research:
 [`dev/status-band-research.md`](dev/status-band-research.md).
 
+### Markdown preview (v0.3.0)
+
+Click a link to a markdown file in one of Claude's replies and the file opens, rendered,
+in a pane beside the chat (or above the prompt in a narrow window). No command and
+nothing opens by itself. The pane follows the file when Claude edits it.
+
+- Tables are drawn fitted to the pane, images show as `[image: name]`, and a long file is
+  cut with a note.
+- Links in a reply that also holds a mermaid diagram are not clickable (rare, not planned).
+- Off in `/rich-ui` and links go back to stock.
+
+Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike:
+[`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
+
 ## Backlog
 
 Not committed. Each would be its own feature, independently toggleable, and each must
@@ -56,11 +70,6 @@ sessions, not just some?
   tables as grids and falls back to per-row records in narrow windows, so only JSON arrays
   and CSV in code fences remain, and those look rare. Low priority; spike:
   [`dev/tables-spike.md`](dev/tables-spike.md).
-- **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
-  formatted docs in a pane beside the chat. First slice built on
-  `feature/markdown-preview`: click a link to a markdown file in a reply to open it (no
-  command, no automatic opening; tables fitted to the pane, images as text; reference
-  [`features/markdown-preview.md`](features/markdown-preview.md)). Spike: [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 - **More mermaid types.** XY chart, pie, C4 and architecture shipped in 0.2.0. Gantt,
   mindmap, timeline, gitGraph and journey wait for a text renderer that draws them; we do
   not write our own. Research: [`dev/mermaid-diagram-types-research.md`](dev/mermaid-diagram-types-research.md).

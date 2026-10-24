@@ -2,6 +2,18 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## 0.3.0 - 2026-10-24
+
+### Added
+- Markdown preview: click a link to a markdown file in one of Claude's replies and the file
+  opens, rendered, in a pane. Tables are fitted to the pane, images show as `[image: name]`,
+  a long file is cut with a note, and the pane refreshes when Claude edits the file. Its own
+  row in `/rich-ui`. ([#10](https://github.com/emergentai/claude-code-rich-ui/pull/10))
+
+### Internal
+- Docs: spikes for rendered tables, edit diffs, status band round two and the markdown
+  preview, a feature page and a manual test fixture. ([#8](https://github.com/emergentai/claude-code-rich-ui/pull/8), [#9](https://github.com/emergentai/claude-code-rich-ui/pull/9), [#10](https://github.com/emergentai/claude-code-rich-ui/pull/10))
+
 ## 0.2.1 - 2026-10-24
 
 ### Fixed
