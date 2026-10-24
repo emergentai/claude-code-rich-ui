@@ -41,7 +41,9 @@ function withoutCode(text: string): string {
 
 // Set before the label of a link the plugin answers, so it can be told from a
 // stock link. A no-break space keeps it on the line of the label after it.
-export const LINK_MARK = '⧉\u00a0'
+// Not U+29C9 (⧉): the engine's own marker for a link that points elsewhere than
+// it reads, and a label that holds it gets the target shown after it.
+export const LINK_MARK = '❐\u00a0'
 
 const LABELED = /(!?)\[([^\]]*)\](\(\s*(<[^>]+>|[^)\s]+)(?:\s+"[^"]*")?\s*\))/g
 

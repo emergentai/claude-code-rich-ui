@@ -255,3 +255,7 @@ test('markPreviewLinks marks only answered links outside code', () => {
   expect(markPreviewLinks('![a](x.md)', ['x.md'])).toBe('![a](x.md)')
   expect(markPreviewLinks('[a](x.md) [a](x.md)', ['x.md'])).toBe(`[${m}a](x.md) [${m}a](x.md)`)
 })
+
+test('the link mark is not the engine\'s own marker', () => {
+  expect(LINK_MARK).not.toContain('⧉')
+})

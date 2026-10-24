@@ -274,7 +274,7 @@ test('a link the plugin answers carries a mark after its label, others do not', 
   await boot($, on)
   const ui = await $.ui.mount(message('[plan](/repo/plan.md) and [web](https://e.com/a.md) and `[c](/repo/c.md)`') as never)
 
-  expect(await ui.find({ type: 'Markdown', text: /\[⧉\u00a0plan\]\(\/repo\/plan\.md\)/ })).toBeDefined()
+  expect(await ui.find({ type: 'Markdown', text: /\[❐\u00a0plan\]\(\/repo\/plan\.md\)/ })).toBeDefined()
   expect(await ui.find({ type: 'Markdown', text: /\[web\]\(https/ })).toBeDefined()
   expect(await ui.find({ type: 'Markdown', text: /`\[c\]\(\/repo\/c\.md\)`/ })).toBeDefined()
   await ui.unmount()
