@@ -116,6 +116,8 @@ the aurora spinner (off by default), and a new spike on scrollback and long tool
 Dropped: tool timing, the turn summary line, the compact nudge and the turn ribbon. The
 cost segment and the turn-finished notification stay in the backlog, not scheduled.
 
+Built: the copy button (idea 1), see [`../features/copy-button.md`](../features/copy-button.md).
+
 ## Suggested order
 
 1. Copy button on code blocks (small, broad, safe).

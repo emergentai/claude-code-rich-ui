@@ -60,6 +60,20 @@ nothing opens by itself. The pane follows the file when Claude edits it.
 Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike:
 [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 
+### Copy code (next release)
+
+A dim `copy code` line under a reply that holds a fenced code block; press it to copy the
+block's source and get a quiet toast. Several blocks are numbered with their language.
+
+- One-line blocks (under 61 characters), empty blocks, mermaid blocks and unfinished fences get
+  nothing; summaries and non-terminal surfaces are left alone.
+- Copies the source only: no fence lines, the list indent removed, no trailing newline.
+- Wraps the reply (`next(e)` plus one row) so mermaid's toggle and the preview's links keep working.
+- Off in `/rich-ui` and replies go back to stock.
+
+Reference: [`features/copy-button.md`](features/copy-button.md). Manual test:
+[`dev/copy-button-manual-test.md`](dev/copy-button-manual-test.md).
+
 ## Backlog
 
 Not committed. Each would be its own feature, independently toggleable, and each must

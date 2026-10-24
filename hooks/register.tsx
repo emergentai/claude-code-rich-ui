@@ -1,5 +1,6 @@
 import type { Register } from 'claude-code'
 
+import { renderCopyRow } from './features/copy-button'
 import { refreshOnWrite, renderLinkedReply, renderPreview } from './features/markdown-preview'
 import { renderAssistantMessage } from './features/mermaid'
 import { onSessionEnd, recordUsage } from './features/status-band'
@@ -13,6 +14,8 @@ export const register: Register = on => {
   on('command.run', { command: 'rich-ui' }, runCommand)
   on('ui.render', { component: 'Pane', requestId: 'rich-ui' }, renderPane)
 
+  // First, so it is outermost: it wraps what mermaid and the preview draw.
+  on('ui.render', { component: 'AssistantMessage' }, renderCopyRow)
   on('ui.render', { component: 'AssistantMessage' }, renderAssistantMessage)
 
   on('tool.call', refreshOnWrite)
