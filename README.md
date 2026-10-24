@@ -20,7 +20,7 @@ switch.
 That adds this repo as a marketplace and installs the plugin. Mods are on by default in
 the terminal from Claude Code 2.1.287, so there is nothing else to enable. Works in the
 terminal only (not the desktop app or the IDE extensions), and the mods API is still
-early access, so it can shift between Claude Code releases. Tested on 2.1.309.
+early access, so it can shift between Claude Code releases. Tested on 2.1.310.
 
 Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 (Marketplaces tab) if you want new features as they land.
@@ -31,6 +31,7 @@ Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 |---|---|
 | Mermaid diagrams | Complete mermaid blocks in Claude's replies are drawn as text diagrams. A dim `show source` line above each one swaps it back to the code. |
 | Status band | A line under the prompt shows context and plan usage, only when they run high. |
+| Markdown preview | Click a link to a markdown file in a reply and it opens, rendered, in a pane. |
 
 Flowcharts (subgraphs included), sequence, class, state, ER, XY chart, pie, C4 and
 architecture diagrams are drawn. Any other type stays the code block it always was, and so does anything too big for your
@@ -56,8 +57,7 @@ reinstall picks them up again. Delete that file if you want a clean slate.
 
 ## 🗺️ Coming next
 
-Planned, not promised: rendered tables, a markdown preview pane, a context bar, inline
-edit diffs, image-quality diagrams. The bar for anything new is that it should help in
+Planned, not promised: more useful links, a status cost segment, more diagram types. The bar for anything new is that it should help in
 most sessions and add no clutter; the longer version is in
 [`docs/FEATURES.md`](docs/FEATURES.md).
 
