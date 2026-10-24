@@ -128,15 +128,48 @@ maintained, while ours has been quiet since February. (b) For gantt, mindmap, ti
 gitGraph and journey no library draws text, and the owner has ruled out both our own
 renderers and the Chrome picture path, so they stay code blocks until a library adds them.
 
+## 4b. Sandbox spike: zombie-mermaid 5.9.1 (done)
+
+Throwaway, on this branch, then reverted. I bundled `@zombie-mermaid/ascii-renderer` 5.9.1
+with esbuild (`--platform=neutral`, minified) to a 271 KB file, pointed `render.ts` at it
+and ran `claude plugin test`.
+
+- The bundle has no `require(`, `process.` or `WebAssembly`, and loads under the engine.
+- Typecheck passes and the existing 58 tests pass unchanged. The renderer takes the same
+  `useAscii`, `colorMode` and `paddingY` options.
+- Under the engine, `renderDiagram` drew `pie`, `xychart-beta`, `C4Context` and
+  `architecture-beta` (the last two were not in the allow-list, so this was a direct
+  render call, not the full feature path).
+- Side by side on one sample per shipped type, zombie looks equal or better:
+  - ER: relationship drawn between the boxes with a label; ours put it on a stray row.
+  - Class: `+ String name` and `+ eat()` keep the member signature; ours dropped the `()`.
+  - Sequence: more compact, no blank rows between messages.
+  - Flowchart with a subgraph: the node inside the subgraph is placed inside it; ours drew
+    a bare label and an edge crossing the border.
+  - State: one regression seen, the start marker `[*]` is not drawn (an arrow starts the
+    diagram); the end marker is drawn as `◉`. Ours drew both, though the start one looked
+    odd.
+- Not checked: a larger flowchart or sequence set, wide diagrams under `fit.ts`, and the
+  licence text beyond the package metadata (MIT).
+
+Result: the swap is viable. Next would be a real change: replace the vendor bundle and
+`build-vendor.mjs` source, add `xychart-beta` and `pie` (and decide on C4 and
+architecture) to `sanity.ts`, update the render tests' expected output, and add tests for
+the new types.
+
+Not evaluated: `grok-mermaid` 0.2.3 (npm, "Unicode box-drawing art for terminals"). Its
+install was blocked by the auto-mode classifier as unvetted external code, so its type
+coverage is unknown. Look at its README on npm or GitHub before ruling it in or out.
+
 ## 5. Recommendation
 
 Direction from the owner: no picture rendering, no counting types in transcripts, and no
 rendering code of our own. Coverage is whatever a maintained library draws as text; a type
 no library draws stays a code block.
 
-1. Spike swapping in `@zombie-mermaid/ascii-renderer` 5.x (section 4a): check it loads in
-   the sandbox and that the five shipped types still look as good. If so, `xychart-beta`,
-   `pie`, C4 and architecture come with it.
+1. Swap in `@zombie-mermaid/ascii-renderer` 5.x. The spike (section 4b) shows it loads in
+   the sandbox and draws the five shipped types as well or better (one state-diagram
+   regression). `xychart-beta`, `pie`, C4 and architecture come with it.
 2. Allow those types in `sanity.ts`, with width and malformed-body checks and tests.
 3. Gantt, mindmap, timeline, gitGraph, journey, quadrant, sankey, block and requirement
    stay code blocks for now. To widen further: watch the zombie-mermaid releases, and ask
@@ -148,13 +181,14 @@ no library draws stays a code block.
 
 ## 6. Open questions
 
-- Does the zombie-mermaid renderer look as good as `beautiful-mermaid` on the five shipped
-  types, and does it load in the mod sandbox?
+- Can the missing state-diagram start marker be fixed upstream, and does a larger sample
+  of the five shipped types hold up?
 - Are there other maintained text renderers that cover gantt, mindmap or timeline? I found
   none; one more search of npm and GitHub before settling is cheap.
 - Is the maintainer open to adding more types, and how fast do releases land?
 
 ## 7. Not done
 
-I did not run anything inside the mod sandbox, did not run the Chrome picture path of
+I ran the renderer inside the engine's test harness only (section 4b), not in a live
+session, did not run the Chrome picture path of
 claude-rich-terminal (ruled out), did not evaluate the npm `mermaid-ascii` package, did not measure type frequency, and wrote no renderer code.
