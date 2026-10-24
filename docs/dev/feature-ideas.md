@@ -53,6 +53,9 @@ anything that adds a line to every message.
 
 ## Enhance links: what a spike would answer
 
+The spike has been done: [`enhance-links-spike.md`](enhance-links-spike.md) answers each
+point below with evidence.
+
 1. Does a rewritten reply keep working when `path:line` is turned into a link? The text is
    ours to change for drawing, but the href must stay in `pressableLinks`.
 2. Open any text file, not only markdown: read with `$.fs.read`, draw with `Code`

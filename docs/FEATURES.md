@@ -70,6 +70,11 @@ sessions, not just some?
   tables as grids and falls back to per-row records in narrow windows, so only JSON arrays
   and CSV in code fences remain, and those look rare. Low priority; spike:
   [`dev/tables-spike.md`](dev/tables-spike.md).
+- **Enhance links (open code references).** Backticked `src/foo.ts:42` in a reply becomes a
+  link that opens the file in a pane with a line gutter, and later the editor. Spiked: it
+  works in the fullscreen UI with a shared reply pass, but whether clicks reach the plugin
+  in terminals without hyperlink support is open. Spike:
+  [`dev/enhance-links-spike.md`](dev/enhance-links-spike.md).
 - **More mermaid types.** XY chart, pie, C4 and architecture shipped in 0.2.0. Gantt,
   mindmap, timeline, gitGraph and journey wait for a text renderer that draws them; we do
   not write our own. Research: [`dev/mermaid-diagram-types-research.md`](dev/mermaid-diagram-types-research.md).
