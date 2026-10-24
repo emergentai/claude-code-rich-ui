@@ -57,18 +57,21 @@ sessions, not just some?
   and CSV in code fences remain, and those look rare. Low priority; spike:
   [`dev/tables-spike.md`](dev/tables-spike.md).
 - **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
-  formatted docs in a pane beside the chat.
-- **Inline edit diffs.** A compact colored diff after each `Edit` or `Write`,
-  complementing the built-in `/diff` pane.
-- **Image-quality diagrams.** The follow-up to the shipped text diagrams. Path from the
-  spike: improve the bundled rasterizer, then try the `Raster` element, then offer host
-  tools such as macOS `qlmanage` as an opt-in. Terminals that cannot draw images keep the
-  text diagram as the fallback.
-- **More mermaid types.** XY charts first (the renderer already draws them), then
-  whatever the renderer gains.
+  formatted docs in a pane beside the chat. Next candidate: stock shows these as plain
+  numbered text and the API supports it (`$.ui.open`, `Markdown`), with a width limit on
+  auto-opening. Spike: [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
+- **More mermaid types.** XY chart, pie, C4 and architecture shipped in 0.2.0. Gantt,
+  mindmap, timeline, gitGraph and journey wait for a text renderer that draws them; we do
+  not write our own. Research: [`dev/mermaid-diagram-types-research.md`](dev/mermaid-diagram-types-research.md).
 
 ## Turned down
 
+- **Inline edit diffs.** Stock Claude Code already prints a coloured diff with context
+  after each `Edit` and `Write` (checked 2.1.310), so there is nothing to add. Spike:
+  [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
+- **Image-quality diagrams.** Pictures instead of text diagrams (by a bundled rasterizer,
+  the `Raster` element or a headless browser) are not wanted: text diagrams work in every
+  terminal and need nothing installed.
 - **Detailed view of Bash tool commands.** Sometimes useful, not usually, and people
   prefer less clutter in a world of AI noise. This is the example that defines the first
   principle.
