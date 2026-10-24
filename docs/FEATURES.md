@@ -57,9 +57,10 @@ sessions, not just some?
   and CSV in code fences remain, and those look rare. Low priority; spike:
   [`dev/tables-spike.md`](dev/tables-spike.md).
 - **Markdown preview pane.** Specs, plans and READMEs Claude writes, rendered as
-  formatted docs in a pane beside the chat. Next candidate: stock shows these as plain
-  numbered text and the API supports it (`$.ui.open`, `Markdown`), with a width limit on
-  auto-opening. Spike: [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
+  formatted docs in a pane beside the chat. First slice built on
+  `feature/markdown-preview`: click a link to a markdown file in a reply to open it (no
+  command, no automatic opening; tables fitted to the pane, images as text; reference
+  [`features/markdown-preview.md`](features/markdown-preview.md)). Spike: [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 - **More mermaid types.** XY chart, pie, C4 and architecture shipped in 0.2.0. Gantt,
   mindmap, timeline, gitGraph and journey wait for a text renderer that draws them; we do
   not write our own. Research: [`dev/mermaid-diagram-types-research.md`](dev/mermaid-diagram-types-research.md).
