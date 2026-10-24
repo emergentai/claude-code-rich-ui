@@ -26,10 +26,33 @@ export function flipDirection(source: string): string | null {
   return source.replace(FLOW_HEADER, `${match[1]} ${next}`)
 }
 
+// Drawing is synchronous and can take seconds for a big diagram, and the engine
+// asks again on every redraw, so a result (including "does not fit") is kept
+// per source and window size.
+const CACHE_LIMIT = 64
+const cache = new Map<string, string[] | null>()
+
 export function fitDiagram(
   source: string,
   viewport: Viewport,
   render: (source: string) => DiagramResult | null = renderDiagram,
+): string[] | null {
+  if (render !== renderDiagram) return computeFit(source, viewport, render)
+
+  const key = `${viewport.columns}x${viewport.rows}\n${source}`
+  if (cache.has(key)) return cache.get(key) ?? null
+
+  const lines = computeFit(source, viewport, render)
+  if (cache.size >= CACHE_LIMIT) cache.delete(cache.keys().next().value as string)
+  cache.set(key, lines)
+
+  return lines
+}
+
+function computeFit(
+  source: string,
+  viewport: Viewport,
+  render: (source: string) => DiagramResult | null,
 ): string[] | null {
   const kind = diagramKind(source)
   if (kind === null) return null
@@ -37,9 +60,20 @@ export function fitDiagram(
   const first = render(source)
   if (first && fitsViewport(first, viewport)) return first.lines
   if (kind !== 'flowchart') return null
+  // Turning a diagram sideways trades height for width. When it is already too
+  // wide and too tall that cannot rescue it, and the second drawing of a large
+  // flowchart is the slow one (seconds), so do not pay for it.
+  if (first && overflowsBoth(first, viewport)) return null
 
   const flipped = flipDirection(source)
   const second = flipped ? render(flipped) : null
 
   return second && fitsViewport(second, viewport) ? second.lines : null
+}
+
+function overflowsBoth(diagram: DiagramResult, viewport: Viewport): boolean {
+  return (
+    diagram.width > viewport.columns - COLUMN_MARGIN &&
+    diagram.height > viewport.rows - ROW_MARGIN
+  )
 }

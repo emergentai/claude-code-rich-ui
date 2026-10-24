@@ -135,3 +135,7 @@ timeline
 7. Malformed input stays code and does not crash the reply: an `xychart-beta` with `bar [`
    unclosed, and a `pie`, `C4Context` or `architecture-beta` fence with a header (or only
    a title) and no content.
+8. A very large flowchart (for example four subgraphs with about 25 nodes and cross links
+   between them) in a normal-size window: the reply appears at once as a code block, typing
+   and scrolling stay responsive, and nothing freezes. Before the fix this froze the
+   session for seconds on every redraw.
