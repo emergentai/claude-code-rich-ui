@@ -1,6 +1,7 @@
 import { expect, test } from 'claude-code/testing'
 
 import { boot } from '../core/test-harness'
+import { VERSION } from '../core/version'
 
 const PANE = {
   plugin: 'rich-ui',
@@ -25,7 +26,7 @@ test('the pane lists each feature with a checkbox and a footer', async ($, on) =
   expect(row?.text).toContain('Mermaid diagrams')
   expect(await ui.find({ type: 'Text', text: /Draw mermaid diagrams/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /Enter toggles/ })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /rich-ui 0\.1\.0/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: new RegExp(`rich-ui ${VERSION.replace(/\./g, '\\.')}`) })).toBeDefined()
   await ui.unmount()
 })
 

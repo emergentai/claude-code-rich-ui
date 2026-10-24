@@ -7,7 +7,7 @@ can be switched off on its own.
 
 ## Shipped
 
-### Mermaid diagrams (v0.1.0)
+### Mermaid diagrams (v0.1.0; more types in v0.2.0)
 
 When Claude's reply contains a complete fenced `mermaid` code block, the feature draws
 it as a text diagram (box-drawing characters) instead of leaving raw code the reader
@@ -20,10 +20,10 @@ source.
 
 **Scope.**
 - Complete, top-level mermaid fences in assistant replies, on the terminal surface only.
-- Flowchart (including subgraphs), sequence, class, state and entity relationship
-  diagrams. Only these five. Everything else (gantt, pie, journey, mindmap, XY charts)
-  stays a normal code block; `xychart-beta` renders in the library but is deliberately
-  not allowed yet.
+- Flowchart (including subgraphs), sequence, class, state, entity relationship, XY chart,
+  pie, C4 and architecture diagrams (v0.2.0 added the last four with the renderer swap
+  to zombie-mermaid). Everything else (gantt, journey, mindmap, timeline, gitGraph)
+  stays a normal code block until the renderer draws it.
 - A diagram that does not fit the window (a flowchart is tried sideways first), and any
   unfinished fence, stays a normal code block.
 - Off in `/rich-ui` and every diagram in the chat goes back to plain code, exactly as
@@ -37,7 +37,7 @@ other diagram languages such as PlantUML.
 
 Design: [`dev/mermaid-feature.md`](dev/mermaid-feature.md).
 
-### Status band
+### Status band (v0.2.0)
 
 A single line under the prompt showing context fullness and plan usage (5h, 7d, spend)
 only when they run high; a healthy session shows nothing. Off in `/rich-ui` clears it.
