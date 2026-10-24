@@ -109,6 +109,13 @@ Two options, both off by default so they pass the clutter rule.
 My pick for a first fun feature is the turn ribbon: it is the only one that also tells
 the reader something.
 
+## Decisions
+
+Chosen to go forward: the copy button, the manager pane refresh, an enhance-links spike,
+the aurora spinner (off by default), and a new spike on scrollback and long tool output.
+Dropped: tool timing, the turn summary line, the compact nudge and the turn ribbon. The
+cost segment and the turn-finished notification stay in the backlog, not scheduled.
+
 ## Suggested order
 
 1. Copy button on code blocks (small, broad, safe).
