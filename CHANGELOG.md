@@ -11,12 +11,11 @@ Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
 ### Changed
 - Mermaid: the diagram renderer is now `@zombie-mermaid/ascii-renderer` 5.9.1 instead of
-  `beautiful-mermaid` 1.1.3, with better ER, class, sequence and subgraph layout. Known
-  regression: the state diagram start marker is not drawn. ([#2](https://github.com/emergentai/claude-code-rich-ui/pull/2))
+  `beautiful-mermaid` 1.1.3, with better ER, class, sequence and subgraph layout. ([#2](https://github.com/emergentai/claude-code-rich-ui/pull/2))
 
-### Known issues
-- A `pie`, C4 or architecture fence with a header and no body draws a nearly empty
-  diagram instead of staying code.
+### Fixed
+- Mermaid: a `pie`, C4 or architecture fence with a header but no content stays a code
+  block instead of drawing an empty diagram. ([#5](https://github.com/emergentai/claude-code-rich-ui/pull/5))
 
 ### Internal
 - Docs: feature reference folder, release process, mermaid type research and manual test
