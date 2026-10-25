@@ -3,7 +3,7 @@ import type { Elements } from 'claude-code'
 import type { EnabledMap, StatusMap } from '../../types'
 import type { Feature } from '../core/feature'
 import { BANNER_COLUMNS, BANNER_ROWS, bannerCells } from './banner'
-import { clip, HEADER_ROWS } from './size'
+import { clip, contentRows, HEADER_ROWS } from './size'
 
 export type PaneView = {
   elements: Elements['terminal']
@@ -13,6 +13,8 @@ export type PaneView = {
   saveFailed: boolean
   width: number
   isDocked: boolean
+  // The rows the pane's room has (`scroll.bodyRows`); only a dock uses it.
+  bodyRows?: number
   version: string
   onToggle: (feature: Feature) => void
 }
@@ -45,10 +47,22 @@ export function buildPane(view: PaneView) {
   ).length
   const summary = `${onCount} of ${view.features.length} on`
   const hasBanner = inner >= BANNER_COLUMNS + summary.length + 2
+  const statusLines = Object.values(view.status).reduce(
+    (total, entry) => total + (entry.error ? 1 : 0) + entry.notes.length,
+    0,
+  )
+  // A dock is as tall as the terminal: when the content leaves room, fill it so
+  // the footer sits at the bottom. If the content is taller, leave it to scroll.
+  const pinHeight =
+    view.isDocked &&
+    view.bodyRows !== undefined &&
+    view.bodyRows > contentRows(view.features.length, statusLines, view.saveFailed)
+      ? view.bodyRows
+      : undefined
   const rule = <Text color="text" dimColor>{'─'.repeat(Math.max(0, view.width))}</Text>
 
   return (
-    <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0}>
+    <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0} height={pinHeight}>
       <Box key="header" height={HEADER_ROWS} paddingX={GUTTER} justifyContent="space-between">
         {hasBanner ? (
           <Raster key="banner" columns={BANNER_COLUMNS} rows={BANNER_ROWS} cells={bannerCells()} />
@@ -118,6 +132,7 @@ export function buildPane(view: PaneView) {
           </Box>
         )
       })}
+      {pinHeight !== undefined && <Box flexGrow={1} />}
       {view.saveFailed && (
         <Box paddingX={GUTTER} marginTop={1}>
           <Text color="warning">Couldn't save your choice</Text>

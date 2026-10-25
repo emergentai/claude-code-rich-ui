@@ -92,6 +92,7 @@ export const renderPane: MatchedHook<
     saveFailed: await read($, saveFailedAtom),
     width: (e.props.bodyColumns ?? 80) - (e.props.placement === 'dock' ? 2 : 0),
     isDocked: e.props.placement === 'dock',
+    bodyRows: e.props.scroll.bodyRows,
     version: VERSION,
     onToggle: async feature => {
       const enabled = await update($, enabledAtom, map => toggled(map, feature))

@@ -40,7 +40,8 @@ Elements, top to bottom, all inside a one-cell gutter (plus one more when docked
 1. Header, 3 rows: a `Raster` banner of "rich-ui" in half-block pixel type with a left-to-right orange-to-violet gradient (`banner.ts`), and on the right a dim `N of M on` summary. The Raster's colours are raw (it is the one place the pane leaves the theme keys; both ends are mid-tone so they read on light and dark). When the pane is too narrow for banner and summary (under about 35 columns) the header is a bold `rich-ui` on the middle row of the same 3 rows, so `contentRows` does not change with width.
 2. A divider: a row of `─` in the theme's `text` colour, dimmed.
 3. Per feature, a keyed `Box` (`row-<id>`, a hover scope with `backgroundColor: subtle`) holding: a plain `Button` (key = feature id, so tests and presses are unchanged) whose children are a fixed-width pill and the name; a status chip beside it only when the feature has an error (`error`, theme `error`) or a note (`note`, theme `warning`); the description on its own dim line indented under the name, which brightens on hover (`hover={{ dimColor: false }}`); then the status lines as before. The pill is `● on ` in `success` (bold) or `○ off` in `inactive`: the glyph carries the state without colour. Focus still draws the button in reverse video; the description stays outside the button for the contrast reason in the old design.
-4. The save-failure line when set, and the dim footer `Enter toggles · Esc closes · rich-ui <version>`.
+4. When docked and the room (`scroll.bodyRows`) is taller than the content, the pane is given that height and a flexible spacer above the footer, so the footer sits at the bottom. If the content is taller, or the pane is inline, nothing is pinned and the pane scrolls or sizes as before.
+5. The save-failure line when set, and the dim footer `Enter toggles · Esc closes · rich-ui <version>`.
 
 Rules:
 - Every text colour is a theme key or `dimColor`; only the banner is raw.

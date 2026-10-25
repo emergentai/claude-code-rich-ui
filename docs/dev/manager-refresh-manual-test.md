@@ -14,7 +14,9 @@ your real plugin store; turn everything back on at the end.
 4. **Narrow.** Resize to about 50 columns: banner still there, descriptions cut with `…`.
    Under about 35 columns: a bold `rich-ui` replaces the banner, rows are still pressable.
 5. **Docked.** Fullscreen terminal 110+ columns: the pane docks, gutters look even on both
-   sides, no row touches the dock edge.
+   sides, no row touches the dock edge, and the footer line is pinned to the bottom of the
+   dock (blank space between the options and it). Shrink the terminal until the content no
+   longer fits: the footer should then follow the options and the pane scroll, not clip.
 6. **Light theme.** `claude --settings '{"theme":"light"}' --plugin-dir <worktree>`: banner
    legible on the light background, `○ off` readable, hover lift visible, text not washed out.
 7. **Chip.** Ask Claude for a mermaid diagram in a terminal where it is left as code (or

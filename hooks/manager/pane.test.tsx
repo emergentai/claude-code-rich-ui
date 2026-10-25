@@ -1,4 +1,5 @@
 import { expect, test } from 'claude-code/testing'
+import type { Engine } from 'claude-code/testing'
 
 import { boot } from '../core/test-harness'
 import { VERSION } from '../core/version'
@@ -261,4 +262,34 @@ test('an off feature shows the inactive pill', async ($, on) => {
   expect(pill?.props.color).toBe('inactive')
   expect(await ui.find({ type: 'Text', text: /2 of 3 on/ })).toBeDefined()
   await ui.unmount()
+})
+
+const heightFor = async (
+  $: Engine,
+  placement: 'dock' | 'inline',
+  bodyRows: number,
+) => {
+  const ui = await $.ui.mount({
+    ...PANE,
+    props: { ...PANE.props, placement, scroll: { offset: 0, bodyRows } },
+    surface: 'terminal',
+  })
+  const root = await ui.find({ type: 'Box' })
+  await ui.unmount()
+
+  return root?.props.height
+}
+
+test('a dock with room is as tall as its room, so the footer sits at the bottom', async ($, on) => {
+  await boot($, on)
+
+  expect(await heightFor($, 'dock', 40)).toBe(40)
+})
+
+test('a dock too short for the content, and an inline pane, keep their natural height', async ($, on) => {
+  await boot($, on)
+
+  expect(await heightFor($, 'dock', contentRows(features.length, 0, false))).toBeUndefined()
+  expect(await heightFor($, 'dock', 5)).toBeUndefined()
+  expect(await heightFor($, 'inline', 40)).toBeUndefined()
 })
