@@ -11,6 +11,7 @@ export type PaneView = {
   status: StatusMap
   saveFailed: boolean
   welcome: string
+  welcomeRev: number
   width: number
   isDocked: boolean
   version: string
@@ -67,7 +68,7 @@ export function buildPane(view: PaneView) {
       })}
       <Text> </Text>
       <Input
-        key="welcome-text"
+        key={`welcome-text-${view.welcomeRev}`}
         label="Welcome text (20 max)"
         placeholder="welcome"
         value={view.welcome}

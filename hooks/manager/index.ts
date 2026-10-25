@@ -38,6 +38,15 @@ const welcomeAtom = atom(
   CAPTION,
   { shape: 'welcome-1' },
 )
+// Bumped when the person presses Enter in the welcome field, and only then. The engine
+// empties a text field on Enter (a submit), and the text has not changed, so nothing
+// else would make the pane draw it again; a new address (see pane.tsx) draws a fresh field
+// holding the text. Typing never bumps it, so typing never replaces the field.
+const welcomeRevAtom = atom(
+  { plugin: 'rich-ui', key: 'welcomeRev' } as const,
+  0,
+  { shape: 'welcome-rev-1' },
+)
 const statusAtom = atom(
   { plugin: 'rich-ui', key: 'status' } as const,
   {} as StatusMap,
@@ -115,6 +124,7 @@ export const renderPane: MatchedHook<
     status: await read($, statusAtom),
     saveFailed: await read($, saveFailedAtom),
     welcome: await read($, welcomeAtom),
+    welcomeRev: await read($, welcomeRevAtom),
     width: (e.props.bodyColumns ?? 80) - (e.props.placement === 'dock' ? 2 : 0),
     isDocked: e.props.placement === 'dock',
     version: VERSION,
@@ -145,6 +155,8 @@ export const renderPane: MatchedHook<
       } catch {
         await update($, saveFailedAtom, () => true)
       }
+      // Enter emptied the field: draw it again with the text.
+      await update($, welcomeRevAtom, n => n + 1)
     },
     onToggle: async feature => {
       const enabled = await update($, enabledAtom, map => toggled(map, feature))

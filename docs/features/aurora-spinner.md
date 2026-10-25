@@ -86,8 +86,9 @@ threshold, so it needs no knowledge of the background colour. Once per session a
 
 The word can be changed in the `/rich-ui` pane: just type in the "Welcome text (20 max)" field. There is no save
 step: every edit updates the sign at once and is written to the store after a 0.4 s pause in typing (Enter
-writes it immediately). The field keeps exactly what is typed and is never redrawn as a new element, so
-nothing flickers; the sign shows it cleaned (lowercase, letters, digits and `! ? . -`, 20 characters; the field stops at 20), and an
+writes it immediately). The field keeps exactly what is typed and typing never replaces it, so nothing
+flickers. Enter is the one exception: the engine empties a text field on Enter (it is a submit, as in the
+prompt box), so the pane draws a fresh field holding the text, once per Enter, with a brief redraw; the sign shows it cleaned (lowercase, letters, digits and `! ? . -`, 20 characters; the field stops at 20), and an
 empty field gives "welcome" on the sign (nothing is stored for the default). A band too narrow for a long word, even in the smallest type, shows the start of it (as many letters as fit) instead of a word cut off at both edges.
 
 The band is as wide as the prompt and as tall as the engine allows (`maxRows - 1`, 7 to 28 rows, at
