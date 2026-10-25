@@ -5,7 +5,7 @@ import type { EnabledMap } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
 import { FRAME_MS, bandSize, createPacer } from '../aurora-common/aurora'
-import { nyanStartedAt, setTicker, startNyan, stopTicker } from '../aurora-common/ticker'
+import { playStartedAt, setTicker, startPlay, stopTicker } from '../aurora-common/ticker'
 import { BANNER_ROWS, TOTAL_MS, nyanCells } from './nyan'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
@@ -44,12 +44,12 @@ export const renderNyan: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
 
   try {
     const now = await $.clock.now()
-    let start = nyanStartedAt()
+    let start = playStartedAt(nyanGreeting.id)
     if (start === undefined) {
       // Not begun: only start on an idle prompt.
       if (e.props.hasSurvey || e.props.isWorking) return next(e)
       start = now
-      startNyan(now)
+      startPlay(nyanGreeting.id, now)
     }
     // Played already; a redraw during the flight keeps drawing it, after it the engine's.
     if (now - start >= TOTAL_MS) return next(e)

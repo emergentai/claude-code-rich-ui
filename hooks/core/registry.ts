@@ -1,3 +1,4 @@
+import { dogeGreeting } from '../features/doge-greeting'
 import { auroraGreeting } from '../features/aurora-greeting'
 import { auroraHeader } from '../features/aurora-header'
 import { auroraMeter } from '../features/aurora-meter'
@@ -14,4 +15,5 @@ export const features: Feature[] = [mermaid, statusBand, markdownPreview,
   auroraHeader,
   auroraMeter,
   nyanGreeting,
+  dogeGreeting,
 ]

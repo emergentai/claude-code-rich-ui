@@ -13,6 +13,7 @@ the stock UI untouched.
 | Aurora pane header | `aurora-header` | the `rich-ui` wordmark in pixel type above the `/rich-ui` pane | while the pane is open |
 | Aurora usage meter | `aurora-meter` | the status band as a row above the prompt with a gradient bar | only when the status band would show |
 | Nyan greeting | `nyan-greeting` | a 7-row banner across the whole window above the prompt | once per session (and after `/clear`), about 4.3 s |
+| Doge greeting | `doge-greeting` | a banner the full width and as tall as the band may be, above the prompt | once per session (and after `/clear`), 5.2 s |
 
 ## Aurora spinner
 
@@ -65,6 +66,23 @@ drawn in half-block cells (two pixels per cell), 7 rows tall and as wide as the 
 columns, the Raster allows 512), then the band goes back to the engine's after a 0.3 s hold. The
 colours are fixed (it is a picture, not themed). Skipped under 50 columns or 24 rows, while a turn
 runs or a survey holds the band. `nyan.ts` is pure: `pixelAt(x, y, ms, width)` is the whole scene.
+
+## Doge greeting
+
+A pixel-art shiba face in the middle of the band with the meme's phrases around it, in a bitmap
+font: "wow" and "much claude" on the left, "such terminal", "very welcome" and "so code" on the right,
+popping in one after another (0.35 s, then every 0.65 s) and flashing through a loud palette. The
+face bobs and blinks. It is drawn in half-block cells over a dark purple gradient, sized by the
+band (the face by its height, the phrases at a whole-number scale), 5.2 s, once per session and again
+after `/clear`, then the band goes back to the engine's. A phrase that would touch the face or run
+off the band is left out, so a narrow window shows fewer. `doge.ts` is pure.
+
+**"Full screen":** a mod cannot take the whole screen. The band above the prompt is the tallest
+thing the engine lets a mod draw without being asked, capped at half the terminal's rows (its
+`maxRows`). The doge uses the full width (up to 400 columns) and `maxRows - 1` rows (7 to 28), so
+about half the window, in a 44-row terminal 16 rows. A pane opened unasked is placed only from 144
+columns and is no taller. Skipped when the band has fewer than 8 rows, under 50 columns or 24 rows,
+or while a turn runs or a survey holds the band.
 
 ## Theme
 

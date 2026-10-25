@@ -9,4 +9,4 @@ code lives. The list of what ships, what is planned and what was turned down is
 | Mermaid diagrams | design in [`../dev/mermaid-feature.md`](../dev/mermaid-feature.md) |
 | Status band | [`status-band.md`](status-band.md) |
 | Markdown preview | [`markdown-preview.md`](markdown-preview.md) |
-| Aurora spinner, greeting, pane header, usage meter, nyan greeting | [`aurora-spinner.md`](aurora-spinner.md) |
+| Aurora spinner, greeting, pane header, usage meter, nyan greeting, doge greeting | [`aurora-spinner.md`](aurora-spinner.md) |

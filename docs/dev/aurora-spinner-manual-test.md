@@ -62,6 +62,14 @@ its limit).
 | c | Toggle off mid-flight | It stops at once. |
 | d | Light theme | Unchanged (fixed colours); check it is not harsh. |
 
+## Doge greeting
+
+| # | Do | Expected |
+|---|---|---|
+| e | Turn it on at an idle prompt | A purple banner as wide as the window and about half its height: a doge in the middle, "wow" and "much claude" on the left, "such terminal", "very welcome" and "so code" on the right, appearing one by one and flashing colours; the doge bobs and blinks. After about 5 s it is gone and nothing is left above the prompt. |
+| f | A tall window, a short one (24 rows), a narrow one (under 50 columns) | Taller window, taller banner (up to 28 rows); a short or narrow one has none; a narrowish one shows fewer phrases but never one over the face. |
+| g | `/clear` | It plays again. |
+
 ## All
 
 | # | Do | Expected |

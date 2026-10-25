@@ -36,31 +36,19 @@ export function runningCount(): number {
   return current.size
 }
 
-// When the greeting began (ms since the epoch): once per session, which no state needs to
-// carry across a reload.
-let greetingStart: number | undefined
+// When each once-per-session greeting began (ms since the epoch), by feature id: which no
+// state needs to carry across a reload.
+const plays = new Map<string, number>()
 
-export function greetingStartedAt(): number | undefined {
-  return greetingStart
+export function playStartedAt(id: string): number | undefined {
+  return plays.get(id)
 }
 
-export function startGreeting(at: number): void {
-  greetingStart = at
-}
-
-// The nyan greeting's clock, the same way.
-let nyanStart: number | undefined
-
-export function nyanStartedAt(): number | undefined {
-  return nyanStart
-}
-
-export function startNyan(at: number): void {
-  nyanStart = at
+export function startPlay(id: string, at: number): void {
+  plays.set(id, at)
 }
 
 // A /clear is a fresh start: the greetings may play once more.
 export function resetGreeting(): void {
-  greetingStart = undefined
-  nyanStart = undefined
+  plays.clear()
 }

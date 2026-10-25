@@ -5,7 +5,7 @@ import type { EnabledMap } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
 import { BAND_ROWS, FRAME_MS, bandSize, createPacer, sweepCells, toneOf } from '../aurora-common/aurora'
-import { greetingStartedAt, setTicker, startGreeting, stopTicker } from '../aurora-common/ticker'
+import { playStartedAt, setTicker, startPlay, stopTicker } from '../aurora-common/ticker'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
 const enabledAtom = atom(
@@ -56,12 +56,12 @@ export const renderGreeting: MatchedHook<'ui.render', { component: 'AbovePrompt'
 
   try {
     const now = await $.clock.now()
-    let start = greetingStartedAt()
+    let start = playStartedAt(auroraGreeting.id)
     if (start === undefined) {
       // Not begun: only start on an idle prompt.
       if (e.props.hasSurvey || e.props.isWorking) return next(e)
       start = now
-      startGreeting(now)
+      startPlay(auroraGreeting.id, now)
     }
     // Played already; a redraw during the sweep keeps drawing it, after it the engine's.
     if (now - start >= TOTAL_MS) return next(e)

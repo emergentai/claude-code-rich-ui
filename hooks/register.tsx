@@ -1,5 +1,6 @@
 import type { Register } from 'claude-code'
 
+import { renderDoge } from './features/doge-greeting'
 import { renderGreeting } from './features/aurora-greeting'
 import { renderHeader } from './features/aurora-header'
 import { renderMeter } from './features/aurora-meter'
@@ -31,6 +32,7 @@ export const register: Register = on => {
   on('ui.render', { component: 'AbovePrompt' }, renderGreeting)
   on('ui.render', { component: 'AbovePrompt' }, renderMeter)
   on('ui.render', { component: 'AbovePrompt' }, renderNyan)
+  on('ui.render', { component: 'AbovePrompt' }, renderDoge)
   on('turn.complete', onTurnComplete)
 
   on('session.measure', recordUsage)
