@@ -13,7 +13,7 @@ the stock UI untouched.
 | Aurora pane header | `aurora-header` | the `rich-ui` wordmark in pixel type above the `/rich-ui` pane | while the pane is open |
 | Aurora usage meter | `aurora-meter` | the status band as a row above the prompt with a gradient bar | only when the status band would show |
 | Nyan greeting | `nyan-greeting` | a 7-row banner across the whole window above the prompt | once per session (and after `/clear`), about 4.3 s |
-| Doge greeting | `doge-greeting` | a centred doge face with "welcome" under it above the prompt, dissolving in | once per session (and after `/clear`), about 3 s |
+| Doge greeting | `doge-greeting` | a big orange "welcome" above the prompt, fading in from the left | once per session (and after `/clear`), about 2 s |
 
 ## Aurora spinner
 
@@ -69,22 +69,17 @@ runs or a survey holds the band. `nyan.ts` is pure: `pixelAt(x, y, ms, width)` i
 
 ## Doge greeting
 
-A shiba face in the middle of the band (a 20 by 21 pixel sprite taken from a supplied 32 by 32 pixel
-grid, the cream background cleared by flood fill from the edges and the grid cropped to the face;
-`tools/doge-sprite-from-csv.mjs` makes the table, scaled to the band by nearest neighbour), with "welcome" in lowercase pixel
-type centred below it. Both sit over the terminal's own background (cells that are not part of the
-picture keep the terminal's colours, so the face floats like a cut-out). The picture dissolves in over
-0.45 s, holds whole for 2.5 s, and then is simply gone: there is no fade out, the band goes straight
-back to the engine's (about three seconds in all). The dissolve gives each pixel a fixed random
+(The id and name are kept from an earlier doge version; it is now a plain sign.) A big "welcome" in
+Claude's orange (lighter at the top of the letters, deeper at the bottom) centred in the band, in
+lowercase pixel type as large as the band allows, over the terminal's own background. It fades in
+from the left over 0.9 s, holds for 1 s, and is then simply gone: there is no fade out, the band goes
+straight back to the engine's (about two seconds in all). The fade gives each pixel a fixed random
 threshold, so it needs no knowledge of the background colour. Once per session and again after
-`/clear`. The caption follows the theme (light on dark, dark on light, mid grey on `auto`); the face
-is the same everywhere. While it holds still nothing is sent to the terminal.
+`/clear`. While it holds still nothing is sent to the terminal.
 
-The face is sized by the band's height less the caption, and centred; the band is as wide as the
-prompt and as tall as the engine allows (`maxRows - 1`, 7 to 28 rows, at most half the terminal), so
-the face is largest in a tall window. A mod cannot draw full-screen, so there is no taller option.
-Skipped when the band has fewer than 8 rows, under 50 columns or 24 rows, or while a turn runs or
-a survey holds the band. `doge.ts` is pure: the sprite is the `SPRITE_ROWS` table, `facePixel(u, v)` reads it.
+The band is as wide as the prompt and as tall as the engine allows (`maxRows - 1`, 7 to 28 rows, at
+most half the terminal), so the word is largest in a big window. Skipped when the band has fewer than
+8 rows, under 50 columns or 24 rows, or while a turn runs or a survey holds the band. `doge.ts` is pure.
 
 ## Theme
 

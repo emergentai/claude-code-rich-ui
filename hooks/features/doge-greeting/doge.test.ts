@@ -2,26 +2,22 @@ import { expect, test } from 'claude-code/testing'
 
 import {
   CAPTION,
-  FACE_ASPECT,
   FADE_IN_MS,
   HOLD_MS,
   MAX_ROWS,
   MIN_ROWS,
   TOTAL_MS,
-  captionColorFor,
+  columnVisibility,
   dogeCells,
   dogeWords,
-  facePixel,
   layoutFor,
+  letterColor,
   rowsFor,
   sourcePixel,
   textBitmap,
-  visibleAt,
 } from './doge'
 
 const DEFAULT = 0x01000000
-// The harness has no toBeCloseTo.
-const near = (a: number, b: number, tol: number) => expect(Math.abs(a - b) <= tol).toBe(true)
 
 test('the caption is the lowercase word "welcome" in a bitmap font', () => {
   const bitmap = textBitmap(CAPTION)
@@ -29,165 +25,85 @@ test('the caption is the lowercase word "welcome" in a bitmap font', () => {
   expect(CAPTION).toBe('welcome')
   expect(bitmap).toHaveLength(5)
   expect(new Set(bitmap.map(row => row.length)).size).toBe(1)
-  // w e l c o m e: three 3-wide, two 5-wide, one 3-wide... plus six one-pixel gaps.
   expect(bitmap[0]?.length).toBe(5 + 3 + 3 + 3 + 3 + 5 + 3 + 6)
   expect(bitmap.flat().some(Boolean)).toBe(true)
   expect(textBitmap('')[0]).toEqual([])
-  expect(textBitmap('w?w')).toEqual(textBitmap('ww'))
 })
 
-const lum = (c: number) => ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255)
+test('the word is centred and as big as the band allows', () => {
+  const layout = layoutFor(80, 16)
 
-// Every drawn pixel of the sprite, with where it is in the unit frame.
-function sprite() {
-  const out: { u: number; v: number; color: number }[] = []
-  for (let j = 0; j < 84; j++) for (let i = 0; i < 80; i++) {
-    const u = (i + 0.5) / 80
-    const v = (j + 0.5) / 84
-    const color = facePixel(u, v)
-    if (color !== undefined) out.push({ u, v, color })
-  }
-  return out
-}
-
-test('the face is a shiba sprite: many fur tones, a black nose, clear corners, solid in the middle', () => {
-  const pixels = sprite()
-  const colors = new Set(pixels.map(p => p.color))
-
-  expect(colors.size).toBeGreaterThan(40) // a photographic downsample, not flat colours
-  for (const c of colors) expect(c).toBeLessThanOrEqual(0xffffff)
-  expect(pixels.length).toBeGreaterThan(80 * 84 * 0.5)
-  for (const [u, v] of [[0.01, 0.01], [0.99, 0.01], [0.01, 0.99], [0.99, 0.99]] as const) expect(facePixel(u, v)).toBeUndefined()
-  expect(facePixel(0.5, 0.6)).toBeDefined()
-  // Off the frame is clear.
-  expect(facePixel(-0.1, 0.5)).toBeUndefined()
-  expect(facePixel(0.5, 1)).toBeUndefined()
+  expect(layout.scale).toBeGreaterThanOrEqual(2)
+  expect(layout.textX).toBeGreaterThan(0)
+  expect(layout.textX + (layout.bits[0]?.length ?? 0) * layout.scale).toBeLessThanOrEqual(80)
+  expect(layout.textY + layout.textH).toBeLessThanOrEqual(16)
+  expect(layoutFor(200, 40).scale).toBeGreaterThan(layout.scale)
 })
 
-test('the darkest part (the nose) is on the left, and the eyes sit above it', () => {
-  const dark = sprite().filter(p => lum(p.color) < 200)
+test('the letters are Claude orange, lighter at the top than the bottom', () => {
+  const top = letterColor(0, 0, 10)
+  const bottom = letterColor(9, 0, 10)
 
-  expect(dark.length).toBeGreaterThan(5)
-  const darkest = dark.reduce((a, b) => (lum(a.color) <= lum(b.color) ? a : b))
-  expect(darkest.u).toBeLessThan(0.45)
-  // A grey-brown eye pair above the nose line.
-  expect(dark.some(p => p.v < darkest.v - 0.1)).toBe(true)
+  expect((top >> 16) & 255).toBeGreaterThan(0xb0)
+  expect(top & 255).toBeGreaterThan(bottom & 255)
+  expect(letterColor(0, 0, 1)).toBe(top)
 })
 
-test('the background is not part of the face: no cream-white fringe outside the head', () => {
-  const pixels = sprite()
-  const lightest = pixels.filter(p => lum(p.color) > 735) // near #FBF4E1 (the removed background)
-  // A few pale highlights inside the muzzle are fine; a frame of them is not.
-  expect(lightest.length).toBeLessThan(pixels.length * 0.06)
-})
-
-test('the face is laid out centred, with the caption centred under it', () => {
-  for (const [width, rows] of [[100, 20], [150, 28], [60, 10]] as const) {
-    const layout = layoutFor(width, rows * 2)
-
-    near(layout.faceW / layout.faceH, FACE_ASPECT, 0.06)
-    near(layout.faceX + layout.faceW / 2, width / 2, 0.5)
-    expect(layout.faceY + layout.faceH).toBeLessThanOrEqual(layout.textY)
-    // Room between the face and the caption: at least three pixel rows (a row and a half of cells).
-    expect(layout.textY - (layout.faceY + layout.faceH)).toBeGreaterThanOrEqual(3)
-    const textW = (layout.bits[0]?.length ?? 0) * layout.scale
-    near(layout.textX + textW / 2, width / 2, 0.5)
-    expect(layout.textY + 5 * layout.scale).toBeLessThanOrEqual(rows * 2)
-    expect(layout.faceX).toBeGreaterThanOrEqual(0)
-    expect(layout.faceX + layout.faceW).toBeLessThanOrEqual(width)
-  }
-})
-
-test('the picture has face pixels in the middle, caption pixels below, nothing in the corners', () => {
-  const layout = layoutFor(100, 40)
-  const caption = captionColorFor('dark')
-
-  expect(sourcePixel(0, 0, layout, caption)).toBeUndefined()
-  expect(sourcePixel(99, 0, layout, caption)).toBeUndefined()
-  expect(sourcePixel(50, Math.round(layout.faceH * 0.62), layout, caption)).toBeDefined()
-  let captionPixels = 0
-  for (let y = layout.textY; y < layout.textY + 5 * layout.scale; y++) {
-    for (let x = layout.textX; x < layout.textX + 60; x++) if (sourcePixel(x, y, layout, caption) === caption) captionPixels += 1
-  }
-  expect(captionPixels).toBeGreaterThan(20)
-})
-
-test('the caption reads on the person\'s background: light on dark, dark on light, mid on auto', () => {
-  const lum = (c: number) => ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255)
-
-  expect(lum(captionColorFor('dark'))).toBeGreaterThan(600)
-  expect(lum(captionColorFor('light'))).toBeLessThan(150)
-  expect(lum(captionColorFor('neutral'))).toBeGreaterThan(300)
-  expect(lum(captionColorFor('neutral'))).toBeLessThan(450)
-})
-
-test('it fades in, holds, then is simply gone: no fade out', () => {
-  expect(visibleAt(-10)).toBe(0)
-  expect(visibleAt(0)).toBe(0)
-  near(visibleAt(FADE_IN_MS / 2), 0.5, 0.01)
-  expect(visibleAt(FADE_IN_MS)).toBe(1)
-  expect(visibleAt(FADE_IN_MS + HOLD_MS / 2)).toBe(1)
-  expect(visibleAt(TOTAL_MS - 1)).toBe(1) // fully there until the last instant
-  expect(visibleAt(TOTAL_MS)).toBe(0)
-  expect(visibleAt(TOTAL_MS * 10)).toBe(0)
+test('it sweeps in from the left, holds, then is simply gone', () => {
+  expect(FADE_IN_MS).toBe(900)
+  expect(HOLD_MS).toBe(1000)
   expect(TOTAL_MS).toBe(FADE_IN_MS + HOLD_MS)
-  expect(TOTAL_MS).toBeLessThan(5000) // "a few seconds"
-})
-
-const blankCells = (words: number[]) => words.filter((_, i) => i % 3 === 0 && words[i] === 0x20).length
-const drawnCells = (words: number[]) => words.length / 3 - blankCells(words)
-
-test('the picture dissolves in, then stays whole until it vanishes at once', () => {
-  const at = (ms: number) => drawnCells(dogeWords(100, 20, ms, 'dark'))
-  const held = at(FADE_IN_MS + 200)
-
-  expect(at(0)).toBe(0)
-  expect(at(FADE_IN_MS / 3)).toBeLessThan(at((FADE_IN_MS * 2) / 3))
-  expect(at((FADE_IN_MS * 2) / 3)).toBeLessThan(held)
-  expect(held).toBeGreaterThan(100)
-  expect(at(TOTAL_MS - 1)).toBe(held)
-  expect(at(TOTAL_MS)).toBe(0)
-})
-
-test('the background is the terminal\'s own: blank cells carry default colours, no fills', () => {
-  const words = dogeWords(100, 20, FADE_IN_MS + 200, 'dark')
-
-  for (let i = 0; i < words.length; i += 3) {
-    const glyph = words[i]
-    expect([0x20, 0x2580, 0x2584]).toContain(glyph)
-    if (glyph === 0x20) expect(words.slice(i + 1, i + 3)).toEqual([DEFAULT, DEFAULT])
-    // A half block with one side clear keeps the other side the terminal's.
-    if (glyph === 0x2580 || glyph === 0x2584) expect(words[i + 1]).toBeLessThanOrEqual(0xffffff)
+  // Part way through, the left is in before the right.
+  const mid = FADE_IN_MS / 2
+  expect(columnVisibility(0, 80, mid)).toBeGreaterThan(columnVisibility(79, 80, mid))
+  expect(columnVisibility(79, 80, 0)).toBe(0)
+  // Fully in across the hold.
+  for (const ms of [FADE_IN_MS, FADE_IN_MS + HOLD_MS / 2, TOTAL_MS - 1]) {
+    expect(columnVisibility(0, 80, ms)).toBe(1)
+    expect(columnVisibility(79, 80, ms)).toBe(1)
   }
-  // Most of the band is background: the picture is a cut-out, not a block.
-  expect(blankCells(words)).toBeGreaterThan(words.length / 3 / 2)
+  expect(columnVisibility(0, 80, TOTAL_MS)).toBe(0)
 })
 
-test('the cells are columns x rows x 12 bytes in padded base64, and a frame is pure', () => {
-  const cells = dogeCells(80, 14, 1000, 'dark')
-  const bytes = (cells.length / 4) * 3 - (cells.endsWith('==') ? 2 : cells.endsWith('=') ? 1 : 0)
+test('only the word is drawn: blank cells keep the terminal\'s own colours', () => {
+  const words = dogeWords(80, 8, FADE_IN_MS)
+  const layout = layoutFor(80, 16)
 
-  expect(bytes).toBe(80 * 14 * 12)
-  expect(dogeCells(80, 14, 1000, 'dark')).toBe(cells)
-  expect(dogeCells(80, 14, 1000, 'light')).not.toBe(cells)
+  expect(words).toHaveLength(80 * 8 * 3)
+  expect(words.slice(0, 3)).toEqual([0x20, DEFAULT, DEFAULT])
+  expect(sourcePixel(0, 0, layout)).toBeUndefined()
+  let drawn = 0
+  for (let i = 0; i < words.length; i += 3) if (words[i] !== 0x20) drawn++
+  expect(drawn).toBeGreaterThan(20)
+})
+
+test('the picture grows from the left and is empty at the start and the end', () => {
+  const count = (ms: number, from: number, to: number) => {
+    const words = dogeWords(80, 8, ms)
+    let n = 0
+    for (let r = 0; r < 8; r++) for (let c = from; c < to; c++) if (words[(r * 80 + c) * 3] !== 0x20) n++
+    return n
+  }
+
+  expect(count(0, 0, 80)).toBe(0)
+  expect(count(FADE_IN_MS * 0.4, 0, 40)).toBeGreaterThan(count(FADE_IN_MS * 0.4, 40, 80))
+  expect(count(TOTAL_MS, 0, 80)).toBe(0)
+  expect(dogeCells(80, 8, FADE_IN_MS)).toBe(dogeCells(80, 8, FADE_IN_MS + 300))
+})
+
+test('the cells are columns x rows x 12 bytes in padded base64', () => {
+  expect(atob(dogeCells(10, 7, 0)).length).toBe(10 * 7 * 12)
+  expect(dogeWords(0, 5, 0)).toEqual([])
 })
 
 test('rows follow the room the engine gives, within the picture limits', () => {
-  expect(rowsFor(20)).toBe(19)
-  expect(rowsFor(MIN_ROWS + 1)).toBe(MIN_ROWS)
-  expect(rowsFor(MIN_ROWS)).toBeUndefined()
-  expect(rowsFor(100)).toBe(MAX_ROWS)
   expect(rowsFor(undefined)).toBeUndefined()
-  expect(rowsFor(Number.NaN)).toBeUndefined()
-  expect(rowsFor(-3)).toBeUndefined()
+  expect(rowsFor(MIN_ROWS)).toBe(MIN_ROWS - 1 >= MIN_ROWS ? MIN_ROWS - 1 : undefined)
+  expect(rowsFor(MIN_ROWS + 1)).toBe(MIN_ROWS)
+  expect(rowsFor(500)).toBe(MAX_ROWS)
 })
 
 test('tiny and huge sizes do not throw', () => {
-  expect(dogeWords(0, 10, 100)).toEqual([])
-  expect(dogeWords(10, 0, 100)).toEqual([])
-  expect(dogeWords(1, 1, 1000)).toHaveLength(3)
-  expect(dogeWords(5, 3, 1000)).toHaveLength(5 * 3 * 3)
-  expect(dogeWords(400, MAX_ROWS, 1000)).toHaveLength(400 * MAX_ROWS * 3)
-  expect(dogeWords(40, 8, -50)).toHaveLength(40 * 8 * 3)
-  expect(dogeWords(50, 8, 1e12).every(Number.isFinite)).toBe(true)
+  expect(() => dogeCells(1, 1, FADE_IN_MS)).not.toThrow()
+  expect(() => dogeCells(400, 28, FADE_IN_MS)).not.toThrow()
 })

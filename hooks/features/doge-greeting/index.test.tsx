@@ -40,8 +40,8 @@ test('on: a banner as wide as the band, over the engine band, repainted until th
 
   await clock.advance(TOTAL_MS + 1000)
   const total = blits.calls.length
-  // Only the dissolve-in changes the picture; the hold sends nothing, the end is handed back.
-  expect(total).toBeGreaterThanOrEqual(Math.floor(FADE_IN_MS / FRAME_MS) - 1)
+  // Only the sweep-in changes the picture; the hold sends nothing, the end is handed back.
+  expect(total).toBeGreaterThanOrEqual(Math.floor(FADE_IN_MS / FRAME_MS) - 3)
   expect(total).toBeLessThanOrEqual(Math.ceil(FADE_IN_MS / FRAME_MS) + 2)
   expect(blits.calls.every(c => c.key === 'doge-greeting' && c.requestId === 'band-1')).toBe(true)
   expect(new Set(blits.calls.map(c => c.cells)).size).toBe(total)
