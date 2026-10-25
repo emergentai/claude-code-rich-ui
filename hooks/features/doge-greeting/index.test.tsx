@@ -3,7 +3,7 @@ import { expect, test } from 'claude-code/testing'
 import { boot } from '../../core/test-harness'
 import { FRAME_MS } from '../aurora-common/aurora'
 import { MAX_COLUMNS } from '.'
-import { TOTAL_MS } from './doge'
+import { FADE_IN_MS, TOTAL_MS } from './doge'
 
 const ON = { prefs: { v: 1, enabled: { 'doge-greeting': true } } }
 
@@ -40,10 +40,11 @@ test('on: a banner as wide as the band, over the engine band, repainted until th
 
   await clock.advance(TOTAL_MS + 1000)
   const total = blits.calls.length
-  expect(total).toBeGreaterThanOrEqual(Math.floor(TOTAL_MS / FRAME_MS) - 2)
-  expect(total).toBeLessThanOrEqual(Math.ceil(TOTAL_MS / FRAME_MS) + 1)
+  // Only the dissolve-in changes the picture; the hold sends nothing, the end is handed back.
+  expect(total).toBeGreaterThanOrEqual(Math.floor(FADE_IN_MS / FRAME_MS) - 1)
+  expect(total).toBeLessThanOrEqual(Math.ceil(FADE_IN_MS / FRAME_MS) + 2)
   expect(blits.calls.every(c => c.key === 'doge-greeting' && c.requestId === 'band-1')).toBe(true)
-  expect(new Set(blits.calls.map(c => c.cells)).size).toBeGreaterThan(total / 3)
+  expect(new Set(blits.calls.map(c => c.cells)).size).toBe(total)
   await clock.advance(5000)
   expect(blits.calls).toHaveLength(total)
   await ui.unmount()
@@ -81,7 +82,7 @@ test('a redraw during the show carries on, not a restart', async ($, on) => {
 
   await clock.advance(TOTAL_MS)
 
-  expect(blits.calls.length).toBeLessThanOrEqual(Math.ceil((TOTAL_MS - 2000) / FRAME_MS) + 1)
+  expect(blits.calls.length).toBeLessThanOrEqual(2)
   await second.unmount()
 })
 

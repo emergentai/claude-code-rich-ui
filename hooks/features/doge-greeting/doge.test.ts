@@ -4,7 +4,6 @@ import {
   CAPTION,
   FACE_ASPECT,
   FADE_IN_MS,
-  FADE_OUT_MS,
   HOLD_MS,
   MAX_ROWS,
   MIN_ROWS,
@@ -37,28 +36,34 @@ test('the caption is the lowercase word "welcome" in a bitmap font', () => {
   expect(textBitmap('w?w')).toEqual(textBitmap('ww'))
 })
 
-test('the face is a shiba: fur, cream cheeks, a black nose, dark eyes, off it nothing', () => {
+const px = (col: number, row: number) => facePixel((col + 0.5) / 28, (row + 0.5) / 27)
+
+test('the face is a shiba sprite: fur, cream cheeks, a black nose, dark eyes, brown ear, clear corners', () => {
   const colors = new Set<number>()
-  for (let v = 0; v <= 1; v += 0.01) for (let u = 0; u <= 1; u += 0.01) {
-    const c = facePixel(u, v)
+  for (let row = 0; row < 27; row++) for (let col = 0; col < 28; col++) {
+    const c = px(col, row)
     if (c !== undefined) colors.add(c)
   }
 
-  expect(colors.has(0x121212)).toBe(true) // nose
-  expect(colors.has(0x1c1a17)).toBe(true) // pupils
-  expect(colors.has(0xf8ecd6)).toBe(true) // cream
-  expect(colors.size).toBeGreaterThan(12) // fur shading, ears, mouth, eyes
+  expect(colors.has(0x0e0e0e)).toBe(true) // nose, eyes, mouth
+  expect(colors.has(0xd8cfa0)).toBe(true) // cream cheek
+  expect(colors.has(0x8a5a2c)).toBe(true) // the dark ear patch
+  expect(colors.size).toBeGreaterThanOrEqual(8)
   for (const c of colors) expect(c).toBeLessThanOrEqual(0xffffff)
-  // The corners of the frame are background.
-  for (const [u, v] of [[0.01, 0.01], [0.99, 0.01], [0.01, 0.99], [0.99, 0.99]] as const) expect(facePixel(u, v)).toBeUndefined()
-  // The middle of the head is not.
-  expect(facePixel(0.55, 0.62)).toBeDefined()
+  for (const [col, row] of [[0, 0], [27, 0], [0, 26], [27, 26]] as const) expect(px(col, row)).toBeUndefined()
+  expect(px(14, 14)).toBeDefined()
+  // Off the frame is clear.
+  expect(facePixel(-0.1, 0.5)).toBeUndefined()
+  expect(facePixel(0.5, 1)).toBeUndefined()
 })
 
-test('the nose is on the left and the eyes above it, as in the three-quarter view', () => {
-  expect(facePixel(0.225, 0.51)).toBe(0x121212)
-  expect(facePixel(0.255, 0.35)).toBe(0x1c1a17)
-  expect(facePixel(0.535, 0.4)).toBe(0x1c1a17)
+test('the nose is on the left, the eyes above it, the mouth runs right from it', () => {
+  expect(px(7, 13)).toBe(0x0e0e0e) // nose
+  expect(px(7, 15)).toBe(0x0e0e0e) // the stem
+  expect(px(11, 17)).toBe(0x0e0e0e) // the mouth line
+  expect(px(7, 9)).toBe(0x0e0e0e) // left eye
+  expect(px(15, 10)).toBe(0x0e0e0e) // right eye, further right and lower
+  expect(px(8, 10)).toBe(0xffffff) // its highlight
 })
 
 test('the face is laid out centred, with the caption centred under it', () => {
@@ -99,40 +104,32 @@ test('the caption reads on the person\'s background: light on dark, dark on ligh
   expect(lum(captionColorFor('neutral'))).toBeLessThan(450)
 })
 
-test('it fades in, holds, fades out and is gone', () => {
+test('it fades in, holds, then is simply gone: no fade out', () => {
   expect(visibleAt(-10)).toBe(0)
   expect(visibleAt(0)).toBe(0)
   near(visibleAt(FADE_IN_MS / 2), 0.5, 0.01)
+  expect(visibleAt(FADE_IN_MS)).toBe(1)
   expect(visibleAt(FADE_IN_MS + HOLD_MS / 2)).toBe(1)
-  near(visibleAt(FADE_IN_MS + HOLD_MS + FADE_OUT_MS / 2), 0.5, 0.01)
+  expect(visibleAt(TOTAL_MS - 1)).toBe(1) // fully there until the last instant
   expect(visibleAt(TOTAL_MS)).toBe(0)
   expect(visibleAt(TOTAL_MS * 10)).toBe(0)
-  // Never goes up after the hold.
-  let last = 1
-  for (let ms = FADE_IN_MS + HOLD_MS; ms <= TOTAL_MS; ms += 50) {
-    const v = visibleAt(ms)
-    expect(v).toBeLessThanOrEqual(last + 1e-9)
-    last = v
-  }
+  expect(TOTAL_MS).toBe(FADE_IN_MS + HOLD_MS)
   expect(TOTAL_MS).toBeLessThan(5000) // "a few seconds"
 })
 
 const blankCells = (words: number[]) => words.filter((_, i) => i % 3 === 0 && words[i] === 0x20).length
 const drawnCells = (words: number[]) => words.length / 3 - blankCells(words)
 
-test('the picture dissolves: more of it each step in, fewer each step out', () => {
+test('the picture dissolves in, then stays whole until it vanishes at once', () => {
   const at = (ms: number) => drawnCells(dogeWords(100, 20, ms, 'dark'))
   const held = at(FADE_IN_MS + 200)
 
   expect(at(0)).toBe(0)
   expect(at(FADE_IN_MS / 3)).toBeLessThan(at((FADE_IN_MS * 2) / 3))
   expect(at((FADE_IN_MS * 2) / 3)).toBeLessThan(held)
-  const out = (k: number) => at(FADE_IN_MS + HOLD_MS + FADE_OUT_MS * k)
-  expect(out(0.25)).toBeGreaterThan(out(0.5))
-  expect(out(0.5)).toBeGreaterThan(out(0.75))
-  expect(out(0.75)).toBeGreaterThan(0)
-  expect(at(TOTAL_MS)).toBe(0)
   expect(held).toBeGreaterThan(100)
+  expect(at(TOTAL_MS - 1)).toBe(held)
+  expect(at(TOTAL_MS)).toBe(0)
 })
 
 test('the background is the terminal\'s own: blank cells carry default colours, no fills', () => {

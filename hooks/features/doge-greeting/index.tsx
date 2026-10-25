@@ -18,7 +18,7 @@ const enabledAtom = atom(
 export const dogeGreeting: Feature = {
   id: 'doge-greeting',
   name: 'Doge greeting',
-  description: 'A doge face and "welcome" appear above the prompt, then fade away, once per session',
+  description: 'A pixel-art doge face and "welcome" fade in above the prompt, then disappear, once per session',
   defaultEnabled: false,
 }
 
@@ -64,14 +64,21 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
     const columns = Math.max(1, Math.min(MAX_COLUMNS, e.props.bodyColumns ?? 80))
 
     let elapsed = now - start
+    let lastCells = dogeCells(columns, rows, elapsed, tone)
     const pacer = createPacer()
     const timer: Timer = $.clock.every(FRAME_MS, async () => {
       if (!pacer.begin()) return
       let isDenied = true
       try {
         elapsed += FRAME_MS
-        const result = await $.ui.blit({ requestId, key: RASTER_KEY, cells: dogeCells(columns, rows, elapsed, tone) })
-        isDenied = result.deny !== undefined
+        // Once it has dissolved in the picture holds still: nothing to send until it ends.
+        const cells = dogeCells(columns, rows, elapsed, tone)
+        if (cells === lastCells) isDenied = false
+        else {
+          lastCells = cells
+          const result = await $.ui.blit({ requestId, key: RASTER_KEY, cells })
+          isDenied = result.deny !== undefined
+        }
       } catch {
         // A frame that fails is a frame skipped.
       }
@@ -88,7 +95,7 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
 
     return (
       <Box flexDirection="column">
-        <Raster key={RASTER_KEY} columns={columns} rows={rows} cells={dogeCells(columns, rows, elapsed, tone)} />
+        <Raster key={RASTER_KEY} columns={columns} rows={rows} cells={lastCells} />
         {rest}
       </Box>
     )
