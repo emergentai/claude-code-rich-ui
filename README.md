@@ -1,13 +1,14 @@
 # <img src="docs/assets/rich-ui.png" alt="rich-ui logo" width="56" height="56" align="absmiddle">&nbsp;&nbsp;&nbsp;rich-ui
 
-### Give Claude Code's interface the upgrades it should have shipped with.
+### The Claude Code interface I wished for, as add-ons you can switch on one at a time.
 
-rich-ui is a Claude Code mod that upgrades the terminal interface itself, one feature
-at a time: things the stock UI shows as plain text get drawn properly. It never
-changes what Claude says or does, only how it looks, and every feature has its own
-switch.
+rich-ui is a Claude Code mod: the interface changes I kept wishing for, built as add-ons.
+Some are real upgrades (mermaid diagrams drawn in the transcript, markdown files opened
+rendered in a pane), some are just touches I enjoy (a quieter spinner, a welcome greeting).
+It never changes what Claude says or does, only how it looks, and every feature has its
+own switch, so take what you like and leave the rest.
 
-> **First up:** mermaid diagrams, drawn right in the transcript instead of dumped as code.
+> **Start with:** mermaid diagrams, drawn right in the transcript instead of dumped as code.
 
 ![rich-ui drawing a mermaid diagram in Claude Code](docs/assets/demo.gif)
 

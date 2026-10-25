@@ -7,8 +7,8 @@
     {
       "name": "rich-ui",
       "source": "./",
-      "description": "A nicer Claude Code terminal UI, one switchable feature at a time."
+      "description": "The Claude Code interface I wished for, as add-ons you can switch on one at a time."
     }
   ],
-  "description": "A nicer Claude Code terminal UI, one switchable feature at a time."
+  "description": "The Claude Code interface I wished for, as add-ons you can switch on one at a time."
 }

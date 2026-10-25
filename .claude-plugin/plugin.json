@@ -1,7 +1,7 @@
 {
   "name": "rich-ui",
   "version": "0.4.0",
-  "description": "A nicer Claude Code terminal UI, one switchable feature at a time. Draws mermaid diagrams in the transcript.",
+  "description": "The Claude Code interface I wished for, as add-ons you can switch on one at a time.",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Emergent AI"
