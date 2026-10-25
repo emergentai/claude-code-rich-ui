@@ -48,7 +48,19 @@ export function startGreeting(at: number): void {
   greetingStart = at
 }
 
-// A /clear is a fresh start: the greeting may play once more.
+// The nyan greeting's clock, the same way.
+let nyanStart: number | undefined
+
+export function nyanStartedAt(): number | undefined {
+  return nyanStart
+}
+
+export function startNyan(at: number): void {
+  nyanStart = at
+}
+
+// A /clear is a fresh start: the greetings may play once more.
 export function resetGreeting(): void {
   greetingStart = undefined
+  nyanStart = undefined
 }

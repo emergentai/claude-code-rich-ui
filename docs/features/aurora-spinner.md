@@ -12,6 +12,7 @@ the stock UI untouched.
 | Aurora greeting | `aurora-greeting` | a 3-row band above the prompt | once per session (and after `/clear`), about 2.8 s |
 | Aurora pane header | `aurora-header` | the `rich-ui` wordmark in pixel type above the `/rich-ui` pane | while the pane is open |
 | Aurora usage meter | `aurora-meter` | the status band as a row above the prompt with a gradient bar | only when the status band would show |
+| Nyan greeting | `nyan-greeting` | a 7-row banner across the whole window above the prompt | once per session (and after `/clear`), about 4.3 s |
 
 ## Aurora spinner
 
@@ -54,7 +55,20 @@ is cleared, so the same figures are never shown twice, and restored when it is o
 at least 44 columns wide, and yields to a survey. Only a context segment animates; a limit alone
 starts no timer.
 
+## Nyan greeting
+
+The same shape as the aurora greeting (it shares its timer, pacer and once-per-session clock), but
+a picture: a pixel-art nyan cat (24 by 14 pixels, two walking frames) flies from off the left edge
+to off the right over 4 s whatever the window's width, a six-stripe rainbow streaming from the left
+edge to its body, bending a pixel every three columns, over a navy sky with twinkling stars. It is
+drawn in half-block cells (two pixels per cell), 7 rows tall and as wide as the band (up to 400
+columns, the Raster allows 512), then the band goes back to the engine's after a 0.3 s hold. The
+colours are fixed (it is a picture, not themed). Skipped under 50 columns or 24 rows, while a turn
+runs or a survey holds the band. `nyan.ts` is pure: `pixelAt(x, y, ms, width)` is the whole scene.
+
 ## Theme
+
+The aurora features read the `theme` setting; the nyan greeting does not.
 
 A `Raster` takes raw colours, so each feature reads the `theme` setting when it draws.
 

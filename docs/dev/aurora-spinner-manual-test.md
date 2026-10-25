@@ -53,6 +53,15 @@ its limit).
 | 17 | Turn the meter off | The text line under the prompt returns. |
 | 18 | Healthy session | Nothing extra. |
 
+## Nyan greeting
+
+| # | Do | Expected |
+|---|---|---|
+| a | Turn it on at an idle prompt | A navy, starry 7-row banner as wide as the window; a nyan cat flies left to right in about 4 s with a rainbow streaming behind it; the banner is gone about 0.3 s after the cat has left, and nothing is left above the prompt. |
+| b | Resize the window wider and narrower, then `/clear` | The banner uses the new width; under 50 columns it is skipped; `/clear` plays it again. |
+| c | Toggle off mid-flight | It stops at once. |
+| d | Light theme | Unchanged (fixed colours); check it is not harsh. |
+
 ## All
 
 | # | Do | Expected |

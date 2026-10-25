@@ -28,6 +28,9 @@ rich-ui features
  [ ] Aurora usage meter
      Show the status band as a row above the prompt with a drifting gradient bar
 
+ [ ] Nyan greeting
+     A nyan cat flies across the window once per session, then it is gone
+
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
 
@@ -80,12 +83,12 @@ or more, one line appears in the status row under the prompt, for example
 `/clear` resets it, and turning Status band off in `/rich-ui` hides it at once. Details:
 [`features/status-band.md`](features/status-band.md).
 
-## Aurora (four features)
+## Aurora (five features)
 
-Four separate toggles in `/rich-ui`, all off until you turn them on, all using a slowly shifting
+Five separate toggles in `/rich-ui`, all off until you turn them on, all using a slowly shifting
 aurora gradient: a small swatch beside the spinner while Claude works; a short sweep above the
-prompt once per session; the `rich-ui` wordmark shimmering on top of this pane; and the status
-band drawn as a row with a gradient bar. None adds anything to the transcript, and the stock
+prompt once per session; the `rich-ui` wordmark shimmering on top of this pane; the status
+band drawn as a row with a gradient bar; and a nyan cat that flies across the window once per session. None adds anything to the transcript, and the stock
 spinner line is never altered. Details: [`features/aurora-spinner.md`](features/aurora-spinner.md).
 
 ## Mermaid diagrams

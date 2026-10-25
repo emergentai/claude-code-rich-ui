@@ -4,6 +4,7 @@ import { renderGreeting } from './features/aurora-greeting'
 import { renderHeader } from './features/aurora-header'
 import { renderMeter } from './features/aurora-meter'
 import { onTurnComplete, renderSpinner } from './features/aurora-spinner'
+import { renderNyan } from './features/nyan-greeting'
 import { refreshOnWrite, renderLinkedReply, renderPreview } from './features/markdown-preview'
 import { renderAssistantMessage } from './features/mermaid'
 import { onSessionEnd, recordUsage } from './features/status-band'
@@ -29,6 +30,7 @@ export const register: Register = on => {
   on('ui.render', { component: 'Spinner' }, renderSpinner)
   on('ui.render', { component: 'AbovePrompt' }, renderGreeting)
   on('ui.render', { component: 'AbovePrompt' }, renderMeter)
+  on('ui.render', { component: 'AbovePrompt' }, renderNyan)
   on('turn.complete', onTurnComplete)
 
   on('session.measure', recordUsage)
