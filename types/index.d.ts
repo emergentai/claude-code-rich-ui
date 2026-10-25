@@ -33,6 +33,8 @@ declare module 'claude-code' {
   interface PluginState {
     'rich-ui': {
       enabled: Shaped<EnabledMap>
+      welcome: Shaped<string>
+      welcomeRev: Shaped<number>
       status: Shaped<StatusMap>
       saveFailed: Shaped<boolean>
       shown: Shaped<ShownMap>

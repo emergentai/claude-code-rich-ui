@@ -2,24 +2,43 @@
 
 ## Turning features on and off
 
-Type `/rich-ui`. A small pane lists every feature with a checkbox:
+Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 
 ```
-rich-ui features
+ ▀     █           ▀
+ █▀▀ █ █▀▀ █▀▄ ▄▄▄ █ █ █
+ █   █ █▄▄ █ █     █▄█ █                                     5 of 6 on
+ ──────────────────────────────────────────────────────────────────────
 
- [x] Mermaid diagrams
-     Draw mermaid diagrams as text diagrams
+ ● on   Mermaid diagrams
+        Draw mermaid diagrams as text diagrams
 
- [x] Status band
-     Show context and plan usage under the prompt when they run high
+ ● on   Status band
+        Show context and plan usage under the prompt when they run high
 
- [x] Markdown preview
-     Open a markdown file Claude links to, rendered, in a pane
+ ● on   Markdown preview
+        Open a markdown file Claude links to, rendered, in a pane
 
- Enter toggles · Esc closes · rich-ui 0.3.0
+ Experimental  ·  may be removed in any version
+
+ ● on   Welcome greeting
+        A big orange "welcome" sweeps in above the prompt once per session, then is gone
+        ╭────────────────────────────────────────╮
+        │ Text: welcome                     7/20 │
+        ╰────────────────────────────────────────╯
+
+ ● on   Zen spinner
+        Replace the working row with one quiet line and trim the turn-end line
+
+ ○ off  Zen footer
+        Replace the hint line under the prompt with a zen saying, and hide the dim notices under the logo
+
+ Enter toggles · Esc closes · rich-ui 0.4.0
 ```
 
-Press a row, or press Enter on it, to flip the feature. Esc closes the pane. The
+Press a row, or press Enter on it, to flip the feature. Under the mouse a row
+lightens. A small `error` or `note` tag beside a name means that feature has
+something to tell you on the line below. Esc closes the pane. The
 pane stays open after a toggle, so you can change several features in one visit.
 
 - A change applies right away, to everything in the chat: turning Mermaid off puts
@@ -28,6 +47,15 @@ pane stays open after a toggle, so you can change several features in one visit.
 - Your choices are saved and come back in the next session.
 - Where the pane appears is up to Claude Code: above the prompt in a narrow
   terminal, beside the conversation in a wide fullscreen one.
+
+Features under **Experimental** are tried out and may be removed in any future version.
+
+## Welcome greeting (experimental)
+
+On by default (switch it off in `/rich-ui`). Once per session (and after `/clear`) a big orange "welcome" sweeps
+in from the left above the prompt, holds half a second and sweeps out. Send a message and it is gone at
+once. Change the word in the text box under the row: it saves as you type. Details:
+[`features/welcome-greeting.md`](features/welcome-greeting.md).
 
 ## Install from a shell
 
@@ -67,6 +95,16 @@ or more, one line appears in the status row under the prompt, for example
 `context ██████░░ 70%  ·  5h 92% (resets in 1h 00m)`. A healthy session shows nothing.
 `/clear` resets it, and turning Status band off in `/rich-ui` hides it at once. Details:
 [`features/status-band.md`](features/status-band.md).
+
+## Zen spinner and Zen footer
+
+Experimental; each has its own switch under Experimental in `/rich-ui`. The Zen spinner is on by default and the Zen footer is off.
+The Zen spinner makes the working row one line such as `  · • ● · · · · ·  thinking 42s`,
+the line that ends a turn a dim `3s`, and hides the background-task hint. The Zen footer
+replaces the hint line under the prompt with a random zen saying that changes each turn
+(`⏵⏵ auto mode on · Chop wood, carry water.`). To hide tool rows and the lines Claude
+writes between tool calls, use Claude Code's own `/focus` view (fullscreen only). Details:
+[`features/zen.md`](features/zen.md).
 
 ## Mermaid diagrams
 

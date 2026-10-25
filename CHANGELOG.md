@@ -2,6 +2,27 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## 0.4.0 - 2026-10-25
+
+### Added
+- Welcome greeting (experimental, on by default): a big orange "welcome" sweeps in above
+  the prompt once per session and ends when you send a message. The word can be changed in
+  `/rich-ui`. ([#16](https://github.com/emergentai/claude-code-rich-ui/pull/16))
+- Zen spinner (experimental, on by default): the working row becomes one quiet line with a
+  gliding highlight, the mode and the seconds, and the turn-end line a dim `3s`. ([#19](https://github.com/emergentai/claude-code-rich-ui/pull/19))
+- Zen footer (experimental, off by default): a random zen saying replaces the hint line
+  under the prompt, and the dim notices under the logo are hidden. ([#19](https://github.com/emergentai/claude-code-rich-ui/pull/19))
+- `/rich-ui` lists experimental features under their own header. ([#16](https://github.com/emergentai/claude-code-rich-ui/pull/16))
+
+### Changed
+- `/rich-ui` is redrawn: a block-letter banner, `● on` / `○ off` switches, rows that
+  lighten under the mouse, `error` / `note` tags and a footer pinned to the bottom of a
+  docked pane. Keys are unchanged. ([#14](https://github.com/emergentai/claude-code-rich-ui/pull/14))
+
+### Internal
+- Docs: feature ideas note, calm mode spike and design, feature pages and manual tests.
+  ([#14](https://github.com/emergentai/claude-code-rich-ui/pull/14), [#16](https://github.com/emergentai/claude-code-rich-ui/pull/16), [#19](https://github.com/emergentai/claude-code-rich-ui/pull/19))
+
 ## 0.3.0 - 2026-10-24
 
 ### Added

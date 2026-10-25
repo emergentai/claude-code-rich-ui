@@ -1,13 +1,14 @@
 # <img src="docs/assets/rich-ui.png" alt="rich-ui logo" width="56" height="56" align="absmiddle">&nbsp;&nbsp;&nbsp;rich-ui
 
-### Give Claude Code's interface the upgrades it should have shipped with.
+### The Claude Code interface I wished for, as add-ons you can switch on one at a time.
 
-rich-ui is a Claude Code mod that upgrades the terminal interface itself, one feature
-at a time: things the stock UI shows as plain text get drawn properly. It never
-changes what Claude says or does, only how it looks, and every feature has its own
-switch.
+rich-ui is a Claude Code mod: the interface changes I kept wishing for, built as add-ons.
+Some are real upgrades (mermaid diagrams drawn in the transcript, markdown files opened
+rendered in a pane), some are just touches I enjoy (a quieter spinner, a welcome greeting).
+It never changes what Claude says or does, only how it looks, and every feature has its
+own switch, so take what you like and leave the rest.
 
-> **First up:** mermaid diagrams, drawn right in the transcript instead of dumped as code.
+> **Start with:** mermaid diagrams, drawn right in the transcript instead of dumped as code.
 
 ![rich-ui drawing a mermaid diagram in Claude Code](docs/assets/demo.gif)
 
@@ -32,6 +33,8 @@ Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 | Mermaid diagrams | Complete mermaid blocks in Claude's replies are drawn as text diagrams. A dim `show source` line above each one swaps it back to the code. |
 | Status band | A line under the prompt shows context and plan usage, only when they run high. |
 | Markdown preview | Click a link to a markdown file in a reply and it opens, rendered, in a pane. |
+| Welcome greeting (experimental) | A big orange "welcome" sweeps in above the prompt once per session. On by default (switch it off in `/rich-ui`); may be removed in any version. |
+| Zen spinner and Zen footer (experimental) | A quiet one-line spinner with the seconds and a dim turn-end time (on by default), and a random zen saying in place of the hint line under the prompt (off by default). Their own rows in `/rich-ui`; may be removed in any version. |
 
 Flowcharts (subgraphs included), sequence, class, state, ER, XY chart, pie, C4 and
 architecture diagrams are drawn. Any other type stays the code block it always was, and so does anything too big for your

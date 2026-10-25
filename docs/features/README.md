@@ -9,3 +9,5 @@ code lives. The list of what ships, what is planned and what was turned down is
 | Mermaid diagrams | design in [`../dev/mermaid-feature.md`](../dev/mermaid-feature.md) |
 | Status band | [`status-band.md`](status-band.md) |
 | Markdown preview | [`markdown-preview.md`](markdown-preview.md) |
+| Welcome greeting (experimental) | [`welcome-greeting.md`](welcome-greeting.md) |
+| Zen spinner and Zen footer (experimental) | [`zen.md`](zen.md) |

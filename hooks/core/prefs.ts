@@ -16,8 +16,17 @@ export function parseStored(raw: unknown): EnabledMap {
   return out
 }
 
-export function serialize(enabled: EnabledMap) {
-  return { v: 1, enabled }
+// The text the welcome sign shows, if the person set one.
+export function parseWelcome(raw: unknown): string | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined
+  const stored = raw as { v?: unknown; welcome?: unknown }
+  if (stored.v !== 1 || typeof stored.welcome !== 'string') return undefined
+
+  return stored.welcome
+}
+
+export function serialize(enabled: EnabledMap, welcome?: string) {
+  return welcome === undefined ? { v: 1, enabled } : { v: 1, enabled, welcome }
 }
 
 // The flag a toggle would set: the opposite of the feature's effective flag.

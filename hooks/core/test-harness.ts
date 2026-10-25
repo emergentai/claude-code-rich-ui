@@ -12,6 +12,7 @@ export async function boot(
   $: Engine,
   on: On,
   store: Record<string, unknown> = {},
+  theme: string = 'dark',
 ) {
   // Not mock.store: tests need to read back what the plugin saved.
   const failSaves = { on: false }
@@ -42,6 +43,19 @@ export async function boot(
 
     return { value: text }
   })
+  on('config.list', () => ({
+    value: [
+      {
+        key: 'theme',
+        label: 'Theme',
+        kind: 'choice',
+        value: theme as never,
+        options: ['auto', 'dark', 'light'],
+        provider: { plugin: 'engine', tier: 'core' },
+        isLocked: false,
+      },
+    ],
+  }))
   on('session.cwd', () => ({ value: '/repo' }))
   on('tool.call', () => ({ result: {}, text: 'ok' }) as never)
   const opened: string[] = []
@@ -51,11 +65,27 @@ export async function boot(
 
     return { value: { isPlaced: true } }
   })
+  // What the plugin passed down to the engine's own drawing.
+  const rendered: { component: string; props: unknown }[] = []
   on('ui.render', ($, e) => {
+    rendered.push({ component: e.component, props: e.props })
     const { Text } = $.ui.resolve(e)
 
     return h(Text, {}, 'engine') as RenderElement
   })
+  // Every Raster repaint, and how the engine answers it: `deny` set means "not mounted";
+  // `delayMs` holds an answer back on the mock clock (a slow host).
+  const blits: { calls: { requestId: string; key: string; cells: string }[]; deny?: string; delayMs: number } = {
+    calls: [],
+    delayMs: 0,
+  }
+  on('ui.blit', async (_, e) => {
+    blits.calls.push({ requestId: e.requestId, key: e.key, cells: 'cells' in e ? e.cells : '' })
+    if (blits.delayMs > 0) await clock.sleep(blits.delayMs)
+
+    return { value: blits.deny === undefined ? {} : { deny: blits.deny } }
+  })
+  on('turn.complete', () => ({ text: '' }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   const status: { line: string | undefined } = { line: undefined }
   on('ui.status', (_, e) => {
@@ -67,5 +97,5 @@ export async function boot(
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  return { clock, saved, failSaves, status, files, opened, order }
+  return { clock, saved, failSaves, status, files, opened, order, rendered, blits }
 }
