@@ -1,11 +1,14 @@
-// header + blank + two rows per feature (name, description) + status lines
-// + blank + footer (+ save notice)
+// banner (3 rows) + divider + per feature a blank row above its two rows (name,
+// description) + status lines + a blank row (the save notice, when set, takes it)
+// + the footer.
+export const HEADER_ROWS = 3
+
 export function contentRows(
   featureCount: number,
   statusLines: number,
   saveFailed: boolean,
 ): number {
-  return featureCount * 2 + statusLines + 4 + (saveFailed ? 1 : 0)
+  return HEADER_ROWS + 1 + featureCount * 3 + statusLines + 1 + (saveFailed ? 1 : 0) + 1
 }
 
 export function clip(text: string, width: number): string {
