@@ -23,7 +23,9 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 
  ○ off  Welcome greeting
         A big orange "welcome" sweeps in above the prompt once per session, then is gone
-        Welcome text (20 max): welcome
+        ╭────────────────────────────────────────╮
+        │ Text: welcome                     7/20 │
+        ╰────────────────────────────────────────╯
 
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
@@ -46,7 +48,7 @@ Features under **Experimental** are tried out and may be removed in any future v
 
 Off until you turn it on in `/rich-ui`. Once per session (and after `/clear`) a big orange "welcome" sweeps
 in from the left above the prompt, holds half a second and sweeps out. Send a message and it is gone at
-once. Change the word in the **Welcome text (20 max)** field under the row: it saves as you type. Details:
+once. Change the word in the text box under the row: it saves as you type. Details:
 [`features/welcome-greeting.md`](features/welcome-greeting.md).
 
 ## Install from a shell

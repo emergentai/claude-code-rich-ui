@@ -4,9 +4,9 @@
 export const HEADER_ROWS = 3
 
 // Experimental features sit under their own header: a blank row and the header line, and
-// the welcome text field is one more row under the greeting.
+// the welcome text field is a bordered box, three rows, under the greeting.
 export const EXPERIMENTAL_HEADER_ROWS = 2
-export const FIELD_ROWS = 1
+export const FIELD_ROWS = 3
 
 export function experimentalCount(features: readonly { isExperimental?: boolean }[]): number {
   return features.filter(feature => feature.isExperimental === true).length

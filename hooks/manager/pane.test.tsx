@@ -5,7 +5,7 @@ import { boot } from '../core/test-harness'
 import { VERSION } from '../core/version'
 import { BANNER_COLUMNS, BANNER_ROWS, bannerCells, gradientAt, toBase64 } from './banner'
 import { chipFor } from './pane'
-import { contentRows, experimentalCount } from './size'
+import { contentRows, EXPERIMENTAL_HEADER_ROWS, experimentalCount, FIELD_ROWS } from './size'
 import { features } from '../core/registry'
 
 const PANE = {
@@ -224,8 +224,8 @@ test('a docked pane and an inline pane both draw every row', async ($, on) => {
 
 test('the pane height matches contentRows for a healthy pane', async () => {
   // header 3 + divider + 3 per feature (blank, name, description) + blank + footer
-  // The experimental header and the welcome field add three rows.
-  expect(contentRows(features.length, 0, false, experimentalCount(features))).toBe(3 + 1 + features.length * 3 + 2 + 3)
+  // The experimental header (two rows) and the bordered welcome field (three) add five.
+  expect(contentRows(features.length, 0, false, experimentalCount(features))).toBe(3 + 1 + features.length * 3 + 2 + EXPERIMENTAL_HEADER_ROWS + FIELD_ROWS)
   expect(contentRows(3, 0, false)).toBe(15)
 })
 
@@ -405,7 +405,7 @@ test('the field stops at 20 characters', async ($, on) => {
   await clock.advance(500)
 
   expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'abcdefghijklmnopqrst' })
-  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ label: 'Welcome text (20 max)' })
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ label: 'Text' })
   await ui.unmount()
 })
 

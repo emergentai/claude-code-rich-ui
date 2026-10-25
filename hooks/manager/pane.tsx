@@ -123,16 +123,25 @@ export function buildPane(view: PaneView) {
           <Text dimColor>{clip(`${indent}${note}`, inner)}</Text>
         ))}
         {feature.id === WELCOME_ID && (
-          <Box paddingLeft={indent.length}>
-            <Input
-              key={`welcome-text-${view.welcomeRev}`}
-              label="Welcome text (20 max)"
-              placeholder="welcome"
-              value={view.welcome}
-              submitLabel="done"
-              onInput={text => view.onWelcome(text)}
-              onSubmit={() => view.onWelcomeDone()}
-            />
+          <Box paddingLeft={indent.length} marginTop={0}>
+            <Box
+              flexGrow={1}
+              borderStyle="round"
+              borderColor="inactive"
+              paddingX={1}
+              justifyContent="space-between"
+            >
+              <Input
+                key={`welcome-text-${view.welcomeRev}`}
+                label="Text"
+                placeholder="welcome"
+                value={view.welcome}
+                submitLabel="done"
+                onInput={text => view.onWelcome(text)}
+                onSubmit={() => view.onWelcomeDone()}
+              />
+              <Text dimColor>{` ${Math.min(view.welcome.length, 20)}/20`}</Text>
+            </Box>
           </Box>
         )}
       </Box>
