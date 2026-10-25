@@ -65,8 +65,8 @@ Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike
 A slowly shifting aurora gradient (half-block cells, theme-aware) in places where it adds no
 clutter: a swatch beside the spinner, a once-per-session greeting sweep above the prompt, an
 animated wordmark atop the `/rich-ui` pane, a gradient bar for the usage band, and a nyan cat
-that flies across the whole window once per session, and a doge that welcomes you across
-the width of the band (as tall as the engine allows, about half the window). Pure delight,
+that flies across the whole window once per session, and a doge face with "welcome"
+below it that dissolves away a few seconds after you start. Pure delight,
 so each is off until turned on; terminal only; the stock UI is untouched when off. These are
 candidates to be judged by hand: the ones not liked will be cut before a release.
 

@@ -4,7 +4,7 @@ import type { MatchedHook, Timer } from 'claude-code'
 import type { EnabledMap } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
-import { FRAME_MS, bandSize, createPacer } from '../aurora-common/aurora'
+import { FRAME_MS, bandSize, createPacer, toneOf } from '../aurora-common/aurora'
 import { playStartedAt, setTicker, startPlay, stopTicker } from '../aurora-common/ticker'
 import { TOTAL_MS, dogeCells, rowsFor } from './doge'
 
@@ -18,7 +18,7 @@ const enabledAtom = atom(
 export const dogeGreeting: Feature = {
   id: 'doge-greeting',
   name: 'Doge greeting',
-  description: 'A doge welcomes you across the whole width of the window once per session',
+  description: 'A doge face and "welcome" appear above the prompt, then fade away, once per session',
   defaultEnabled: false,
 }
 
@@ -27,9 +27,9 @@ const RASTER_KEY = 'doge-greeting'
 
 // The same shape as the other greetings: the band above the prompt, drawn once per
 // session (and once more after /clear) on an idle prompt, repainted by one timer, then
-// handed back to the engine. It takes the band's whole width and as many rows as the
-// engine allows the band (at most half the terminal, less one), so it is as near to a
-// full-screen greeting as a mod can draw: the band cannot be taller.
+// handed back to the engine. The band is as wide as the prompt and as tall as the engine
+// allows (at most half the terminal, less one row); the doge face is centred in it with
+// "welcome" below, both over the terminal's own background, dissolving away at the end.
 export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = async (
   $,
   e,
@@ -57,6 +57,8 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
     if (now - start >= TOTAL_MS) return next(e)
 
     const rest = await next(e)
+    // The caption's colour follows the theme; the face is the same everywhere.
+    const tone = toneOf((await $.config.list()).find(row => row.key === 'theme')?.value)
     const { Box, Raster } = $.ui.resolve(e)
     const requestId = e.requestId
     const columns = Math.max(1, Math.min(MAX_COLUMNS, e.props.bodyColumns ?? 80))
@@ -68,7 +70,7 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
       let isDenied = true
       try {
         elapsed += FRAME_MS
-        const result = await $.ui.blit({ requestId, key: RASTER_KEY, cells: dogeCells(columns, rows, elapsed) })
+        const result = await $.ui.blit({ requestId, key: RASTER_KEY, cells: dogeCells(columns, rows, elapsed, tone) })
         isDenied = result.deny !== undefined
       } catch {
         // A frame that fails is a frame skipped.
@@ -86,7 +88,7 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
 
     return (
       <Box flexDirection="column">
-        <Raster key={RASTER_KEY} columns={columns} rows={rows} cells={dogeCells(columns, rows, elapsed)} />
+        <Raster key={RASTER_KEY} columns={columns} rows={rows} cells={dogeCells(columns, rows, elapsed, tone)} />
         {rest}
       </Box>
     )
