@@ -1,5 +1,6 @@
-// banner (3 rows) + divider + two rows per feature (name, description) with a
-// blank row between features + status lines + (save notice) + footer.
+// banner (3 rows) + divider + per feature a blank row above its two rows (name,
+// description) + status lines + a blank row (the save notice, when set, takes it)
+// + the footer.
 export const HEADER_ROWS = 3
 
 export function contentRows(
@@ -7,7 +8,7 @@ export function contentRows(
   statusLines: number,
   saveFailed: boolean,
 ): number {
-  return HEADER_ROWS + 1 + Math.max(0, featureCount * 3 - 1) + statusLines + 1 + (saveFailed ? 1 : 0)
+  return HEADER_ROWS + 1 + featureCount * 3 + statusLines + 1 + (saveFailed ? 1 : 0) + 1
 }
 
 export function clip(text: string, width: number): string {

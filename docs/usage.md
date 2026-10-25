@@ -9,6 +9,7 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
  █▀▀ █ █▀▀ █▀▄ ▄▄▄ █ █ █
  █   █ █▄▄ █ █     █▄█ █                                     3 of 3 on
  ──────────────────────────────────────────────────────────────────────
+
  ● on   Mermaid diagrams
         Draw mermaid diagrams as text diagrams
 
@@ -17,6 +18,7 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 
  ● on   Markdown preview
         Open a markdown file Claude links to, rendered, in a pane
+
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
 

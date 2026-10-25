@@ -76,7 +76,7 @@ export function buildPane(view: PaneView) {
             key={`row-${feature.id}`}
             flexDirection="column"
             paddingX={GUTTER}
-            marginTop={index === 0 ? 0 : 1}
+            marginTop={1}
             hover={{ backgroundColor: 'subtle' }}
           >
             <Box>
@@ -119,11 +119,11 @@ export function buildPane(view: PaneView) {
         )
       })}
       {view.saveFailed && (
-        <Box paddingX={GUTTER}>
+        <Box paddingX={GUTTER} marginTop={1}>
           <Text color="warning">Couldn't save your choice</Text>
         </Box>
       )}
-      <Box paddingX={GUTTER}>
+      <Box paddingX={GUTTER} marginTop={view.saveFailed ? 0 : 1}>
         <Text dimColor>
           {clip(`Enter toggles · Esc closes · rich-ui ${view.version}`, inner)}
         </Text>
