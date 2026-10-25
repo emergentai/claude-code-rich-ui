@@ -94,16 +94,17 @@ test('a redraw during the show carries on, not a restart', async ($, on) => {
   await second.unmount()
 })
 
-test('/clear lets it play once more', async ($, on) => {
+test('/clear does not play it again', async ($, on) => {
   const { clock } = await boot($, on, ON)
   const first = await $.ui.mount(band())
   await clock.advance(TOTAL_MS + 500)
   await first.unmount()
 
   await $.session.end({ reason: 'clear', sessionId: 's1', resume: {} } as never)
+  await clock.advance(10)
   const again = await $.ui.mount(band({ requestId: 'band-3' }))
 
-  expect(await again.find({ type: 'Raster' })).toBeDefined()
+  expect(await again.find({ type: 'Raster' })).toBeUndefined()
   await again.unmount()
 })
 
