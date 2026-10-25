@@ -7,7 +7,7 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 ```
  ▀     █           ▀
  █▀▀ █ █▀▀ █▀▄ ▄▄▄ █ █ █
- █   █ █▄▄ █ █     █▄█ █                                     3 of 3 on
+ █   █ █▄▄ █ █     █▄█ █                                     3 of 4 on
  ──────────────────────────────────────────────────────────────────────
 
  ● on   Mermaid diagrams
@@ -18,6 +18,12 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 
  ● on   Markdown preview
         Open a markdown file Claude links to, rendered, in a pane
+
+ Experimental  ·  may be removed in any version
+
+ ○ off  Welcome greeting
+        A big orange "welcome" sweeps in above the prompt once per session, then is gone
+        Welcome text (20 max): welcome
 
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
@@ -33,6 +39,15 @@ pane stays open after a toggle, so you can change several features in one visit.
 - Your choices are saved and come back in the next session.
 - Where the pane appears is up to Claude Code: above the prompt in a narrow
   terminal, beside the conversation in a wide fullscreen one.
+
+Features under **Experimental** are tried out and may be removed in any future version.
+
+## Welcome greeting (experimental)
+
+Off until you turn it on in `/rich-ui`. Once per session (and after `/clear`) a big orange "welcome" sweeps
+in from the left above the prompt, holds half a second and sweeps out. Send a message and it is gone at
+once. Change the word in the **Welcome text (20 max)** field under the row: it saves as you type. Details:
+[`features/welcome-greeting.md`](features/welcome-greeting.md).
 
 ## Install from a shell
 

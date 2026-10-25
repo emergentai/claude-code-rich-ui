@@ -170,7 +170,7 @@ test('turning it off mid-flight stops it', async ($, on) => {
     surface: 'terminal',
     component: 'Pane',
     requestId: 'rich-ui',
-    props: { title: 'rich-ui', placement: 'dock', bodyColumns: 80, view: {} },
+    props: { title: 'rich-ui', isFocused: false, placement: 'dock', bodyColumns: 80, scroll: { offset: 0, bodyRows: 20 }, view: {} },
   } as never)
 
   await pane.press({ key: 'welcome-greeting' })

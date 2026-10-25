@@ -113,7 +113,13 @@ the reader something.
 
 Chosen to go forward: the copy button, the manager pane refresh, an enhance-links spike,
 the aurora spinner (off by default), and a new spike on scrollback and long tool output.
-Dropped: tool timing, the turn summary line, the compact nudge and the turn ribbon. The
+Dropped: tool timing, the turn summary line, the compact nudge and the turn ribbon.
+
+**Outcome of the aurora spinner:** several placements of the gradient (a swatch beside the spinner,
+a usage meter, a pane header, a nyan cat, a doge) were built and tried by hand; the one kept is a plain
+big "welcome" sign at startup, shipped as the first *experimental* feature
+([`../features/welcome-greeting.md`](../features/welcome-greeting.md)). A band above the spinner looked
+like clutter, and a swatch on the turn-duration line would not paint in a transcript row. The
 cost segment and the turn-finished notification stay in the backlog, not scheduled.
 
 ## Outcome: manager pane refresh
