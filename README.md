@@ -2,6 +2,8 @@
 
 ### The Claude Code interface I wished for, as add-ons you can switch on one at a time.
 
+[![Release](https://img.shields.io/github/v/release/emergentai/claude-code-rich-ui)](https://github.com/emergentai/claude-code-rich-ui/releases) [![License: MIT](https://img.shields.io/github/license/emergentai/claude-code-rich-ui)](LICENSE) [![Tested on Claude Code 2.1.310](https://img.shields.io/badge/tested%20on%20Claude%20Code-2.1.310-blue)](#-install) [![Stars](https://img.shields.io/github/stars/emergentai/claude-code-rich-ui?style=flat)](https://github.com/emergentai/claude-code-rich-ui/stargazers)
+
 rich-ui is a Claude Code mod: the interface changes I kept wishing for, built as add-ons.
 Some are real upgrades (mermaid diagrams drawn in the transcript, markdown files opened
 rendered in a pane), some are just touches I enjoy (a quieter spinner, a welcome greeting).
