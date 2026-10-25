@@ -24,7 +24,7 @@ const statusAtom = atom(
 export const calmSpinner: Feature = {
   id: 'calm-spinner',
   name: 'Zen spinner',
-  description: 'Replace the working row with one quiet line and trim the turn-end line',
+  description: 'Show a calm one-line status while Claude works',
   isExperimental: true,
   defaultEnabled: true,
 }

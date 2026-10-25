@@ -22,7 +22,7 @@ const usageAtom = atom(
 export const statusBand: Feature = {
   id: 'status-band',
   name: 'Status band',
-  description: 'Show context and plan usage under the prompt when they run high',
+  description: 'Show context and plan usage when they run high',
   defaultEnabled: true,
 }
 

@@ -38,6 +38,7 @@ declare module 'claude-code' {
       status: Shaped<StatusMap>
       saveFailed: Shaped<boolean>
       shown: Shaped<ShownMap>
+      'zen-quote': Shaped<number>
       usage: Shaped<UsageSnapshot>
       preview: Shaped<PreviewState>
     }

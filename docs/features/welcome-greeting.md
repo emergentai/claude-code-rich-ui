@@ -30,7 +30,7 @@ to take it away (0.9 s each way). Then the band goes back to the engine's.
 
 ## Setting the text
 
-`/rich-ui` has a bordered text box under the Welcome greeting row (`Text: welcome`, with a `19/20` character counter
+`/rich-ui` has a bordered text box under the Welcome greeting row (showing `welcome`, with a `19/20` character counter
 on the right). There is no save step:
 
 - Every edit changes the sign at once, and is written to the store after a 0.4 s pause in typing.

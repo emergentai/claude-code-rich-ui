@@ -86,7 +86,7 @@ type Feature = {
   name: string               // shown in the pane
   description: string        // one line, shown in the pane
   defaultEnabled: boolean
-  isExperimental?: boolean   // listed under an "Experimental" header in the pane; may be removed in any version
+  isExperimental?: boolean   // listed under an "Experimental" header in the pane; may be removed in a future version
 }
 ```
 

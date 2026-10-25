@@ -1,4 +1,4 @@
-import { atom, read } from 'claude-code'
+import { atom, read, update } from 'claude-code'
 import type { Hook, MatchedHook } from 'claude-code'
 
 import type { EnabledMap } from '../../../types'
@@ -13,23 +13,32 @@ const enabledAtom = atom(
   { shape: 'enabled-1' },
 )
 
+// Which saying shows, kept in shared state and not in the module: a hook may run in a fresh
+// module environment each time, and a saying held there came back as a new pick on every
+// draw. -1 means none chosen yet.
+const quoteAtom = atom(
+  { plugin: 'rich-ui', key: 'zen-quote' } as const,
+  -1,
+  { shape: 'zen-quote-1' },
+)
+
 export const quietFooter: Feature = {
   id: 'quiet-footer',
   name: 'Zen footer',
-  description: 'Replace the hint line under the prompt with a zen saying, and hide the dim notices under the logo',
+  description: 'Swap the hint under the prompt for a zen saying',
   isExperimental: true,
   defaultEnabled: false,
 }
 
-// Which saying shows: set at the first draw, then a new random one each time a turn
-// finishes. One module environment holds it, so a hot reload starts again.
-let current: number | undefined
-
 // Each finished turn moves the footer to another saying, and the hint is drawn again to
 // show it. Only the main conversation's turns come through this event.
 export const advanceFooter: Hook<'turn.complete'> = async ($, e, next) => {
-  current = pickQuote(current, Math.random())
-  if (isOn(await read($, enabledAtom), quietFooter)) $.ui.invalidate('ui.render')
+  if (isOn(await read($, enabledAtom), quietFooter)) {
+    await update($, quoteAtom, previous =>
+      pickQuote(previous < 0 ? undefined : previous, Math.random()),
+    )
+    $.ui.invalidate('ui.render')
+  }
 
   return next(e)
 }
@@ -46,9 +55,18 @@ export const renderPromptHint: MatchedHook<'ui.render', { component: 'PromptHint
 ) => {
   if (!isOn(await read($, enabledAtom), quietFooter) || e.surface !== 'terminal') return next(e)
 
-  current ??= pickQuote(undefined, Math.random())
+  // Drawing never picks: the first saying is chosen once, after the draw, and kept until
+  // the next turn ends.
+  const stored = await read($, quoteAtom)
+  if (stored < 0 || stored >= ZEN_QUOTES.length) {
+    void $.clock.after(0, () =>
+      update($, quoteAtom, previous =>
+        previous >= 0 && previous < ZEN_QUOTES.length ? previous : pickQuote(undefined, Math.random()),
+      ),
+    )
+  }
 
-  return next({ ...e, props: { ...e.props, hint: ZEN_QUOTES[current]! } })
+  return next({ ...e, props: { ...e.props, hint: ZEN_QUOTES[stored >= 0 && stored < ZEN_QUOTES.length ? stored : 0]! } })
 }
 
 // The dim notices under the logo (the model source, an experiment, a settings hint)

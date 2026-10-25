@@ -24,7 +24,7 @@ const welcomeAtom = atom(
 export const welcomeGreeting: Feature = {
   id: 'welcome-greeting',
   name: 'Welcome greeting',
-  description: 'A big orange "welcome" sweeps in above the prompt once per session, then is gone',
+  description: 'Greet each session with a big animated message above the prompt',
   isExperimental: true,
   defaultEnabled: true,
 }

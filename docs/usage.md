@@ -19,7 +19,7 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
  ● on   Markdown preview
         Open a markdown file Claude links to, rendered, in a pane
 
- Experimental  ·  may be removed in any version
+ Experimental  ·  may be removed in a future version
 
  ● on   Welcome greeting
         A big orange "welcome" sweeps in above the prompt once per session, then is gone

@@ -409,7 +409,7 @@ test('the field stops at 20 characters', async ($, on) => {
   await clock.advance(500)
 
   expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'abcdefghijklmnopqrst' })
-  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ label: 'Text' })
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).not.toHaveProperty('label')
   await ui.unmount()
 })
 
@@ -418,7 +418,7 @@ test('the welcome greeting is listed under an Experimental header, after the reg
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
   expect(await ui.find({ type: 'Text', text: 'Experimental' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /may be removed in any version/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /may be removed in a future version/ })).toBeDefined()
   const order = ['Mermaid diagrams', 'Status band', 'Markdown preview', 'Experimental', 'Welcome greeting']
   for (const text of order) expect(await ui.find({ type: 'Text', text: new RegExp(text) })).toBeDefined()
   expect(await ui.find({ key: 'welcome-greeting' })).toBeDefined()
