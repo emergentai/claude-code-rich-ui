@@ -2,6 +2,13 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## 0.5.0 - 2026-10-25
+
+### Added
+- Markdown preview: Claude is now told the preview is on, so it links the markdown files it
+  writes and you can click to open them. Follows the feature's toggle in `/rich-ui`.
+  ([#24](https://github.com/emergentai/claude-code-rich-ui/pull/24))
+
 ## 0.4.1 - 2026-10-25
 
 ### Fixed
