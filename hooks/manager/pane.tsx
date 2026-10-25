@@ -3,7 +3,7 @@ import type { Elements } from 'claude-code'
 import type { EnabledMap, StatusMap } from '../../types'
 import type { Feature } from '../core/feature'
 import { BANNER_COLUMNS, BANNER_ROWS, bannerCells } from './banner'
-import { clip, contentRows, HEADER_ROWS } from './size'
+import { clip, contentRows, experimentalCount, HEADER_ROWS } from './size'
 
 export type PaneView = {
   elements: Elements['terminal']
@@ -16,7 +16,11 @@ export type PaneView = {
   // The rows the pane's room has (`scroll.bodyRows`); only a dock uses it.
   bodyRows?: number
   version: string
+  welcome: string
+  welcomeRev: number
   onToggle: (feature: Feature) => void
+  onWelcome: (text: string) => void
+  onWelcomeDone: () => void
 }
 
 // The switch beside a name: same width on and off, so names line up, and the
@@ -26,6 +30,8 @@ export const PILL_OFF = '○ off'
 const PILL_GAP = 2
 const GUTTER = 1
 const CHIP_GAP = 2
+// The feature whose text field sits under its row (the id of features/welcome-greeting).
+const WELCOME_ID = 'welcome-greeting'
 
 // What a row's chip says, if anything: a healthy feature has none.
 export function chipFor(entry: StatusMap[string] | undefined) {
@@ -39,7 +45,7 @@ export function chipFor(entry: StatusMap[string] | undefined) {
 // rejects a function that is handed `$`, so the hook reads the state and writes
 // the toggle itself. Colours are theme keys; only the banner's Raster is raw.
 export function buildPane(view: PaneView) {
-  const { Box, Text, Button, Raster } = view.elements
+  const { Box, Text, Button, Raster, Input } = view.elements
   const inner = view.width - GUTTER * 2
   const indent = ' '.repeat(PILL_OFF.length + PILL_GAP)
   const onCount = view.features.filter(
@@ -56,10 +62,91 @@ export function buildPane(view: PaneView) {
   const pinHeight =
     view.isDocked &&
     view.bodyRows !== undefined &&
-    view.bodyRows > contentRows(view.features.length, statusLines, view.saveFailed)
+    view.bodyRows >
+      contentRows(view.features.length, statusLines, view.saveFailed, experimentalCount(view.features))
       ? view.bodyRows
       : undefined
   const rule = <Text color="text" dimColor>{'─'.repeat(Math.max(0, view.width))}</Text>
+
+  const regular = view.features.filter(feature => feature.isExperimental !== true)
+  const experimental = view.features.filter(feature => feature.isExperimental === true)
+  const renderRow = (feature: Feature) => {
+    const index = view.features.indexOf(feature)
+    const isOn = view.enabled[feature.id] ?? feature.defaultEnabled
+    const entry = view.status[feature.id]
+    const chip = chipFor(entry)
+    const nameWidth =
+      inner - PILL_OFF.length - PILL_GAP - (chip ? chip.text.length + CHIP_GAP : 0)
+
+    return (
+      <Box
+        key={`row-${feature.id}`}
+        flexDirection="column"
+        paddingX={GUTTER}
+        marginTop={1}
+        hover={{ backgroundColor: 'subtle' }}
+      >
+        <Box>
+          <Button
+            key={feature.id}
+            plain
+            autoFocus={index === 0 ? true : undefined}
+            onPress={() => view.onToggle(feature)}
+          >
+            <Text color={isOn ? 'success' : 'inactive'} bold={isOn}>
+              {isOn ? PILL_ON : PILL_OFF}
+            </Text>
+            <Text color="text">{' '.repeat(PILL_GAP)}</Text>
+            <Text color="text">{clip(feature.name, nameWidth)}</Text>
+          </Button>
+          {chip && (
+            <Text color={chip.color}>
+              {' '.repeat(CHIP_GAP)}
+              {chip.text}
+            </Text>
+          )}
+        </Box>
+        <Text dimColor hover={{ dimColor: false }}>
+          {clip(`${indent}${feature.description}`, inner)}
+        </Text>
+        {entry?.error && (
+          <Text color="warning">
+            {clip(
+              `${indent}${feature.name}: failed ${entry.error.count} time${
+                entry.error.count === 1 ? '' : 's'
+              }, last error: ${entry.error.message}`,
+              inner,
+            )}
+          </Text>
+        )}
+        {entry?.notes.map(note => (
+          <Text dimColor>{clip(`${indent}${note}`, inner)}</Text>
+        ))}
+        {feature.id === WELCOME_ID && (
+          <Box paddingLeft={indent.length} marginTop={0}>
+            <Box
+              flexGrow={1}
+              borderStyle="round"
+              borderColor="inactive"
+              paddingX={1}
+              justifyContent="space-between"
+            >
+              <Input
+                key={`welcome-text-${view.welcomeRev}`}
+                label="Text"
+                placeholder="welcome"
+                value={view.welcome}
+                submitLabel="done"
+                onInput={text => view.onWelcome(text)}
+                onSubmit={() => view.onWelcomeDone()}
+              />
+              <Text dimColor>{` ${Math.min(view.welcome.length, 20)}/20`}</Text>
+            </Box>
+          </Box>
+        )}
+      </Box>
+    )
+  }
 
   return (
     <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0} height={pinHeight}>
@@ -78,60 +165,18 @@ export function buildPane(view: PaneView) {
         </Box>
       </Box>
       {rule}
-      {view.features.map((feature, index) => {
-        const isOn = view.enabled[feature.id] ?? feature.defaultEnabled
-        const entry = view.status[feature.id]
-        const chip = chipFor(entry)
-        const nameWidth =
-          inner - PILL_OFF.length - PILL_GAP - (chip ? chip.text.length + CHIP_GAP : 0)
-
-        return (
-          <Box
-            key={`row-${feature.id}`}
-            flexDirection="column"
-            paddingX={GUTTER}
-            marginTop={1}
-            hover={{ backgroundColor: 'subtle' }}
-          >
-            <Box>
-              <Button
-                key={feature.id}
-                plain
-                autoFocus={index === 0 ? true : undefined}
-                onPress={() => view.onToggle(feature)}
-              >
-                <Text color={isOn ? 'success' : 'inactive'} bold={isOn}>
-                  {isOn ? PILL_ON : PILL_OFF}
-                </Text>
-                <Text color="text">{' '.repeat(PILL_GAP)}</Text>
-                <Text color="text">{clip(feature.name, nameWidth)}</Text>
-              </Button>
-              {chip && (
-                <Text color={chip.color}>
-                  {' '.repeat(CHIP_GAP)}
-                  {chip.text}
-                </Text>
-              )}
-            </Box>
-            <Text dimColor hover={{ dimColor: false }}>
-              {clip(`${indent}${feature.description}`, inner)}
+      {regular.map(renderRow)}
+      {experimental.length > 0 && (
+        <Box key="experimental" flexDirection="column" paddingX={GUTTER} marginTop={1}>
+          <Box>
+            <Text bold color="text">
+              Experimental
             </Text>
-            {entry?.error && (
-              <Text color="warning">
-                {clip(
-                  `${indent}${feature.name}: failed ${entry.error.count} time${
-                    entry.error.count === 1 ? '' : 's'
-                  }, last error: ${entry.error.message}`,
-                  inner,
-                )}
-              </Text>
-            )}
-            {entry?.notes.map(note => (
-              <Text dimColor>{clip(`${indent}${note}`, inner)}</Text>
-            ))}
+            <Text dimColor>{clip('  ·  may be removed in any version', inner - 'Experimental'.length)}</Text>
           </Box>
-        )
-      })}
+        </Box>
+      )}
+      {experimental.map(renderRow)}
       {pinHeight !== undefined && <Box flexGrow={1} />}
       {view.saveFailed && (
         <Box paddingX={GUTTER} marginTop={1}>

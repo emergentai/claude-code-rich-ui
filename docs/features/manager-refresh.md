@@ -33,6 +33,9 @@ with a switch: the manager is always present. Behaviour and keys are unchanged.
   row keeps the engine's reverse video.
 - **Chip.** `error` (red) or `note` (amber) beside a feature's name only when it has a
   status entry; the detail lines stay under the description. A healthy feature has none.
+- **Experimental.** A feature with `isExperimental` is listed after the regular ones under an
+  `Experimental · may be removed in any version` header (today: the welcome greeting, whose text field sits
+  under its row).
 - **Layout.** One divider under the header, a blank row above each option and above the
   footer, a one-cell gutter everywhere (two when docked), no border of our own because the
   engine frames the pane.

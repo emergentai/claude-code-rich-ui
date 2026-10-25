@@ -71,6 +71,20 @@ every user opens, not a toggleable feature: the manager has no switch of its own
 Reference: [`features/manager-refresh.md`](features/manager-refresh.md). Manual check:
 [`dev/manager-refresh-manual-test.md`](dev/manager-refresh-manual-test.md).
 
+## Experimental
+
+Features here are tried out and may be removed in any future version. Each has its own switch in
+`/rich-ui`, under an **Experimental** header.
+
+### Welcome greeting (unreleased)
+
+A big orange "welcome" sweeps in from the left above the prompt, holds a moment and sweeps out, once per
+session, and ends at once when you send a message. On by default. The word can be changed in
+`/rich-ui` (20 characters, saved as you type). Pure delight, so it is experimental and terminal-only.
+
+Reference: [`features/welcome-greeting.md`](features/welcome-greeting.md). Manual check:
+[`dev/welcome-greeting-manual-test.md`](dev/welcome-greeting-manual-test.md).
+
 ## Backlog
 
 Not committed. Each would be its own feature, independently toggleable, and each must

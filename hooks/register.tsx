@@ -3,6 +3,7 @@ import type { Register } from 'claude-code'
 import { refreshOnWrite, renderLinkedReply, renderPreview } from './features/markdown-preview'
 import { renderAssistantMessage } from './features/mermaid'
 import { onSessionEnd, recordUsage } from './features/status-band'
+import { renderWelcome } from './features/welcome-greeting'
 import { renderPane, runCommand, startSession } from './manager'
 
 // The engine only accepts literal `on("event", hook)` calls here, so `on` is
@@ -18,6 +19,8 @@ export const register: Register = on => {
   on('tool.call', refreshOnWrite)
   on('ui.render', { component: 'AssistantMessage' }, renderLinkedReply)
   on('ui.render', { component: 'Pane', requestId: 'rich-ui-preview' }, renderPreview)
+
+  on('ui.render', { component: 'AbovePrompt' }, renderWelcome)
 
   on('session.measure', recordUsage)
   on('session.end', onSessionEnd)

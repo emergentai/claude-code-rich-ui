@@ -5,7 +5,7 @@ import { boot } from '../core/test-harness'
 import { VERSION } from '../core/version'
 import { BANNER_COLUMNS, BANNER_ROWS, bannerCells, gradientAt, toBase64 } from './banner'
 import { chipFor } from './pane'
-import { contentRows } from './size'
+import { contentRows, EXPERIMENTAL_HEADER_ROWS, experimentalCount, FIELD_ROWS } from './size'
 import { features } from '../core/registry'
 
 const PANE = {
@@ -143,7 +143,7 @@ test('the pane draws a banner Raster, a summary and no chip on a healthy pane', 
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
   expect(await ui.find({ key: 'banner' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /3 of 3 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /4 of 4 on/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /^(error|note)$/ })).toBeUndefined()
   await ui.unmount()
 })
@@ -169,7 +169,7 @@ test('the summary counts features that are on', async ($, on) => {
   await ui.press({ key: 'mermaid' })
   await clock.settle()
 
-  expect(await ui.find({ type: 'Text', text: /2 of 3 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
   await ui.unmount()
 })
 
@@ -224,7 +224,8 @@ test('a docked pane and an inline pane both draw every row', async ($, on) => {
 
 test('the pane height matches contentRows for a healthy pane', async () => {
   // header 3 + divider + 3 per feature (blank, name, description) + blank + footer
-  expect(contentRows(features.length, 0, false)).toBe(3 + 1 + features.length * 3 + 2)
+  // The experimental header (two rows) and the bordered welcome field (three) add five.
+  expect(contentRows(features.length, 0, false, experimentalCount(features))).toBe(3 + 1 + features.length * 3 + 2 + EXPERIMENTAL_HEADER_ROWS + FIELD_ROWS)
   expect(contentRows(3, 0, false)).toBe(15)
 })
 
@@ -260,7 +261,7 @@ test('an off feature shows the inactive pill', async ($, on) => {
 
   const pill = await ui.find({ type: 'Text', text: /○ off/ })
   expect(pill?.props.color).toBe('inactive')
-  expect(await ui.find({ type: 'Text', text: /2 of 3 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
   await ui.unmount()
 })
 
@@ -289,7 +290,147 @@ test('a dock with room is as tall as its room, so the footer sits at the bottom'
 test('a dock too short for the content, and an inline pane, keep their natural height', async ($, on) => {
   await boot($, on)
 
-  expect(await heightFor($, 'dock', contentRows(features.length, 0, false))).toBeUndefined()
+  expect(await heightFor($, 'dock', contentRows(features.length, 0, false, experimentalCount(features)))).toBeUndefined()
   expect(await heightFor($, 'dock', 5)).toBeUndefined()
   expect(await heightFor($, 'inline', 40)).toBeUndefined()
+})
+
+test('the welcome text saves as it is typed, with no save step and no new field', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'welcome' })
+
+  await ui.input({ key: 'welcome-text-0', text: 'Hello Wor', kind: 'change' })
+  await ui.input({ key: 'welcome-text-0', text: 'Hello World!!!!!!!!!', kind: 'change' })
+  await clock.advance(500)
+
+  // The field keeps what was typed (the same element, so nothing flickers)...
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'Hello World!!!!!!!!!' })
+  // ...and the store holds the cleaned text the sign shows, written once after the pause.
+  expect(JSON.stringify(saved.get('prefs'))).toBe(
+    JSON.stringify({ v: 1, enabled: {}, welcome: 'hello world!!!!!!!!!' }),
+  )
+  await ui.unmount()
+})
+
+test('typing writes after a pause, not on every key', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  await ui.input({ key: 'welcome-text-0', text: 'h', kind: 'change' })
+  await clock.advance(100)
+  expect(saved.get('prefs')).toBeUndefined()
+  await ui.input({ key: 'welcome-text-0', text: 'hi', kind: 'change' })
+  await clock.advance(100)
+  expect(saved.get('prefs')).toBeUndefined()
+  await clock.advance(500)
+
+  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {}, welcome: 'hi' }))
+  await ui.unmount()
+})
+
+test('Enter writes it at once', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  await ui.input({ key: 'welcome-text-0', text: 'hey', kind: 'change' })
+  await ui.input({ key: 'welcome-text-0', text: 'hey' })
+  await clock.settle()
+
+  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {}, welcome: 'hey' }))
+  await ui.unmount()
+})
+
+test('Enter does not empty the field: it is drawn again holding the text, once per Enter', async ($, on) => {
+  const { clock } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await ui.input({ key: 'welcome-text-0', text: 'hey there', kind: 'change' })
+  await clock.advance(500)
+  // Typing never replaced the field.
+  expect(await ui.find({ key: 'welcome-text-0' })).toBeDefined()
+
+  await ui.input({ key: 'welcome-text-0', text: 'hey there' })
+  await clock.settle()
+  expect(await ui.find({ key: 'welcome-text-0' })).toBeUndefined()
+  expect((await ui.find({ key: 'welcome-text-1' }))?.props).toMatchObject({ value: 'hey there' })
+
+  // And again: Enter on an unchanged text still brings it back.
+  await ui.input({ key: 'welcome-text-1', text: 'hey there' })
+  await clock.settle()
+  expect((await ui.find({ key: 'welcome-text-2' }))?.props).toMatchObject({ value: 'hey there' })
+  await ui.unmount()
+})
+
+test('clearing the field is allowed: it is not refilled while typing, and the sign falls back to "welcome"', async ($, on) => {
+  const { clock, saved } = await boot($, on, { prefs: { v: 1, enabled: {}, welcome: 'hi team' } })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  await ui.input({ key: 'welcome-text-0', text: '', kind: 'change' })
+  await clock.advance(500)
+
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: '' })
+  // The default is not stored: back to nothing saved.
+  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {} }))
+  await ui.unmount()
+})
+
+test('a saved welcome text comes back in the pane', async ($, on) => {
+  await boot($, on, { prefs: { v: 1, enabled: {}, welcome: 'hi team' } })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'hi team' })
+  await ui.unmount()
+})
+
+test('toggling a feature after typing keeps the field and its text, and saves both', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await ui.input({ key: 'welcome-text-0', text: 'hey', kind: 'change' })
+
+  await ui.press({ key: 'status-band' })
+  await clock.settle()
+
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'hey' })
+  expect(JSON.stringify(saved.get('prefs'))).toBe(
+    JSON.stringify({ v: 1, enabled: { 'status-band': false }, welcome: 'hey' }),
+  )
+  await ui.unmount()
+})
+
+test('the field stops at 20 characters', async ($, on) => {
+  const { clock } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  await ui.input({ key: 'welcome-text-0', text: 'abcdefghijklmnopqrstuvwxyz', kind: 'change' })
+  await clock.advance(500)
+
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'abcdefghijklmnopqrst' })
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ label: 'Text' })
+  await ui.unmount()
+})
+
+test('the welcome greeting is listed under an Experimental header, after the regular features', async ($, on) => {
+  await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  expect(await ui.find({ type: 'Text', text: 'Experimental' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /may be removed in any version/ })).toBeDefined()
+  const order = ['Mermaid diagrams', 'Status band', 'Markdown preview', 'Experimental', 'Welcome greeting']
+  for (const text of order) expect(await ui.find({ type: 'Text', text: new RegExp(text) })).toBeDefined()
+  expect(await ui.find({ key: 'welcome-greeting' })).toBeDefined()
+  expect(await ui.find({ key: 'welcome-text-0' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('the welcome greeting row is on by default and toggles like any feature, saving the choice', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /4 of 4 on/ })).toBeDefined()
+
+  await ui.press({ key: 'welcome-greeting' })
+  await clock.settle()
+
+  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: { 'welcome-greeting': false } }))
+  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
+  await ui.unmount()
 })
