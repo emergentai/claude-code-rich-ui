@@ -273,7 +273,7 @@ test('a long path and a long error wrap instead of being cut', async ($, on) => 
 
 // The engine's own prompt, as far as these tests need: one shared section.
 const engineSections = (on: Parameters<typeof boot>[1]) =>
-  on('prompt.compose', () => ({ value: { sections: [{ id: 'intro', text: 'You are Claude.', scope: 'shared' }] } }) as never)
+  on('prompt.compose', () => ({ sections: [{ id: 'intro', text: 'You are Claude.', scope: 'shared' }] }) as never)
 
 test('the system prompt tells the model to link markdown files it writes', async ($, on) => {
   engineSections(on)
