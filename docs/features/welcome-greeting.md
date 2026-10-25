@@ -2,10 +2,10 @@
 
 A big "welcome" in Claude's orange sweeps in from the left above the prompt, holds for half a
 second and sweeps out from the left, about two seconds in all, once per session. Pure delight, so it is
-**experimental** and off until you turn it on: it may be removed in any future version.
+**experimental**: it may be removed in any future version.
 
-- id `welcome-greeting`, name "Welcome greeting", `defaultEnabled: false`, `isExperimental: true`
-- Toggle: its own row in `/rich-ui`, under the **Experimental** header. Off, nothing is drawn and the
+- id `welcome-greeting`, name "Welcome greeting", `defaultEnabled: true`, `isExperimental: true`
+- Toggle: its own row in `/rich-ui`, under the **Experimental** header. It is on by default; off, nothing is drawn and the
   stock UI is untouched.
 - Terminal surface only.
 

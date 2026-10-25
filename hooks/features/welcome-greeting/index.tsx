@@ -26,7 +26,7 @@ export const welcomeGreeting: Feature = {
   name: 'Welcome greeting',
   description: 'A big orange "welcome" sweeps in above the prompt once per session, then is gone',
   isExperimental: true,
-  defaultEnabled: false,
+  defaultEnabled: true,
 }
 
 export const MAX_COLUMNS = 400

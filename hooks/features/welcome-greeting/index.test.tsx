@@ -19,8 +19,16 @@ function band(overrides: Record<string, unknown> = {}, props: Record<string, unk
   } as never
 }
 
-test('off by default: the band is the engine own', async ($, on) => {
-  const { clock, blits } = await boot($, on)
+test('on by default: nothing needs turning on', async ($, on) => {
+  await boot($, on)
+  const ui = await $.ui.mount(band())
+
+  expect(await ui.find({ type: 'Raster' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('turned off in the saved choices: the band is the engine own and nothing is painted', async ($, on) => {
+  const { clock, blits } = await boot($, on, { prefs: { v: 1, enabled: { 'welcome-greeting': false } } })
   const ui = await $.ui.mount(band())
 
   expect(await ui.find({ type: 'Raster' })).toBeUndefined()

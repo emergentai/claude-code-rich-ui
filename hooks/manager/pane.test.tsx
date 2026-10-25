@@ -143,7 +143,7 @@ test('the pane draws a banner Raster, a summary and no chip on a healthy pane', 
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
   expect(await ui.find({ key: 'banner' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /4 of 4 on/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /^(error|note)$/ })).toBeUndefined()
   await ui.unmount()
 })
@@ -169,7 +169,7 @@ test('the summary counts features that are on', async ($, on) => {
   await ui.press({ key: 'mermaid' })
   await clock.settle()
 
-  expect(await ui.find({ type: 'Text', text: /2 of 4 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
   await ui.unmount()
 })
 
@@ -261,7 +261,7 @@ test('an off feature shows the inactive pill', async ($, on) => {
 
   const pill = await ui.find({ type: 'Text', text: /○ off/ })
   expect(pill?.props.color).toBe('inactive')
-  expect(await ui.find({ type: 'Text', text: /2 of 4 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
   await ui.unmount()
 })
 
@@ -422,13 +422,15 @@ test('the welcome greeting is listed under an Experimental header, after the reg
   await ui.unmount()
 })
 
-test('the welcome greeting row toggles like any feature and saves the choice', async ($, on) => {
+test('the welcome greeting row is on by default and toggles like any feature, saving the choice', async ($, on) => {
   const { clock, saved } = await boot($, on)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /4 of 4 on/ })).toBeDefined()
 
   await ui.press({ key: 'welcome-greeting' })
   await clock.settle()
 
-  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: { 'welcome-greeting': true } }))
+  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: { 'welcome-greeting': false } }))
+  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
   await ui.unmount()
 })

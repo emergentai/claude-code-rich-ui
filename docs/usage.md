@@ -7,7 +7,7 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 ```
  ▀     █           ▀
  █▀▀ █ █▀▀ █▀▄ ▄▄▄ █ █ █
- █   █ █▄▄ █ █     █▄█ █                                     3 of 4 on
+ █   █ █▄▄ █ █     █▄█ █                                     4 of 4 on
  ──────────────────────────────────────────────────────────────────────
 
  ● on   Mermaid diagrams
@@ -21,7 +21,7 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 
  Experimental  ·  may be removed in any version
 
- ○ off  Welcome greeting
+ ● on   Welcome greeting
         A big orange "welcome" sweeps in above the prompt once per session, then is gone
         ╭────────────────────────────────────────╮
         │ Text: welcome                     7/20 │
@@ -46,7 +46,7 @@ Features under **Experimental** are tried out and may be removed in any future v
 
 ## Welcome greeting (experimental)
 
-Off until you turn it on in `/rich-ui`. Once per session (and after `/clear`) a big orange "welcome" sweeps
+On by default (switch it off in `/rich-ui`). Once per session (and after `/clear`) a big orange "welcome" sweeps
 in from the left above the prompt, holds half a second and sweeps out. Send a message and it is gone at
 once. Change the word in the text box under the row: it saves as you type. Details:
 [`features/welcome-greeting.md`](features/welcome-greeting.md).

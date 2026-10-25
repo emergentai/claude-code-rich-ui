@@ -74,13 +74,13 @@ Reference: [`features/manager-refresh.md`](features/manager-refresh.md). Manual 
 ## Experimental
 
 Features here are tried out and may be removed in any future version. Each has its own switch in
-`/rich-ui`, under an **Experimental** header, and is off until you turn it on.
+`/rich-ui`, under an **Experimental** header.
 
 ### Welcome greeting (unreleased)
 
 A big orange "welcome" sweeps in from the left above the prompt, holds a moment and sweeps out, once per
-session, and ends at once when you send a message. The word can be changed in `/rich-ui`
-(20 characters, saved as you type). Pure delight, so it is experimental and terminal-only.
+session, and ends at once when you send a message. On by default. The word can be changed in
+`/rich-ui` (20 characters, saved as you type). Pure delight, so it is experimental and terminal-only.
 
 Reference: [`features/welcome-greeting.md`](features/welcome-greeting.md). Manual check:
 [`dev/welcome-greeting-manual-test.md`](dev/welcome-greeting-manual-test.md).
