@@ -2,6 +2,12 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## 0.4.1 - 2026-10-25
+
+### Fixed
+- Welcome greeting: it now plays once, when the session opens, and no longer replays after
+  `/clear` or a plugin reload. ([#22](https://github.com/emergentai/claude-code-rich-ui/pull/22))
+
 ## 0.4.0 - 2026-10-25
 
 ### Added
