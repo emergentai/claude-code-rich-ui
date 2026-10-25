@@ -146,7 +146,7 @@ test('the welcome text saves as it is typed, with no save step and no new field'
   expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'Hello World!!!!!!!!!' })
   // ...and the store holds the cleaned text the sign shows, written once after the pause.
   expect(JSON.stringify(saved.get('prefs'))).toBe(
-    JSON.stringify({ v: 1, enabled: {}, welcome: 'hello world!' }),
+    JSON.stringify({ v: 1, enabled: {}, welcome: 'hello world!!!!!!!!!' }),
   )
   await ui.unmount()
 })
@@ -212,5 +212,17 @@ test('toggling a feature after typing keeps the field and its text, and saves bo
   expect(JSON.stringify(saved.get('prefs'))).toBe(
     JSON.stringify({ v: 1, enabled: { 'status-band': false }, welcome: 'hey' }),
   )
+  await ui.unmount()
+})
+
+test('the field stops at 20 characters', async ($, on) => {
+  const { clock } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  await ui.input({ key: 'welcome-text', text: 'abcdefghijklmnopqrstuvwxyz', kind: 'change' })
+  await clock.advance(500)
+
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'abcdefghijklmnopqrst' })
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ label: 'Welcome text (20 max)' })
   await ui.unmount()
 })

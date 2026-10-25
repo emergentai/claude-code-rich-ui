@@ -4,7 +4,7 @@ import type { Hook, MatchedHook, Timer } from 'claude-code'
 import type { EnabledMap, StatusMap, UsageSnapshot } from '../../types'
 import { withoutStatus } from '../core/errors'
 import { isOn } from '../core/gate'
-import { cleanText, CAPTION } from '../features/doge-greeting/doge'
+import { cleanText, CAPTION, MAX_TEXT } from '../features/doge-greeting/doge'
 import { parseStored, parseWelcome, serialize, STORE_KEY, toggled } from '../core/prefs'
 import { features } from '../core/registry'
 import { bandText, segmentsFor } from '../features/status-band/band'
@@ -18,8 +18,8 @@ import { contentRows, WELCOME_ROWS } from './size'
 const PANE_ID = 'rich-ui'
 
 // Only a text the person changed is stored; the default stays unsaved.
-// The field takes this many characters; the sign shows MAX_TEXT of them, cleaned.
-const MAX_FIELD = 40
+// The field takes this many characters, the most the sign shows.
+const MAX_FIELD = MAX_TEXT
 const SAVE_PAUSE_MS = 400
 // The pending write after the last keystroke, so a burst of typing is one write.
 let saveTimer: Timer | undefined

@@ -84,11 +84,11 @@ back to the engine's (about two and a half seconds in all). The fade gives each 
 threshold, so it needs no knowledge of the background colour. Once per session and again after
 `/clear`. While it holds still nothing is sent to the terminal.
 
-The word can be changed in the `/rich-ui` pane: just type in the "Welcome text" field. There is no save
+The word can be changed in the `/rich-ui` pane: just type in the "Welcome text (20 max)" field. There is no save
 step: every edit updates the sign at once and is written to the store after a 0.4 s pause in typing (Enter
 writes it immediately). The field keeps exactly what is typed and is never redrawn as a new element, so
-nothing flickers; the sign shows it cleaned (lowercase, letters, digits and `! ? . -`, 12 characters), and an
-empty field gives "welcome" on the sign (nothing is stored for the default).
+nothing flickers; the sign shows it cleaned (lowercase, letters, digits and `! ? . -`, 20 characters; the field stops at 20), and an
+empty field gives "welcome" on the sign (nothing is stored for the default). A band too narrow for a long word, even in the smallest type, shows the start of it (as many letters as fit) instead of a word cut off at both edges.
 
 The band is as wide as the prompt and as tall as the engine allows (`maxRows - 1`, 7 to 28 rows, at
 most half the terminal), so the word is largest in a big window. Skipped when the band has fewer than

@@ -66,7 +66,7 @@ const GLYPH_H = 5
 
 // What the person typed, as the sign can draw it: the letters, digits and a few marks, one
 // space between words, at most MAX_TEXT characters; the default when nothing is left.
-export const MAX_TEXT = 12
+export const MAX_TEXT = 20
 
 export function cleanText(raw: unknown): string {
   if (typeof raw !== 'string') return CAPTION
@@ -150,7 +150,14 @@ let cached: (Layout & { text: string }) | undefined
 // The word as big as the band allows (a whole number of pixels a dot), centred.
 export function layoutFor(width: number, height: number, text: string = CAPTION): Layout {
   if (cached?.width === width && cached.height === height && cached.text === text) return cached
-  const bits = textBitmap(text)
+  // A band too narrow for the whole word, even in the smallest type, shows as much of the
+  // start of it as fits rather than a word cut off at both edges.
+  let shown = text
+  let bits = textBitmap(shown)
+  while ((bits[0]?.length ?? 0) > width - 2 && shown.length > 1) {
+    shown = shown.slice(0, -1)
+    bits = textBitmap(shown)
+  }
   const bitsW = bits[0]?.length ?? 1
   const scale = Math.max(
     1,

@@ -139,3 +139,24 @@ test('the sign draws whatever text it is given, centred and sized to fit', () =>
   expect(dogeCells(80, 8, FADE_IN_MS, 'hi')).not.toBe(dogeCells(80, 8, FADE_IN_MS))
   expect(layoutFor(80, 16)).not.toBe(short)
 })
+
+test('the sign takes up to 20 characters', () => {
+  expect(MAX_TEXT).toBe(20)
+  expect(cleanText('abcdefghij klmnopqrst')).toBe('abcdefghij klmnopqrs')
+  expect(cleanText('twenty characters long')).toHaveLength(20)
+})
+
+test('a long word still fits its band: it is shown to the end of the letters that fit, never cut at both edges', () => {
+  const text = 'abcdefghij klmnopqrs'
+  for (const [width, rows] of [[50, 10], [60, 12], [120, 20], [400, 28]] as const) {
+    const layout = layoutFor(width, rows * 2, text)
+
+    expect(layout.textX).toBeGreaterThanOrEqual(0)
+    expect(layout.textX + (layout.bits[0]?.length ?? 0) * layout.scale).toBeLessThanOrEqual(width)
+  }
+  // Wide bands show every letter.
+  expect(layoutFor(400, 56, text).bits[0]?.length).toBe(textBitmap(text)[0]?.length)
+  // A band narrower than the word shows its start.
+  expect((layoutFor(50, 20, text).bits[0]?.length ?? 0)).toBeLessThan(textBitmap(text)[0]?.length ?? 0)
+  expect(dogeWords(50, 10, 1200, text).length).toBe(50 * 10 * 3)
+})

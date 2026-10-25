@@ -68,7 +68,7 @@ export function buildPane(view: PaneView) {
       <Text> </Text>
       <Input
         key="welcome-text"
-        label="Welcome text (12 max, auto-saves): "
+        label="Welcome text (20 max)"
         placeholder="welcome"
         value={view.welcome}
         submitLabel="done"
