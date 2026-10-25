@@ -81,6 +81,20 @@ sessions, not just some?
   tables as grids and falls back to per-row records in narrow windows, so only JSON arrays
   and CSV in code fences remain, and those look rare. Low priority; spike:
   [`dev/tables-spike.md`](dev/tables-spike.md).
+- **Minimal / calm mode.** A toggle that makes the chat read as a conversation: your
+  messages and Claude's replies stay, and the noise around them goes. Candidates, each to
+  be checked against what the render sites allow: tool rows and tool groups drawn as
+  nothing (the stock `ToolUse`, `ToolResult` and `ToolGroup` sites accept an empty tree),
+  mid-turn narration ("Let me look at that file") hidden once the final reply is there,
+  and the stock spinner's rotating verb ("Flibbertigibbeting…") replaced by something
+  quiet. Inspired by the `fm` mod's Calm mode (`kunchenguid/firstmate`, `/calm`), whose
+  conversation-only view and lack of a verb spinner were liked; its sailboat animation was
+  not, so the working indicator would be plain. Open questions before it can pass the
+  first principle: a tool-less view hides what Claude is doing, so it needs a visible
+  cue that work is happening (elapsed time, the tool name, `esc to interrupt`, all of
+  which the stock spinner line carries and a replacement must keep) and a one-key way to
+  see everything (ctrl+o already shows the full transcript); and permission prompts must
+  never be hidden. Off by default; the stock UI untouched when off.
 - **More mermaid types.** XY chart, pie, C4 and architecture shipped in 0.2.0. Gantt,
   mindmap, timeline, gitGraph and journey wait for a text renderer that draws them; we do
   not write our own. Research: [`dev/mermaid-diagram-types-research.md`](dev/mermaid-diagram-types-research.md).
