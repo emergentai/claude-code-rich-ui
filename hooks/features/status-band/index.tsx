@@ -4,8 +4,7 @@ import type { Hook } from 'claude-code'
 import type { EnabledMap, UsageSnapshot } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
-import { auroraMeter } from '../aurora-meter'
-import { resetGreeting, stopAllTickers } from '../aurora-common/ticker'
+import { resetGreeting, stopTicker } from '../welcome-greeting/clock'
 import { bandText, segmentsFor } from './band'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
@@ -33,9 +32,7 @@ export const statusBand: Feature = {
 // moves, which is when the line is rewritten. The manager clears or restores it
 // when the feature is toggled (manager/index.ts).
 async function refreshStatus($: Parameters<Hook<'session.measure'>>[0]) {
-  const enabled = await read($, enabledAtom)
-  // The aurora meter draws these figures itself, as a row above the prompt.
-  const isShown = isOn(enabled, statusBand) && !isOn(enabled, auroraMeter)
+  const isShown = isOn(await read($, enabledAtom), statusBand)
   $.ui.status(
     isShown ? bandText(segmentsFor(await read($, usageAtom), await $.clock.now())) : undefined,
   )
@@ -61,10 +58,10 @@ export const recordUsage: Hook<'session.measure'> = async ($, e, next) => {
 // usage atom survives that handoff with its pre-clear reading, so it is reset
 // here instead of waiting on a session.measure that may not come soon.
 export const onSessionEnd: Hook<'session.end'> = async ($, e, next) => {
-  // The engine allows one unmatched session.end hook, so the aurora features' stop
-  // (every reason, /clear included) rides here; it is synchronous and cannot throw.
-  stopAllTickers()
+  // The engine allows one unmatched session.end hook, so the welcome greeting's stop rides
+  // here (every reason; /clear also lets it play again). Synchronous, and cannot throw.
   if (e.reason === 'clear') resetGreeting()
+  else stopTicker()
   if (e.reason === 'clear') {
     await update($, usageAtom, () => ({ limits: [] }) as UsageSnapshot)
     await refreshStatus($)

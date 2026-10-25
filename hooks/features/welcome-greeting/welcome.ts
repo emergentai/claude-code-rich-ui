@@ -3,7 +3,7 @@
 // second, and is then simply gone. Cells are half blocks, two pixels per cell, so a band
 // `rows` tall is `rows * 2` square pixels high.
 
-import { encodeWords } from '../aurora-common/aurora'
+import { encodeWords } from './frames'
 
 export const MIN_ROWS = 7
 export const MAX_ROWS = 28
@@ -190,7 +190,7 @@ export function sourcePixel(x: number, y: number, layout: Layout): number | unde
 
 // The banner's cells at `ms`, `columns` wide and `rows` tall, as 32-bit words. Pixels that
 // are not part of the word, or are not faded in (or have faded out), leave the terminal's own colours.
-export function dogeWords(columns: number, rows: number, ms: number, text: string = CAPTION): number[] {
+export function welcomeWords(columns: number, rows: number, ms: number, text: string = CAPTION): number[] {
   if (columns < 1 || rows < 1) return []
   const layout = layoutFor(columns, rows * 2, text)
   const words: number[] = []
@@ -211,8 +211,8 @@ export function dogeWords(columns: number, rows: number, ms: number, text: strin
   return words
 }
 
-export function dogeCells(columns: number, rows: number, ms: number, text: string = CAPTION): string {
-  return encodeWords(dogeWords(columns, rows, ms, text))
+export function welcomeCells(columns: number, rows: number, ms: number, text: string = CAPTION): string {
+  return encodeWords(welcomeWords(columns, rows, ms, text))
 }
 
 // How tall the band may be: the engine's room less one row, within the sizes the picture

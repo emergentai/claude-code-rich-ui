@@ -6,4 +6,6 @@ export type Feature = {
   name: string
   description: string
   defaultEnabled: boolean
+  // Shown under an "Experimental" header in /rich-ui: it may be removed in any version.
+  isExperimental?: boolean
 }

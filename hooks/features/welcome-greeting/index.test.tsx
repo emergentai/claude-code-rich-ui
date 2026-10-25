@@ -1,10 +1,11 @@
 import { expect, test } from 'claude-code/testing'
 
 import { boot } from '../../core/test-harness'
-import { FRAME_MS } from '../aurora-common/aurora'
-import { HOLD_MS, SWEEP_IN_MS, SWEEP_OUT_MS, TOTAL_MS, sweepAt } from '.'
+import { FRAME_MS } from './frames'
+import { MAX_COLUMNS } from '.'
+import { FADE_IN_MS, FADE_OUT_MS, TOTAL_MS, welcomeCells } from './welcome'
 
-const ON = { prefs: { v: 1, enabled: { 'aurora-greeting': true } } }
+const ON = { prefs: { v: 1, enabled: { 'welcome-greeting': true } } }
 
 function band(overrides: Record<string, unknown> = {}, props: Record<string, unknown> = {}) {
   return {
@@ -18,40 +19,44 @@ function band(overrides: Record<string, unknown> = {}, props: Record<string, unk
   } as never
 }
 
-test('the sweep comes in, holds, then goes out', () => {
-  expect(sweepAt(0)).toEqual({ from: 0, to: 0 })
-  expect(sweepAt(SWEEP_IN_MS / 2)).toEqual({ from: 0, to: 0.5 })
-  expect(sweepAt(SWEEP_IN_MS + HOLD_MS / 2)).toEqual({ from: 0, to: 1 })
-  expect(sweepAt(SWEEP_IN_MS + HOLD_MS + SWEEP_OUT_MS / 2)).toEqual({ from: 0.5, to: 1 })
-  expect(sweepAt(TOTAL_MS)).toEqual({ from: 1, to: 1 })
-  expect(sweepAt(TOTAL_MS * 3).from).toBe(1)
-})
-
 test('off by default: the band is the engine own', async ($, on) => {
   const { clock, blits } = await boot($, on)
   const ui = await $.ui.mount(band())
 
   expect(await ui.find({ type: 'Raster' })).toBeUndefined()
-  await clock.advance(5000)
+  await clock.advance(6000)
   expect(blits.calls).toHaveLength(0)
   await ui.unmount()
 })
 
-test('on: a Raster over the engine band, repainted until the sweep is done', async ($, on) => {
+test('on: a banner as wide as the band, over the engine band, repainted until the show is over', async ($, on) => {
   const { clock, blits } = await boot($, on, ON)
   const ui = await $.ui.mount(band())
+  const raster = (await ui.find({ type: 'Raster' })) as unknown as { props: { columns: number; rows: number } }
 
-  expect(await ui.find({ type: 'Raster' })).toBeDefined()
+  expect(raster.props.columns).toBe(100)
+  expect(raster.props.rows).toBe(19) // the band's 20 rows less one
   expect(await ui.find({ type: 'Text', text: /engine/ })).toBeDefined()
 
   await clock.advance(TOTAL_MS + 1000)
   const total = blits.calls.length
-
-  expect(total).toBeGreaterThanOrEqual(Math.floor(TOTAL_MS / FRAME_MS) - 2)
-  expect(total).toBeLessThanOrEqual(Math.ceil(TOTAL_MS / FRAME_MS) + 1)
-  expect(blits.calls.every(c => c.key === 'aurora-greeting' && c.requestId === 'band-1')).toBe(true)
+  // Only the sweeps change the picture; the hold sends nothing, the end is handed back.
+  expect(total).toBeGreaterThanOrEqual(Math.floor((FADE_IN_MS + FADE_OUT_MS) / FRAME_MS) - 6)
+  expect(total).toBeLessThanOrEqual(Math.ceil((FADE_IN_MS + FADE_OUT_MS) / FRAME_MS) + 3)
+  expect(blits.calls.every(c => c.key === 'welcome-greeting' && c.requestId === 'band-1')).toBe(true)
+  expect(new Set(blits.calls.map(c => c.cells)).size).toBe(total)
   await clock.advance(5000)
   expect(blits.calls).toHaveLength(total)
+  await ui.unmount()
+})
+
+test('it spans a wide window up to the Raster limit', async ($, on) => {
+  await boot($, on, ON)
+  const ui = await $.ui.mount(band({ viewport: { columns: 600, rows: 40 } }, { bodyColumns: 595 }))
+  const raster = (await ui.find({ type: 'Raster' })) as unknown as { props: { columns: number } }
+
+  expect(raster.props.columns).toBe(MAX_COLUMNS)
+  expect(MAX_COLUMNS).toBeLessThanOrEqual(512)
   await ui.unmount()
 })
 
@@ -67,19 +72,17 @@ test('once played, a later draw hands the band back to the engine', async ($, on
   await again.unmount()
 })
 
-test('a redraw during the sweep keeps drawing it, not a restart', async ($, on) => {
+test('a redraw during the show carries on, not a restart', async ($, on) => {
   const { clock, blits } = await boot($, on, ON)
   const first = await $.ui.mount(band())
-  await clock.advance(1000)
+  await clock.advance(FADE_IN_MS + 300)
   await first.unmount()
   const second = await $.ui.mount(band({ requestId: 'band-2' }))
   blits.calls.length = 0
 
   await clock.advance(TOTAL_MS)
 
-  // Only what is left of the sweep (about 1.8 s), not another full one.
-  expect(await second.find({ type: 'Text', text: /engine/ })).toBeDefined()
-  expect(blits.calls.length).toBeLessThanOrEqual(Math.ceil((TOTAL_MS - 1000) / FRAME_MS) + 1)
+  expect(blits.calls.length).toBeLessThanOrEqual(Math.ceil(FADE_OUT_MS / FRAME_MS) + 3)
   await second.unmount()
 })
 
@@ -94,6 +97,14 @@ test('/clear lets it play once more', async ($, on) => {
 
   expect(await again.find({ type: 'Raster' })).toBeDefined()
   await again.unmount()
+})
+
+test('a band with too little room keeps the engine band', async ($, on) => {
+  await boot($, on, ON)
+  const ui = await $.ui.mount(band({}, { maxRows: 6 }))
+
+  expect(await ui.find({ type: 'Raster' })).toBeUndefined()
+  await ui.unmount()
 })
 
 test('a survey or a working turn keeps it from starting', async ($, on) => {
@@ -119,27 +130,41 @@ test('a narrow or unmeasured window, or another surface, keeps the engine band',
     expect(await ui.find({ type: 'Raster' })).toBeUndefined()
     await ui.unmount()
   }
-  await clock.advance(2000)
+  await clock.advance(FADE_IN_MS + 300)
   expect(blits.calls).toHaveLength(0)
 })
 
-test('session end stops a sweep in progress', async ($, on) => {
+test('session end stops a show in progress', async ($, on) => {
   const { clock, blits } = await boot($, on, ON)
   const ui = await $.ui.mount(band())
-  await clock.advance(500)
+  await clock.advance(1000)
 
   await $.session.end({ reason: 'other', sessionId: 's1', resume: {} } as never)
   const after = blits.calls.length
-  await clock.advance(5000)
+  await clock.advance(6000)
 
   expect(blits.calls).toHaveLength(after)
   await ui.unmount()
 })
 
-test('turning it off mid-sweep stops it', async ($, on) => {
+test('every blit denied ends the timer on its own', async ($, on) => {
   const { clock, blits } = await boot($, on, ON)
   const ui = await $.ui.mount(band())
-  await clock.advance(500)
+  blits.deny = 'not mounted'
+
+  await clock.advance(FRAME_MS * 60)
+  const after = blits.calls.length
+  await clock.advance(6000)
+
+  expect(after).toBeLessThanOrEqual(26)
+  expect(blits.calls).toHaveLength(after)
+  await ui.unmount()
+})
+
+test('turning it off mid-flight stops it', async ($, on) => {
+  const { clock, blits } = await boot($, on, ON)
+  const ui = await $.ui.mount(band())
+  await clock.advance(800)
   const pane = await $.ui.mount({
     plugin: 'rich-ui',
     surface: 'terminal',
@@ -148,14 +173,24 @@ test('turning it off mid-sweep stops it', async ($, on) => {
     props: { title: 'rich-ui', placement: 'dock', bodyColumns: 80, view: {} },
   } as never)
 
-  await pane.press({ key: 'aurora-greeting' })
+  await pane.press({ key: 'welcome-greeting' })
   await clock.settle()
   const after = blits.calls.length
-  await clock.advance(5000)
+  await clock.advance(6000)
 
   expect(blits.calls.length).toBeLessThanOrEqual(after + 1)
   expect(await ui.find({ type: 'Raster' })).toBeUndefined()
   await pane.unmount()
+  await ui.unmount()
+})
+
+test('it draws the text the person set in the pane', async ($, on) => {
+  const { blits, clock } = await boot($, on, { prefs: { v: 1, enabled: { 'welcome-greeting': true }, welcome: 'hi' } })
+  const ui = await $.ui.mount(band())
+  await clock.advance(FADE_IN_MS + FRAME_MS * 2)
+
+  expect(blits.calls.at(-1)?.cells).toBe(welcomeCells(100, 19, FADE_IN_MS, 'hi'))
+  expect(blits.calls.at(-1)?.cells).not.toBe(welcomeCells(100, 19, FADE_IN_MS))
   await ui.unmount()
 })
 

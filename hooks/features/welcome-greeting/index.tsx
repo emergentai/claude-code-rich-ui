@@ -4,9 +4,9 @@ import type { MatchedHook, Timer } from 'claude-code'
 import type { EnabledMap } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
-import { FRAME_MS, bandSize, createPacer } from '../aurora-common/aurora'
-import { playStartedAt, setTicker, startPlay, stopTicker } from '../aurora-common/ticker'
-import { CAPTION, TOTAL_MS, cleanText, dogeCells, rowsFor } from './doge'
+import { playStartedAt, setTicker, startPlay, stopTicker } from './clock'
+import { FRAME_MS, bandSize, createPacer } from './frames'
+import { CAPTION, TOTAL_MS, cleanText, rowsFor, welcomeCells } from './welcome'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
 const enabledAtom = atom(
@@ -21,29 +21,30 @@ const welcomeAtom = atom(
   { shape: 'welcome-1' },
 )
 
-export const dogeGreeting: Feature = {
-  id: 'doge-greeting',
-  name: 'Doge greeting',
-  description: 'A big orange "welcome" fades in from the left above the prompt, then disappear, once per session',
+export const welcomeGreeting: Feature = {
+  id: 'welcome-greeting',
+  name: 'Welcome greeting',
+  description: 'A big orange "welcome" sweeps in above the prompt once per session, then is gone',
+  isExperimental: true,
   defaultEnabled: false,
 }
 
 export const MAX_COLUMNS = 400
-const RASTER_KEY = 'doge-greeting'
+const RASTER_KEY = 'welcome-greeting'
 
-// The same shape as the other greetings: the band above the prompt, drawn once per
+// The band above the prompt, drawn once per
 // session (and once more after /clear) on an idle prompt, repainted by one timer, then
 // handed back to the engine. The band is as wide as the prompt and as tall as the engine
 // allows (at most half the terminal, less one row); "welcome" is centred in it over
 // the terminal's own background, fading in from the left and out from the left.
-export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = async (
+export const renderWelcome: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = async (
   $,
   e,
   next,
 ) => {
   if (e.surface !== 'terminal') return next(e)
-  if (!isOn(await read($, enabledAtom), dogeGreeting)) {
-    stopTicker(dogeGreeting.id)
+  if (!isOn(await read($, enabledAtom), welcomeGreeting)) {
+    stopTicker()
 
     return next(e)
   }
@@ -52,18 +53,18 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
 
   try {
     const now = await $.clock.now()
-    let start = playStartedAt(dogeGreeting.id)
+    let start = playStartedAt()
     if (start === undefined) {
       // Not begun: only start on an idle prompt.
       if (e.props.hasSurvey || e.props.isWorking) return next(e)
       start = now
-      startPlay(dogeGreeting.id, now)
+      startPlay(now)
     }
     // A turn has started (the person pressed Enter): the greeting is over at once, so it
     // never sits over the transcript while Claude answers, and it does not come back.
     if (start !== undefined && e.props.isWorking) {
-      stopTicker(dogeGreeting.id)
-      startPlay(dogeGreeting.id, now - TOTAL_MS)
+      stopTicker()
+      startPlay(now - TOTAL_MS)
 
       return next(e)
     }
@@ -78,7 +79,7 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
     const columns = Math.max(1, Math.min(MAX_COLUMNS, e.props.bodyColumns ?? 80))
 
     let elapsed = now - start
-    let lastCells = dogeCells(columns, rows, elapsed, text)
+    let lastCells = welcomeCells(columns, rows, elapsed, text)
     const pacer = createPacer()
     const timer: Timer = $.clock.every(FRAME_MS, async () => {
       if (!pacer.begin()) return
@@ -86,7 +87,7 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
       try {
         elapsed += FRAME_MS
         // While it holds the picture is still: nothing to send until it ends.
-        const cells = dogeCells(columns, rows, elapsed, text)
+        const cells = welcomeCells(columns, rows, elapsed, text)
         if (cells === lastCells) isDenied = false
         else {
           lastCells = cells
@@ -97,15 +98,15 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
         // A frame that fails is a frame skipped.
       }
       if (elapsed >= TOTAL_MS) {
-        stopTicker(dogeGreeting.id, timer)
+        stopTicker(timer)
         // Ask for the redraw that hands the band back to the engine.
         $.ui.invalidate('ui.render')
 
         return
       }
-      if (pacer.end(isDenied)) stopTicker(dogeGreeting.id, timer)
+      if (pacer.end(isDenied)) stopTicker(timer)
     })
-    setTicker(dogeGreeting.id, timer)
+    setTicker(timer)
 
     return (
       <Box flexDirection="column">
@@ -114,7 +115,7 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
       </Box>
     )
   } catch {
-    stopTicker(dogeGreeting.id)
+    stopTicker()
 
     return next(e)
   }

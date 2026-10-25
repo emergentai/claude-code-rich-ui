@@ -14,6 +14,3 @@ export function clip(text: string, width: number): string {
 
   return `${text.slice(0, width - 1)}…`
 }
-
-// The welcome text field: a blank row and the field itself.
-export const WELCOME_ROWS = 2

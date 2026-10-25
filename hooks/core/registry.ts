@@ -1,19 +1,7 @@
-import { dogeGreeting } from '../features/doge-greeting'
-import { auroraGreeting } from '../features/aurora-greeting'
-import { auroraHeader } from '../features/aurora-header'
-import { auroraMeter } from '../features/aurora-meter'
-import { auroraSpinner } from '../features/aurora-spinner'
-import { nyanGreeting } from '../features/nyan-greeting'
 import { markdownPreview } from '../features/markdown-preview'
 import { mermaid } from '../features/mermaid'
 import { statusBand } from '../features/status-band'
+import { welcomeGreeting } from '../features/welcome-greeting'
 import type { Feature } from './feature'
 
-export const features: Feature[] = [mermaid, statusBand, markdownPreview,
-  auroraSpinner,
-  auroraGreeting,
-  auroraHeader,
-  auroraMeter,
-  nyanGreeting,
-  dogeGreeting,
-]
+export const features: Feature[] = [mermaid, statusBand, markdownPreview, welcomeGreeting]

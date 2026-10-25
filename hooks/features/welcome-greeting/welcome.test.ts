@@ -11,14 +11,14 @@ import {
   MIN_ROWS,
   TOTAL_MS,
   columnVisibility,
-  dogeCells,
-  dogeWords,
+  welcomeCells,
+  welcomeWords,
   layoutFor,
   letterColor,
   rowsFor,
   sourcePixel,
   textBitmap,
-} from './doge'
+} from './welcome'
 
 const DEFAULT = 0x01000000
 
@@ -72,7 +72,7 @@ test('it sweeps in from the left, holds, then sweeps out from the left', () => {
 })
 
 test('only the word is drawn: blank cells keep the terminal\'s own colours', () => {
-  const words = dogeWords(80, 8, FADE_IN_MS)
+  const words = welcomeWords(80, 8, FADE_IN_MS)
   const layout = layoutFor(80, 16)
 
   expect(words).toHaveLength(80 * 8 * 3)
@@ -85,7 +85,7 @@ test('only the word is drawn: blank cells keep the terminal\'s own colours', () 
 
 test('the picture grows from the left, is empty at the start and the end, and holds still', () => {
   const count = (ms: number, from: number, to: number) => {
-    const words = dogeWords(80, 8, ms)
+    const words = welcomeWords(80, 8, ms)
     let n = 0
     for (let r = 0; r < 8; r++) for (let c = from; c < to; c++) if (words[(r * 80 + c) * 3] !== 0x20) n++
     return n
@@ -95,12 +95,12 @@ test('the picture grows from the left, is empty at the start and the end, and ho
   expect(count(FADE_IN_MS * 0.4, 0, 40)).toBeGreaterThan(count(FADE_IN_MS * 0.4, 40, 80))
   expect(count(TOTAL_MS, 0, 80)).toBe(0)
   expect(count(FADE_IN_MS + HOLD_MS + FADE_OUT_MS * 0.4, 0, 40)).toBeLessThan(count(FADE_IN_MS + HOLD_MS + FADE_OUT_MS * 0.4, 40, 80))
-  expect(dogeCells(80, 8, FADE_IN_MS)).toBe(dogeCells(80, 8, FADE_IN_MS + 300))
+  expect(welcomeCells(80, 8, FADE_IN_MS)).toBe(welcomeCells(80, 8, FADE_IN_MS + 300))
 })
 
 test('the cells are columns x rows x 12 bytes in padded base64', () => {
-  expect(atob(dogeCells(10, 7, 0)).length).toBe(10 * 7 * 12)
-  expect(dogeWords(0, 5, 0)).toEqual([])
+  expect(atob(welcomeCells(10, 7, 0)).length).toBe(10 * 7 * 12)
+  expect(welcomeWords(0, 5, 0)).toEqual([])
 })
 
 test('rows follow the room the engine gives, within the picture limits', () => {
@@ -111,8 +111,8 @@ test('rows follow the room the engine gives, within the picture limits', () => {
 })
 
 test('tiny and huge sizes do not throw', () => {
-  expect(() => dogeCells(1, 1, FADE_IN_MS)).not.toThrow()
-  expect(() => dogeCells(400, 28, FADE_IN_MS)).not.toThrow()
+  expect(() => welcomeCells(1, 1, FADE_IN_MS)).not.toThrow()
+  expect(() => welcomeCells(400, 28, FADE_IN_MS)).not.toThrow()
 })
 
 test('typed text is cleaned to what the font can draw, with the default when nothing is left', () => {
@@ -136,7 +136,7 @@ test('the sign draws whatever text it is given, centred and sized to fit', () =>
 
   expect(short.scale).toBeGreaterThan(long.scale)
   expect(short.textX).toBeGreaterThan(0)
-  expect(dogeCells(80, 8, FADE_IN_MS, 'hi')).not.toBe(dogeCells(80, 8, FADE_IN_MS))
+  expect(welcomeCells(80, 8, FADE_IN_MS, 'hi')).not.toBe(welcomeCells(80, 8, FADE_IN_MS))
   expect(layoutFor(80, 16)).not.toBe(short)
 })
 
@@ -158,5 +158,5 @@ test('a long word still fits its band: it is shown to the end of the letters tha
   expect(layoutFor(400, 56, text).bits[0]?.length).toBe(textBitmap(text)[0]?.length)
   // A band narrower than the word shows its start.
   expect((layoutFor(50, 20, text).bits[0]?.length ?? 0)).toBeLessThan(textBitmap(text)[0]?.length ?? 0)
-  expect(dogeWords(50, 10, 1200, text).length).toBe(50 * 10 * 3)
+  expect(welcomeWords(50, 10, 1200, text).length).toBe(50 * 10 * 3)
 })

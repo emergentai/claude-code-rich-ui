@@ -16,24 +16,6 @@ rich-ui features
  [x] Markdown preview
      Open a markdown file Claude links to, rendered, in a pane
 
- [ ] Aurora spinner
-     A small drifting gradient swatch beside the spinner while Claude works
-
- [ ] Aurora greeting
-     A brief aurora sweep above the prompt once per session, then it fades away
-
- [ ] Aurora pane header
-     The rich-ui wordmark in pixel type, shimmering, on top of this pane
-
- [ ] Aurora usage meter
-     Show the status band as a row above the prompt with a drifting gradient bar
-
- [ ] Nyan greeting
-     A nyan cat flies across the window once per session, then it is gone
-
- [ ] Doge greeting
-     A big orange "welcome" fades in from the left above the prompt, then fades out from the left, once per session
-
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
 
@@ -85,14 +67,6 @@ or more, one line appears in the status row under the prompt, for example
 `context ██████░░ 70%  ·  5h 92% (resets in 1h 00m)`. A healthy session shows nothing.
 `/clear` resets it, and turning Status band off in `/rich-ui` hides it at once. Details:
 [`features/status-band.md`](features/status-band.md).
-
-## Aurora (six features)
-
-Six separate toggles in `/rich-ui`, all off until you turn them on, all using a slowly shifting
-aurora gradient: a small swatch beside the spinner while Claude works; a short sweep above the
-prompt once per session; the `rich-ui` wordmark shimmering on top of this pane; the status
-band drawn as a row with a gradient bar; and a nyan cat that flies across the window once per session; and a big orange "welcome" sign. None adds anything to the transcript, and the stock
-spinner line is never altered. Details: [`features/aurora-spinner.md`](features/aurora-spinner.md).
 
 ## Mermaid diagrams
 

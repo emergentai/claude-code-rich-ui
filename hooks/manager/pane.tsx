@@ -10,21 +10,17 @@ export type PaneView = {
   enabled: EnabledMap
   status: StatusMap
   saveFailed: boolean
-  welcome: string
-  welcomeRev: number
   width: number
   isDocked: boolean
   version: string
   onToggle: (feature: Feature) => void
-  onWelcome: (text: string) => void
-  onWelcomeDone: () => void
 }
 
 // Builds the pane from plain data and a callback: the engine's module scan
 // rejects a function that is handed `$`, so the hook reads the state and writes
 // the toggle itself.
 export function buildPane(view: PaneView) {
-  const { Box, Text, Button, Input } = view.elements
+  const { Box, Text, Button } = view.elements
 
   return (
     <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0}>
@@ -66,16 +62,6 @@ export function buildPane(view: PaneView) {
           </Box>
         )
       })}
-      <Text> </Text>
-      <Input
-        key={`welcome-text-${view.welcomeRev}`}
-        label="Welcome text (20 max)"
-        placeholder="welcome"
-        value={view.welcome}
-        submitLabel="done"
-        onInput={text => view.onWelcome(text)}
-        onSubmit={() => view.onWelcomeDone()}
-      />
       <Text> </Text>
       {view.saveFailed && <Text color="warning">Couldn't save your choice</Text>}
       <Text dimColor>
