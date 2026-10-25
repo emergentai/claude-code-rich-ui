@@ -4,7 +4,7 @@ import type { Hook } from 'claude-code'
 import type { EnabledMap, UsageSnapshot } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
-import { resetGreeting, stopTicker } from '../welcome-greeting/clock'
+import { stopTicker } from '../welcome-greeting/clock'
 import { bandText, segmentsFor } from './band'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
@@ -59,9 +59,8 @@ export const recordUsage: Hook<'session.measure'> = async ($, e, next) => {
 // here instead of waiting on a session.measure that may not come soon.
 export const onSessionEnd: Hook<'session.end'> = async ($, e, next) => {
   // The engine allows one unmatched session.end hook, so the welcome greeting's stop rides
-  // here (every reason; /clear also lets it play again). Synchronous, and cannot throw.
-  if (e.reason === 'clear') resetGreeting()
-  else stopTicker()
+  // here (every reason; /clear does not let it play again). Synchronous, and cannot throw.
+  stopTicker()
   if (e.reason === 'clear') {
     await update($, usageAtom, () => ({ limits: [] }) as UsageSnapshot)
     await refreshStatus($)

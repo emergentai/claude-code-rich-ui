@@ -18,7 +18,7 @@ terminal's colours), so it looks the same on a dark or a light theme. A pixel at
 along a front that moves from the left, the word holds for 0.5 s, and the front passes again from the left
 to take it away (0.9 s each way). Then the band goes back to the engine's.
 
-- Plays once per session, and again after `/clear`.
+- Plays once, when the session opens; not again after `/clear` or a plugin reload.
 - Turned on mid-session it plays at the next redraw, so it can be judged without restarting.
 - The band is as wide as the prompt and as tall as the engine allows (`maxRows - 1`, 7 to 28 rows, at
   most half the terminal). A mod cannot draw full-screen.
@@ -26,7 +26,7 @@ to take it away (0.9 s each way). Then the band goes back to the engine's.
   8 rows, and while a survey holds the band. It only starts on an idle prompt.
 - **It ends the moment a turn starts.** Pressing Enter on a message hands the band back to the engine at
   once, so the greeting never covers the transcript while Claude answers, and it does not come back until
-  `/clear`.
+  the next session.
 
 ## Setting the text
 
@@ -53,7 +53,7 @@ timer stops when:
 |---|---|
 | The show is over | The timer asks for the redraw that hands the band back. |
 | A turn starts (Enter) | The hook sees `isWorking`, cancels and marks the show played. |
-| `/clear`, exit, any session end | `session.end`, through the status band's handler (the engine allows one unmatched hook per event). `/clear` also lets it play again. |
+| `/clear`, exit, any session end | `session.end`, through the status band's handler (the engine allows one unmatched hook per event). |
 | The feature is turned off | The hook reads the toggle, so it draws again, returns the stock band and cancels. |
 | The window is too small | The same redraw returns the stock band and cancels. |
 | 25 blits in a row are denied | The Raster is gone: the timer cancels itself (about two seconds). |
