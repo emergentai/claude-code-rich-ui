@@ -36,34 +36,49 @@ test('the caption is the lowercase word "welcome" in a bitmap font', () => {
   expect(textBitmap('w?w')).toEqual(textBitmap('ww'))
 })
 
-const px = (col: number, row: number) => facePixel((col + 0.5) / 28, (row + 0.5) / 27)
+const lum = (c: number) => ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255)
 
-test('the face is a shiba sprite: fur, cream cheeks, a black nose, dark eyes, brown ear, clear corners', () => {
-  const colors = new Set<number>()
-  for (let row = 0; row < 27; row++) for (let col = 0; col < 28; col++) {
-    const c = px(col, row)
-    if (c !== undefined) colors.add(c)
+// Every drawn pixel of the sprite, with where it is in the unit frame.
+function sprite() {
+  const out: { u: number; v: number; color: number }[] = []
+  for (let j = 0; j < 84; j++) for (let i = 0; i < 80; i++) {
+    const u = (i + 0.5) / 80
+    const v = (j + 0.5) / 84
+    const color = facePixel(u, v)
+    if (color !== undefined) out.push({ u, v, color })
   }
+  return out
+}
 
-  expect(colors.has(0x0e0e0e)).toBe(true) // nose, eyes, mouth
-  expect(colors.has(0xd8cfa0)).toBe(true) // cream cheek
-  expect(colors.has(0x8a5a2c)).toBe(true) // the dark ear patch
-  expect(colors.size).toBeGreaterThanOrEqual(8)
+test('the face is a shiba sprite: many fur tones, a black nose, clear corners, solid in the middle', () => {
+  const pixels = sprite()
+  const colors = new Set(pixels.map(p => p.color))
+
+  expect(colors.size).toBeGreaterThan(40) // a photographic downsample, not flat colours
   for (const c of colors) expect(c).toBeLessThanOrEqual(0xffffff)
-  for (const [col, row] of [[0, 0], [27, 0], [0, 26], [27, 26]] as const) expect(px(col, row)).toBeUndefined()
-  expect(px(14, 14)).toBeDefined()
+  expect(pixels.length).toBeGreaterThan(80 * 84 * 0.5)
+  for (const [u, v] of [[0.01, 0.01], [0.99, 0.01], [0.01, 0.99], [0.99, 0.99]] as const) expect(facePixel(u, v)).toBeUndefined()
+  expect(facePixel(0.5, 0.6)).toBeDefined()
   // Off the frame is clear.
   expect(facePixel(-0.1, 0.5)).toBeUndefined()
   expect(facePixel(0.5, 1)).toBeUndefined()
 })
 
-test('the nose is on the left, the eyes above it, the mouth runs right from it', () => {
-  expect(px(7, 13)).toBe(0x0e0e0e) // nose
-  expect(px(7, 15)).toBe(0x0e0e0e) // the stem
-  expect(px(11, 17)).toBe(0x0e0e0e) // the mouth line
-  expect(px(7, 9)).toBe(0x0e0e0e) // left eye
-  expect(px(15, 10)).toBe(0x0e0e0e) // right eye, further right and lower
-  expect(px(8, 10)).toBe(0xffffff) // its highlight
+test('the darkest part (the nose) is on the left, and the eyes sit above it', () => {
+  const dark = sprite().filter(p => lum(p.color) < 200)
+
+  expect(dark.length).toBeGreaterThan(5)
+  const darkest = dark.reduce((a, b) => (lum(a.color) <= lum(b.color) ? a : b))
+  expect(darkest.u).toBeLessThan(0.45)
+  // A grey-brown eye pair above the nose line.
+  expect(dark.some(p => p.v < darkest.v - 0.1)).toBe(true)
+})
+
+test('the background is not part of the face: no cream-white fringe outside the head', () => {
+  const pixels = sprite()
+  const lightest = pixels.filter(p => lum(p.color) > 735) // near #FBF4E1 (the removed background)
+  // A few pale highlights inside the muzzle are fine; a frame of them is not.
+  expect(lightest.length).toBeLessThan(pixels.length * 0.06)
 })
 
 test('the face is laid out centred, with the caption centred under it', () => {

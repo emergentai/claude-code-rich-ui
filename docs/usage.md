@@ -32,7 +32,7 @@ rich-ui features
      A nyan cat flies across the window once per session, then it is gone
 
  [ ] Doge greeting
-     A pixel-art doge face and "welcome" fade in above the prompt, then disappear, once per session
+     A doge face and "welcome" fade in above the prompt, then disappear, once per session
 
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
@@ -91,7 +91,7 @@ or more, one line appears in the status row under the prompt, for example
 Six separate toggles in `/rich-ui`, all off until you turn them on, all using a slowly shifting
 aurora gradient: a small swatch beside the spinner while Claude works; a short sweep above the
 prompt once per session; the `rich-ui` wordmark shimmering on top of this pane; the status
-band drawn as a row with a gradient bar; and a nyan cat that flies across the window once per session; and a pixel-art doge face that says "welcome". None adds anything to the transcript, and the stock
+band drawn as a row with a gradient bar; and a nyan cat that flies across the window once per session; and a doge face that says "welcome". None adds anything to the transcript, and the stock
 spinner line is never altered. Details: [`features/aurora-spinner.md`](features/aurora-spinner.md).
 
 ## Mermaid diagrams

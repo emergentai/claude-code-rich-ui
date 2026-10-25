@@ -66,7 +66,7 @@ its limit).
 
 | # | Do | Expected |
 |---|---|---|
-| e | Turn it on at an idle prompt | A pixel-art doge face (tan fur, cream cheeks, black nose and L-shaped mouth, small dark eyes) dissolves in in the middle above the prompt with "welcome" below it, dissolving in, holding about two seconds, then vanishing at once (no fade out) after about three seconds; the terminal's own background shows around it, no coloured block; nothing is left above the prompt. |
+| e | Turn it on at an idle prompt | A doge face (a 20 by 21 pixel photo-like sprite: orange fur, cream muzzle, black nose, two ears with the right one's inner shadow, eyes glancing aside) dissolves in in the middle above the prompt with "welcome" below it, dissolving in, holding about two seconds, then vanishing at once (no fade out) after about three seconds; the terminal's own background shows around it, no coloured block; nothing is left above the prompt. |
 | f | A tall window, a short one (24 rows), a narrow one (under 50 columns) | Taller window, bigger face; a short or narrow one has none. |
 | g | Dark and light themes | The caption is light on dark and dark on light; it must be legible on `auto` too. |
 | h | `/clear` | It plays again. |

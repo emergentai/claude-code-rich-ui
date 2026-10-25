@@ -18,7 +18,7 @@ const enabledAtom = atom(
 export const dogeGreeting: Feature = {
   id: 'doge-greeting',
   name: 'Doge greeting',
-  description: 'A pixel-art doge face and "welcome" fade in above the prompt, then disappear, once per session',
+  description: 'A doge face and "welcome" fade in above the prompt, then disappear, once per session',
   defaultEnabled: false,
 }
 
