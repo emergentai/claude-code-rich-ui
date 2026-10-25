@@ -1,7 +1,7 @@
 import type { Register } from 'claude-code'
 
 import { renderSpinner, renderToolProgress, renderTurnDuration } from './features/calm-spinner'
-import { refreshOnWrite, renderLinkedReply, renderPreview } from './features/markdown-preview'
+import { addPromptSection, refreshOnWrite, renderLinkedReply, renderPreview } from './features/markdown-preview'
 import { renderAssistantMessage } from './features/mermaid'
 import { advanceFooter, renderInfoNotice, renderPromptHint } from './features/quiet-footer'
 import { onSessionEnd, recordUsage } from './features/status-band'
@@ -18,6 +18,7 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'AssistantMessage' }, renderAssistantMessage)
 
+  on('prompt.compose', addPromptSection)
   on('tool.call', refreshOnWrite)
   on('ui.render', { component: 'AssistantMessage' }, renderLinkedReply)
   on('ui.render', { component: 'Pane', requestId: 'rich-ui-preview' }, renderPreview)
