@@ -32,6 +32,14 @@ const welcomeAtom = atom(
   CAPTION,
   { shape: 'welcome-1' },
 )
+// Bumped on every save of the welcome text, so the pane draws its field as a new element
+// (see pane.tsx): the engine clears the field on Enter, and a redraw with the same
+// address would leave it empty until the pane is reopened.
+const welcomeRevAtom = atom(
+  { plugin: 'rich-ui', key: 'welcomeRev' } as const,
+  0,
+  { shape: 'welcome-rev-1' },
+)
 const statusAtom = atom(
   { plugin: 'rich-ui', key: 'status' } as const,
   {} as StatusMap,
@@ -109,6 +117,7 @@ export const renderPane: MatchedHook<
     status: await read($, statusAtom),
     saveFailed: await read($, saveFailedAtom),
     welcome: await read($, welcomeAtom),
+    welcomeRev: await read($, welcomeRevAtom),
     width: (e.props.bodyColumns ?? 80) - (e.props.placement === 'dock' ? 2 : 0),
     isDocked: e.props.placement === 'dock',
     version: VERSION,
@@ -121,6 +130,8 @@ export const renderPane: MatchedHook<
       } catch {
         await update($, saveFailedAtom, () => true)
       }
+      // Last, so the new field is drawn with the final text.
+      await update($, welcomeRevAtom, n => n + 1)
     },
     onToggle: async feature => {
       const enabled = await update($, enabledAtom, map => toggled(map, feature))
