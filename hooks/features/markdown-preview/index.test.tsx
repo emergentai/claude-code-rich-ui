@@ -2,6 +2,8 @@ import { expect, test } from 'claude-code/testing'
 
 import { boot } from '../../core/test-harness'
 
+const MODEL = 'claude-sonnet-5-5'
+
 const PANE = {
   plugin: 'rich-ui',
   component: 'Pane',
@@ -267,4 +269,35 @@ test('a long path and a long error wrap instead of being cut', async ($, on) => 
   expect(await pane.find({ type: 'Text', text: new RegExp(`Could not read ${long.replace(/[.]/g, '\\.')}`) })).toBeDefined()
   await pane.unmount()
   await ui.unmount()
+})
+
+// The engine's own prompt, as far as these tests need: one shared section.
+const engineSections = (on: Parameters<typeof boot>[1]) =>
+  on('prompt.compose', () => ({ sections: [{ id: 'intro', text: 'You are Claude.', scope: 'shared' }] }) as never)
+
+test('the system prompt tells the model to link markdown files it writes', async ($, on) => {
+  engineSections(on)
+  await boot($, on)
+  const { sections } = await $.prompt.compose({ model: MODEL, promptModel: MODEL, outputStyle: null, tools: [], traits: [], surfaces: ['terminal'] })
+
+  const added = sections.find(section => section.id === 'rich-ui:markdown-preview')
+  expect(added?.scope).toBe('session')
+  expect(added?.text).toContain('markdown link')
+  expect(sections.filter(section => section.id === 'rich-ui:markdown-preview')).toHaveLength(1)
+})
+
+test('with the preview off the system prompt is left alone', async ($, on) => {
+  engineSections(on)
+  await boot($, on, { prefs: { v: 1, enabled: { 'markdown-preview': false } } })
+  const { sections } = await $.prompt.compose({ model: MODEL, promptModel: MODEL, outputStyle: null, tools: [], traits: [], surfaces: ['terminal'] })
+
+  expect(sections.some(section => section.id === 'rich-ui:markdown-preview')).toBe(false)
+})
+
+test('where nothing draws in a terminal the system prompt is left alone', async ($, on) => {
+  engineSections(on)
+  await boot($, on)
+  const { sections } = await $.prompt.compose({ model: MODEL, promptModel: MODEL, outputStyle: null, tools: [], traits: [], surfaces: [] })
+
+  expect(sections.some(section => section.id === 'rich-ui:markdown-preview')).toBe(false)
 })

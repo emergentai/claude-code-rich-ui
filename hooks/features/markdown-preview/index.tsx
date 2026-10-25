@@ -19,6 +19,13 @@ const previewAtom = atom(
   { shape: 'preview-1' },
 )
 
+const PROMPT_SECTION_ID = 'rich-ui:markdown-preview'
+export const PROMPT_TEXT =
+  'The user can click a markdown link to a local .md file in your replies to open it rendered in a preview pane. ' +
+  'Whenever you create or substantially change a markdown file, link it in your reply as a markdown link, ' +
+  'for example [the plan](docs/plan.md), with the path relative to the working directory or absolute. ' +
+  'Do not write that path only in backticks or as plain text: that is not clickable.'
+
 const MERMAID_FENCE = /^(?:`{3,}|~{3,})[ \t]*mermaid/im
 
 export const markdownPreview: Feature = {
@@ -26,6 +33,19 @@ export const markdownPreview: Feature = {
   name: 'Markdown preview',
   description: 'Show linked markdown files rendered in a side pane',
   defaultEnabled: true,
+}
+
+// Tells the model the preview is on, so it links the markdown files it writes.
+// Composed per request, so the /rich-ui toggle takes effect on the next one.
+export const addPromptSection: Hook<'prompt.compose'> = async ($, e, next) => {
+  const result = await next(e)
+  if (!isOn(await read($, enabledAtom), markdownPreview)) return result
+  if (!e.surfaces.includes('terminal')) return result
+  if (result.sections.some(section => section.id === PROMPT_SECTION_ID)) return result
+
+  return {
+    sections: [...result.sections, { id: PROMPT_SECTION_ID, text: PROMPT_TEXT, scope: 'session' }],
+  }
 }
 
 // Refreshes the pane's text when Claude writes or edits the markdown file on
