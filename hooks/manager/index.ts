@@ -75,6 +75,8 @@ export const startSession: Hook<'session.start'> = async ($, e, next) => {
   }
   await update($, enabledAtom, () => stored)
   await update($, welcomeAtom, () => welcome)
+  // Rows can draw before the choices load (a resumed session does), so draw them again.
+  $.ui.invalidate('ui.render')
 
   await $.command.register({
     name: 'rich-ui',
@@ -163,6 +165,8 @@ export const renderPane: MatchedHook<
         const segments = segmentsFor(await read($, usageAtom), await $.clock.now())
         $.ui.status(isOn(enabled, statusBand) ? bandText(segments) : undefined)
       }
+      // Rows already in the transcript were drawn under the old choice.
+      $.ui.invalidate('ui.render')
       try {
         await $.store.set(STORE_KEY, serialize(enabled, custom(cleanText(await read($, welcomeAtom)))))
         await update($, saveFailedAtom, () => false)

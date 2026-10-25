@@ -143,7 +143,7 @@ test('the pane draws a banner Raster, a summary and no chip on a healthy pane', 
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
   expect(await ui.find({ key: 'banner' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /4 of 4 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /5 of 6 on/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /^(error|note)$/ })).toBeUndefined()
   await ui.unmount()
 })
@@ -169,7 +169,7 @@ test('the summary counts features that are on', async ($, on) => {
   await ui.press({ key: 'mermaid' })
   await clock.settle()
 
-  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /4 of 6 on/ })).toBeDefined()
   await ui.unmount()
 })
 
@@ -225,7 +225,9 @@ test('a docked pane and an inline pane both draw every row', async ($, on) => {
 test('the pane height matches contentRows for a healthy pane', async () => {
   // header 3 + divider + 3 per feature (blank, name, description) + blank + footer
   // The experimental header (two rows) and the bordered welcome field (three) add five.
-  expect(contentRows(features.length, 0, false, experimentalCount(features))).toBe(3 + 1 + features.length * 3 + 2 + EXPERIMENTAL_HEADER_ROWS + FIELD_ROWS)
+  expect(contentRows(features.length, 0, false, experimentalCount(features))).toBe(
+    3 + 1 + features.length * 3 + 2 + EXPERIMENTAL_HEADER_ROWS + FIELD_ROWS,
+  )
   expect(contentRows(3, 0, false)).toBe(15)
 })
 
@@ -261,7 +263,7 @@ test('an off feature shows the inactive pill', async ($, on) => {
 
   const pill = await ui.find({ type: 'Text', text: /○ off/ })
   expect(pill?.props.color).toBe('inactive')
-  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /4 of 6 on/ })).toBeDefined()
   await ui.unmount()
 })
 
@@ -284,13 +286,15 @@ const heightFor = async (
 test('a dock with room is as tall as its room, so the footer sits at the bottom', async ($, on) => {
   await boot($, on)
 
-  expect(await heightFor($, 'dock', 40)).toBe(40)
+  expect(await heightFor($, 'dock', 80)).toBe(80)
 })
 
 test('a dock too short for the content, and an inline pane, keep their natural height', async ($, on) => {
   await boot($, on)
 
-  expect(await heightFor($, 'dock', contentRows(features.length, 0, false, experimentalCount(features)))).toBeUndefined()
+  expect(
+    await heightFor($, 'dock', contentRows(features.length, 0, false, experimentalCount(features))),
+  ).toBeUndefined()
   expect(await heightFor($, 'dock', 5)).toBeUndefined()
   expect(await heightFor($, 'inline', 40)).toBeUndefined()
 })
@@ -425,12 +429,30 @@ test('the welcome greeting is listed under an Experimental header, after the reg
 test('the welcome greeting row is on by default and toggles like any feature, saving the choice', async ($, on) => {
   const { clock, saved } = await boot($, on)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(await ui.find({ type: 'Text', text: /4 of 4 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /5 of 6 on/ })).toBeDefined()
 
   await ui.press({ key: 'welcome-greeting' })
   await clock.settle()
 
   expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: { 'welcome-greeting': false } }))
-  expect(await ui.find({ type: 'Text', text: /3 of 4 on/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /4 of 6 on/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('the zen features sit under the Experimental header, after the welcome greeting', async ($, on) => {
+  await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  const order = [
+    'Mermaid diagrams',
+    'Status band',
+    'Markdown preview',
+    'Experimental',
+    'Welcome greeting',
+    'Zen spinner',
+    'Zen footer',
+  ]
+  for (const text of order) expect(await ui.find({ type: 'Text', text: new RegExp(text) })).toBeDefined()
+  expect(await ui.find({ key: 'calm-spinner' })).toBeDefined()
   await ui.unmount()
 })

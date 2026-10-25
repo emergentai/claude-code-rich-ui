@@ -1,6 +1,10 @@
 // The pane's header banner: "rich-ui" in half-block pixel type with a soft
 // gradient, as the cells of a Raster (terminal only). Pure: no `$`, no engine.
 
+import { DEFAULT_COLOR, toBase64 } from '../core/raster'
+
+export { toBase64 }
+
 // Each glyph is six pixel rows (three terminal rows of half blocks); '#' is lit.
 const GLYPHS: Record<string, string[]> = {
   r: ['...', '...', '###', '#..', '#..', '#..'],
@@ -19,7 +23,6 @@ const PIXEL_ROWS = 6
 const FROM = [0xe0, 0x7a, 0x4f]
 const TO = [0x8a, 0x7a, 0xe8]
 
-const DEFAULT_COLOR = 0x01000000
 const UPPER_HALF = 0x2580
 const LOWER_HALF = 0x2584
 const FULL = 0x2588
@@ -32,27 +35,6 @@ const PIXELS: string[] = Array.from({ length: PIXEL_ROWS }, (_, row) =>
 
 export const BANNER_COLUMNS = PIXELS[0]!.length
 export const BANNER_ROWS = PIXEL_ROWS / 2
-
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-
-// Standard padded base64; the module has no Buffer.
-export function toBase64(bytes: Uint8Array): string {
-  let out = ''
-
-  for (let i = 0; i < bytes.length; i += 3) {
-    const a = bytes[i] ?? 0
-    const b = bytes[i + 1] ?? 0
-    const c = bytes[i + 2] ?? 0
-    const n = (a << 16) | (b << 8) | c
-
-    out += ALPHABET[(n >> 18) & 63]
-    out += ALPHABET[(n >> 12) & 63]
-    out += i + 1 < bytes.length ? ALPHABET[(n >> 6) & 63] : '='
-    out += i + 2 < bytes.length ? ALPHABET[n & 63] : '='
-  }
-
-  return out
-}
 
 // The gradient colour of one column, left to right.
 export function gradientAt(column: number): number {
