@@ -34,7 +34,6 @@ declare module 'claude-code' {
     'rich-ui': {
       enabled: Shaped<EnabledMap>
       welcome: Shaped<string>
-      welcomeRev: Shaped<number>
       status: Shaped<StatusMap>
       saveFailed: Shaped<boolean>
       shown: Shaped<ShownMap>

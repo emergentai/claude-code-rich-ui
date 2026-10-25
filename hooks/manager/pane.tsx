@@ -11,12 +11,12 @@ export type PaneView = {
   status: StatusMap
   saveFailed: boolean
   welcome: string
-  welcomeRev: number
   width: number
   isDocked: boolean
   version: string
   onToggle: (feature: Feature) => void
   onWelcome: (text: string) => void
+  onWelcomeDone: () => void
 }
 
 // Builds the pane from plain data and a callback: the engine's module scan
@@ -67,17 +67,18 @@ export function buildPane(view: PaneView) {
       })}
       <Text> </Text>
       <Input
-        key={`welcome-text-${view.welcomeRev}`}
-        label="Welcome sign text: "
+        key="welcome-text"
+        label="Welcome text (12 max, auto-saves): "
         placeholder="welcome"
         value={view.welcome}
-        submitLabel="save"
-        onSubmit={text => view.onWelcome(text)}
+        submitLabel="done"
+        onInput={text => view.onWelcome(text)}
+        onSubmit={() => view.onWelcomeDone()}
       />
       <Text> </Text>
       {view.saveFailed && <Text color="warning">Couldn't save your choice</Text>}
       <Text dimColor>
-        {clip(`Enter toggles or saves · Esc closes · rich-ui ${view.version}`, view.width)}
+        {clip(`Enter toggles · Esc closes · rich-ui ${view.version}`, view.width)}
       </Text>
     </Box>
   )

@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { Hook, MatchedHook } from 'claude-code'
+import type { Hook, MatchedHook, Timer } from 'claude-code'
 
 import type { EnabledMap, StatusMap, UsageSnapshot } from '../../types'
 import { withoutStatus } from '../core/errors'
@@ -18,6 +18,12 @@ import { contentRows, WELCOME_ROWS } from './size'
 const PANE_ID = 'rich-ui'
 
 // Only a text the person changed is stored; the default stays unsaved.
+// The field takes this many characters; the sign shows MAX_TEXT of them, cleaned.
+const MAX_FIELD = 40
+const SAVE_PAUSE_MS = 400
+// The pending write after the last keystroke, so a burst of typing is one write.
+let saveTimer: Timer | undefined
+
 const custom = (welcome: string) => (welcome === CAPTION ? undefined : welcome)
 
 // Declared here, not imported: the engine's module scan reads a state source
@@ -31,14 +37,6 @@ const welcomeAtom = atom(
   { plugin: 'rich-ui', key: 'welcome' } as const,
   CAPTION,
   { shape: 'welcome-1' },
-)
-// Bumped on every save of the welcome text, so the pane draws its field as a new element
-// (see pane.tsx): the engine clears the field on Enter, and a redraw with the same
-// address would leave it empty until the pane is reopened.
-const welcomeRevAtom = atom(
-  { plugin: 'rich-ui', key: 'welcomeRev' } as const,
-  0,
-  { shape: 'welcome-rev-1' },
 )
 const statusAtom = atom(
   { plugin: 'rich-ui', key: 'status' } as const,
@@ -117,21 +115,36 @@ export const renderPane: MatchedHook<
     status: await read($, statusAtom),
     saveFailed: await read($, saveFailedAtom),
     welcome: await read($, welcomeAtom),
-    welcomeRev: await read($, welcomeRevAtom),
     width: (e.props.bodyColumns ?? 80) - (e.props.placement === 'dock' ? 2 : 0),
     isDocked: e.props.placement === 'dock',
     version: VERSION,
+    // The welcome text saves as it is typed: the field keeps exactly what the person types
+    // (the pane redraws with the same text, so nothing moves), the sign cleans it when it
+    // draws, and the store write waits for a pause in typing. Enter just writes it at once.
     onWelcome: async text => {
-      const welcome = cleanText(text)
-      await update($, welcomeAtom, () => welcome)
+      await update($, welcomeAtom, () => text.slice(0, MAX_FIELD))
+      saveTimer?.cancel()
+      saveTimer = $.clock.after(SAVE_PAUSE_MS, () => {
+        void (async () => {
+          const welcome = cleanText(await read($, welcomeAtom))
+          try {
+            await $.store.set(STORE_KEY, serialize(await read($, enabledAtom), custom(welcome)))
+            await update($, saveFailedAtom, () => false)
+          } catch {
+            await update($, saveFailedAtom, () => true)
+          }
+        })()
+      })
+    },
+    onWelcomeDone: async () => {
+      saveTimer?.cancel()
+      const welcome = cleanText(await read($, welcomeAtom))
       try {
         await $.store.set(STORE_KEY, serialize(await read($, enabledAtom), custom(welcome)))
         await update($, saveFailedAtom, () => false)
       } catch {
         await update($, saveFailedAtom, () => true)
       }
-      // Last, so the new field is drawn with the final text.
-      await update($, welcomeRevAtom, n => n + 1)
     },
     onToggle: async feature => {
       const enabled = await update($, enabledAtom, map => toggled(map, feature))
@@ -146,7 +159,7 @@ export const renderPane: MatchedHook<
         )
       }
       try {
-        await $.store.set(STORE_KEY, serialize(enabled, custom(await read($, welcomeAtom))))
+        await $.store.set(STORE_KEY, serialize(enabled, custom(cleanText(await read($, welcomeAtom)))))
         await update($, saveFailedAtom, () => false)
       } catch {
         // The choice holds for this session; the footer says it was not saved.

@@ -6,7 +6,7 @@ import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
 import { FRAME_MS, bandSize, createPacer } from '../aurora-common/aurora'
 import { playStartedAt, setTicker, startPlay, stopTicker } from '../aurora-common/ticker'
-import { CAPTION, TOTAL_MS, dogeCells, rowsFor } from './doge'
+import { CAPTION, TOTAL_MS, cleanText, dogeCells, rowsFor } from './doge'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
 const enabledAtom = atom(
@@ -71,7 +71,8 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
     if (now - start >= TOTAL_MS) return next(e)
 
     const rest = await next(e)
-    const text = await read($, welcomeAtom)
+    // The field keeps what was typed; the sign shows it cleaned to what the font draws.
+    const text = cleanText(await read($, welcomeAtom))
     const { Box, Raster } = $.ui.resolve(e)
     const requestId = e.requestId
     const columns = Math.max(1, Math.min(MAX_COLUMNS, e.props.bodyColumns ?? 80))

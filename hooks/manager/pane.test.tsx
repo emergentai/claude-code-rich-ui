@@ -133,20 +133,62 @@ test('toggling the status band clears and restores its line', async ($, on) => {
   await ui.unmount()
 })
 
-test('the welcome text is typed into the pane, cleaned and saved with the choices', async ($, on) => {
+test('the welcome text saves as it is typed, with no save step and no new field', async ($, on) => {
   const { clock, saved } = await boot($, on)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'welcome' })
 
-  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'welcome' })
-  await ui.input({ key: 'welcome-text-0', text: 'Hello World!!!!!!!!!' })
-  await clock.settle()
+  await ui.input({ key: 'welcome-text', text: 'Hello Wor', kind: 'change' })
+  await ui.input({ key: 'welcome-text', text: 'Hello World!!!!!!!!!', kind: 'change' })
+  await clock.advance(500)
 
-  // Saved: the field is drawn again, as a new element carrying the saved text.
-  expect(await ui.find({ key: 'welcome-text-0' })).toBeUndefined()
-  expect((await ui.find({ key: 'welcome-text-1' }))?.props).toMatchObject({ value: 'hello world!' })
+  // The field keeps what was typed (the same element, so nothing flickers)...
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'Hello World!!!!!!!!!' })
+  // ...and the store holds the cleaned text the sign shows, written once after the pause.
   expect(JSON.stringify(saved.get('prefs'))).toBe(
     JSON.stringify({ v: 1, enabled: {}, welcome: 'hello world!' }),
   )
+  await ui.unmount()
+})
+
+test('typing writes after a pause, not on every key', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  await ui.input({ key: 'welcome-text', text: 'h', kind: 'change' })
+  await clock.advance(100)
+  expect(saved.get('prefs')).toBeUndefined()
+  await ui.input({ key: 'welcome-text', text: 'hi', kind: 'change' })
+  await clock.advance(100)
+  expect(saved.get('prefs')).toBeUndefined()
+  await clock.advance(500)
+
+  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {}, welcome: 'hi' }))
+  await ui.unmount()
+})
+
+test('Enter writes it at once', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  await ui.input({ key: 'welcome-text', text: 'hey', kind: 'change' })
+  await ui.input({ key: 'welcome-text', text: 'hey' })
+  await clock.settle()
+
+  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {}, welcome: 'hey' }))
+  await ui.unmount()
+})
+
+test('clearing the field is allowed: it is not refilled while typing, and the sign falls back to "welcome"', async ($, on) => {
+  const { clock, saved } = await boot($, on, { prefs: { v: 1, enabled: {}, welcome: 'hi team' } })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  await ui.input({ key: 'welcome-text', text: '', kind: 'change' })
+  await clock.advance(500)
+
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: '' })
+  // The default is not stored: back to nothing saved.
+  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {} }))
   await ui.unmount()
 })
 
@@ -154,32 +196,21 @@ test('a saved welcome text comes back in the pane', async ($, on) => {
   await boot($, on, { prefs: { v: 1, enabled: {}, welcome: 'hi team' } })
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
-  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'hi team' })
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'hi team' })
   await ui.unmount()
 })
 
-test('saving the same text again redraws the field too, so it never stays blank', async ($, on) => {
-  const { clock } = await boot($, on)
+test('toggling a feature after typing keeps the field and its text, and saves both', async ($, on) => {
+  const { clock, saved } = await boot($, on)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-
-  await ui.input({ key: 'welcome-text-0', text: 'hello' })
-  await clock.settle()
-  await ui.input({ key: 'welcome-text-1', text: 'hello' })
-  await clock.settle()
-
-  expect((await ui.find({ key: 'welcome-text-2' }))?.props).toMatchObject({ value: 'hello' })
-  await ui.unmount()
-})
-
-test('toggling a feature after saving the text keeps the field and its text', async ($, on) => {
-  const { clock } = await boot($, on)
-  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  await ui.input({ key: 'welcome-text-0', text: 'hey' })
-  await clock.settle()
+  await ui.input({ key: 'welcome-text', text: 'hey', kind: 'change' })
 
   await ui.press({ key: 'status-band' })
   await clock.settle()
 
-  expect((await ui.find({ key: 'welcome-text-1' }))?.props).toMatchObject({ value: 'hey' })
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'hey' })
+  expect(JSON.stringify(saved.get('prefs'))).toBe(
+    JSON.stringify({ v: 1, enabled: { 'status-band': false }, welcome: 'hey' }),
+  )
   await ui.unmount()
 })

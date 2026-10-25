@@ -70,6 +70,7 @@ its limit).
 | f | A tall window, a short one (24 rows), a narrow one (under 50 columns) | Taller window, bigger word; a short or narrow one has none. |
 | g | Dark and light themes | The orange reads on both. |
 | h | `/clear` | It plays again. |
+| j | `/rich-ui`, click the "Welcome text" field and type; close and reopen the pane | The sign text changes as you type with no save step and no flicker of the pane; the text is still there after reopening and in a new session; clearing the field is allowed (the sign says "welcome"). |
 | i | Type a message and press Enter while a greeting (doge, nyan or aurora) is still up | The greeting is gone at once; your message and Claude's answer are fully visible; the greeting does not return. |
 
 ## All

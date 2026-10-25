@@ -34,7 +34,7 @@ rich-ui features
  [ ] Doge greeting
      A big orange "welcome" fades in from the left above the prompt, then fades out from the left, once per session
 
- Enter toggles or saves · Esc closes · rich-ui 0.3.0
+ Enter toggles · Esc closes · rich-ui 0.3.0
 ```
 
 Press a row, or press Enter on it, to flip the feature. Esc closes the pane. The
