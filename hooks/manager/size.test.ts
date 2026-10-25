@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { clip, contentRows } from './size'
+import { clip, contentRows, wrap } from './size'
 
 test('content rows cover banner, dividers, feature rows, status and footer', async () => {
   // 3 banner + 1 divider + 1 blank + 1 footer = 6, plus three rows a feature
@@ -15,4 +15,11 @@ test('clip leaves short text alone and cuts long text with an ellipsis', async (
   expect(clip('a long description here', 10)).toBe('a long de…')
   expect(clip('anything', 0)).toBe('')
   expect(clip('anything', 1)).toBe('…')
+})
+
+test('wrap breaks on words, at most two lines, cutting the rest with an ellipsis', async () => {
+  expect(wrap('short', 10)).toEqual(['short'])
+  expect(wrap('one two three four', 10)).toEqual(['one two', 'three four'])
+  expect(wrap('one two three four five six', 10)).toEqual(['one two', 'three fou…'])
+  expect(contentRows(1, 0, false, 0, 1)).toBe(10)
 })

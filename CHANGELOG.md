@@ -18,6 +18,12 @@ Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 - `/rich-ui` is redrawn: a block-letter banner, `● on` / `○ off` switches, rows that
   lighten under the mouse, `error` / `note` tags and a footer pinned to the bottom of a
   docked pane. Keys are unchanged. ([#14](https://github.com/emergentai/claude-code-rich-ui/pull/14))
+- `/rich-ui` descriptions are shorter and wrap to at most two lines instead of being cut off,
+  Markdown preview is listed above Status band, the Welcome greeting text box no longer
+  shows a "Text" label, and the Experimental header says "may be removed in a future version".
+
+### Fixed
+- Zen footer: the saying now changes only when a turn finishes, not on every redraw.
 
 ### Internal
 - Docs: feature ideas note, calm mode spike and design, feature pages and manual tests.

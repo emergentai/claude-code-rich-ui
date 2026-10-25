@@ -8,8 +8,8 @@ import type { Feature } from './feature'
 
 export const features: Feature[] = [
   mermaid,
-  statusBand,
   markdownPreview,
+  statusBand,
   welcomeGreeting,
   calmSpinner,
   quietFooter,

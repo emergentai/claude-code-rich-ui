@@ -24,7 +24,7 @@ const MERMAID_FENCE = /^(?:`{3,}|~{3,})[ \t]*mermaid/im
 export const markdownPreview: Feature = {
   id: 'markdown-preview',
   name: 'Markdown preview',
-  description: 'Open a markdown file Claude links to, rendered, in a pane',
+  description: 'Show linked markdown files rendered in a side pane',
   defaultEnabled: true,
 }
 
