@@ -8,7 +8,7 @@ import { encodeWords } from '../aurora-common/aurora'
 export const MIN_ROWS = 7
 export const MAX_ROWS = 28
 export const FADE_IN_MS = 900
-export const HOLD_MS = 1000
+export const HOLD_MS = 500
 export const FADE_OUT_MS = 900
 // It fades in from the left, stays, and fades out from the left the same way.
 export const TOTAL_MS = FADE_IN_MS + HOLD_MS + FADE_OUT_MS

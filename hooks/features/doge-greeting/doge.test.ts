@@ -54,7 +54,7 @@ test('the letters are Claude orange, lighter at the top than the bottom', () => 
 
 test('it sweeps in from the left, holds, then sweeps out from the left', () => {
   expect(FADE_IN_MS).toBe(900)
-  expect(HOLD_MS).toBe(1000)
+  expect(HOLD_MS).toBe(500)
   expect(TOTAL_MS).toBe(FADE_IN_MS + HOLD_MS + FADE_OUT_MS)
   // Part way in, the left is in before the right.
   expect(columnVisibility(0, 80, FADE_IN_MS / 2)).toBeGreaterThan(columnVisibility(79, 80, FADE_IN_MS / 2))
