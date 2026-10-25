@@ -63,6 +63,14 @@ export const renderGreeting: MatchedHook<'ui.render', { component: 'AbovePrompt'
       start = now
       startPlay(auroraGreeting.id, now)
     }
+    // A turn has started (the person pressed Enter): the greeting is over at once, so it
+    // never sits over the transcript while Claude answers, and it does not come back.
+    if (start !== undefined && e.props.isWorking) {
+      stopTicker(auroraGreeting.id)
+      startPlay(auroraGreeting.id, now - TOTAL_MS)
+
+      return next(e)
+    }
     // Played already; a redraw during the sweep keeps drawing it, after it the engine's.
     if (now - start >= TOTAL_MS) return next(e)
 

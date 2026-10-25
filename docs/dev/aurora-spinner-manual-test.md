@@ -70,6 +70,7 @@ its limit).
 | f | A tall window, a short one (24 rows), a narrow one (under 50 columns) | Taller window, bigger word; a short or narrow one has none. |
 | g | Dark and light themes | The orange reads on both. |
 | h | `/clear` | It plays again. |
+| i | Type a message and press Enter while a greeting (doge, nyan or aurora) is still up | The greeting is gone at once; your message and Claude's answer are fully visible; the greeting does not return. |
 
 ## All
 

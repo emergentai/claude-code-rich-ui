@@ -193,3 +193,26 @@ test('it draws the text the person set in the pane', async ($, on) => {
   expect(blits.calls.at(-1)?.cells).not.toBe(dogeCells(100, 19, FADE_IN_MS))
   await ui.unmount()
 })
+
+test('pressing Enter (a turn starts) ends it at once: the engine band is back and nothing more is painted', async ($, on) => {
+  const { clock, blits } = await boot($, on, ON)
+  const playing = await $.ui.mount(band())
+  await clock.advance(500)
+  expect(await playing.find({ type: 'Raster' })).toBeDefined()
+  await playing.unmount()
+
+  // The band is drawn again with a turn running, as the engine does when the prompt is sent.
+  const working = await $.ui.mount(band({ requestId: 'band-2' }, { isWorking: true }))
+  const after = blits.calls.length
+  await clock.advance(6000)
+
+  expect(await working.find({ type: 'Raster' })).toBeUndefined()
+  expect(await working.find({ type: 'Text', text: /engine/ })).toBeDefined()
+  expect(blits.calls).toHaveLength(after)
+  await working.unmount()
+
+  // And it does not come back once the turn is over.
+  const idle = await $.ui.mount(band({ requestId: 'band-3' }))
+  expect(await idle.find({ type: 'Raster' })).toBeUndefined()
+  await idle.unmount()
+})

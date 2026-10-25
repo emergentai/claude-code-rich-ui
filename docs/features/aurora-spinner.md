@@ -67,6 +67,13 @@ columns, the Raster allows 512), then the band goes back to the engine's after a
 colours are fixed (it is a picture, not themed). Skipped under 50 columns or 24 rows, while a turn
 runs or a survey holds the band. `nyan.ts` is pure: `pixelAt(x, y, ms, width)` is the whole scene.
 
+## Greetings and Enter
+
+All three greetings (aurora, nyan, doge) end the instant a turn starts, which is when the person
+presses Enter: the hook sees `isWorking`, cancels its timer and hands the band back to the engine, and
+the greeting does not return afterwards (until `/clear`). Before this fix the band stayed up over
+the transcript while Claude answered, and the message just sent seemed to vanish behind it.
+
 ## Doge greeting
 
 (The id and name are kept from an earlier doge version; it is now a plain sign.) A big "welcome" in
