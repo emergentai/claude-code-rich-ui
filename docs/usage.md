@@ -11,8 +11,10 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
  ──────────────────────────────────────────────────────────────────────
  ● on   Mermaid diagrams
         Draw mermaid diagrams as text diagrams
+
  ● on   Status band
         Show context and plan usage under the prompt when they run high
+
  ● on   Markdown preview
         Open a markdown file Claude links to, rendered, in a pane
  Enter toggles · Esc closes · rich-ui 0.3.0

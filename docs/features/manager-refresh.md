@@ -13,8 +13,10 @@ with a switch: the manager is always present. Behaviour and keys are unchanged.
  ● on   Mermaid diagrams                                       note
         Draw mermaid diagrams as text diagrams
         Diagrams left as code: terminal size unknown
+
  ○ off  Status band
         Show context and plan usage under the prompt when they run high
+
  ● on   Markdown preview
         Open a markdown file Claude links to, rendered, in a pane
  Enter toggles · Esc closes · rich-ui 0.3.0
@@ -40,8 +42,9 @@ Tabs, a "what's new" strip, a border, animation: see "Outcome" in
 ## Limits
 
 The pane opens with a fixed number of rows (`contentRows`). An inline pane is capped by
-the terminal's height: at 40 terminal rows 11 content rows fit, which is exactly the three
-features today. More features or status lines will need a scroll or a shorter header.
+the terminal's height: at 40 terminal rows about 12 content rows fit, and the pane is 13
+(three features with a blank row between them), so on a terminal under about 45 rows the footer
+is cut. A taller terminal, or the docked layout, shows it all.
 
 ## Code
 

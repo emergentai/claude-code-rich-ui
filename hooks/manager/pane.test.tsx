@@ -222,10 +222,9 @@ test('a docked pane and an inline pane both draw every row', async ($, on) => {
 })
 
 test('the pane height matches contentRows for a healthy pane', async () => {
-  // header 3 + divider + 2 per feature + footer; 11 for today's three features,
-  // the most an inline pane showed on a 40-row terminal
-  expect(contentRows(features.length, 0, false)).toBe(3 + 1 + features.length * 2 + 1)
-  expect(contentRows(3, 0, false)).toBe(11)
+  // header 3 + divider + 3 per feature less the last blank + footer
+  expect(contentRows(features.length, 0, false)).toBe(3 + 1 + features.length * 3 - 1 + 1)
+  expect(contentRows(3, 0, false)).toBe(13)
 })
 
 test('the banner cells are well formed', async () => {

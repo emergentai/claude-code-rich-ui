@@ -76,6 +76,7 @@ export function buildPane(view: PaneView) {
             key={`row-${feature.id}`}
             flexDirection="column"
             paddingX={GUTTER}
+            marginTop={index === 0 ? 0 : 1}
             hover={{ backgroundColor: 'subtle' }}
           >
             <Box>

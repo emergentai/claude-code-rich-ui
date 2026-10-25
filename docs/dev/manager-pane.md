@@ -28,6 +28,7 @@ Out of v1: reset to defaults, number hotkeys, per-feature settings, and any way 
  ● on   Mermaid diagrams            note
         Draw mermaid diagrams as text diagrams
         Diagrams left as code: terminal size unknown
+
  ○ off  Status band
         Show context and plan usage under the prompt when they run high
  Enter toggles · Esc closes · rich-ui 0.3.0
@@ -44,7 +45,7 @@ Rules:
 - Any line wider than the body is cut with an ellipsis; the pill and name always remain visible.
 - No border of our own: the engine frames the pane (inline and docked), and a second frame would spend two rows and columns. A healthy feature has no chip and no status line.
 - No tabs and no "what's new" strip (see the PR for why). No timers, no `$.ui.blit`: the banner is static, so nothing redraws on its own.
-- The pane is as tall as `contentRows`: 3 + 1 + 2 per feature + status lines + save line + 1. An inline pane is capped by the terminal height (seen: 11 content rows at 40 terminal rows), so the layout spends no row on decoration below the list; with more features than fit, the footer is what is cut first.
+- The pane is as tall as `contentRows`: 3 + 1 + 2 per feature plus a blank row between features + status lines + save line + 1 (13 for three features). An inline pane is capped by the terminal height (seen: about 12 content rows at 40 terminal rows), so on a short terminal the footer is what is cut first, then the last feature.
 
 ## 4. Behavior
 
