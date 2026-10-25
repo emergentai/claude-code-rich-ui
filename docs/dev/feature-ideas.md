@@ -123,6 +123,8 @@ out on purpose: tabs (a three-row feature list has nothing to put in Status or A
 a second view costs a row of chrome the inline pane cannot spare), the "what's new" strip
 (the module cannot read the changelog at run time, and a copy would have to be kept in sync
 by hand), a border of our own (the engine already frames the pane) and any animation.
+Added after trying it: blank rows between the options and around the footer, and the
+footer pinned to the bottom of a docked pane.
 
 ## Suggested order
 

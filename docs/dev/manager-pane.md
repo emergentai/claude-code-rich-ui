@@ -55,7 +55,7 @@ Rules:
 ### 4.1 Opening
 
 - The plugin registers the command `rich-ui` at `session.start`.
-- `command.run` for `rich-ui` calls `$.ui.open` with id `rich-ui`, title "rich-ui", `focus: true`, `closeOnEscape: true` and `rows` set to the content height (`contentRows`: banner, divider, two rows per feature, their status lines, footer, plus one when the save-failure line shows). It answers `{}`: the command's `text` is optional, so nothing extra is added to the transcript.
+- `command.run` for `rich-ui` calls `$.ui.open` with id `rich-ui`, title "rich-ui", `focus: true`, `closeOnEscape: true` and `rows` set to the content height (`contentRows`: banner, divider, a blank row and two rows per feature, their status lines, a blank row, footer, plus one when the save-failure line shows). It answers `{}`: the command's `text` is optional, so nothing extra is added to the transcript.
 - `holdToasts` is left off so the pane does not suppress other plugins' notifications.
 - Opening an already open pane re-sends the title and size; it does not create a second pane.
 - `focus` is only a request. If the user has text in the composer when they run the command it cannot be: the pane then opens without the keyboard and can be focused by click or the engine's focus chord.

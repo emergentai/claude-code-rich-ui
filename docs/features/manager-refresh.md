@@ -33,8 +33,11 @@ with a switch: the manager is always present. Behaviour and keys are unchanged.
   row keeps the engine's reverse video.
 - **Chip.** `error` (red) or `note` (amber) beside a feature's name only when it has a
   status entry; the detail lines stay under the description. A healthy feature has none.
-- **Layout.** One divider under the header, a one-cell gutter everywhere (two when docked),
-  no border of our own because the engine frames the pane.
+- **Layout.** One divider under the header, a blank row above each option and above the
+  footer, a one-cell gutter everywhere (two when docked), no border of our own because the
+  engine frames the pane.
+- **Footer pinned (docked).** When the dock is taller than the content, the footer sits at
+  the bottom of the dock. If the content is taller, or the pane is inline, nothing is pinned.
 
 ## Not done, and why
 

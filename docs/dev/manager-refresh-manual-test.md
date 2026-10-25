@@ -5,7 +5,8 @@ automated tests cannot see colour, hover or the real placement. Note that toggli
 your real plugin store; turn everything back on at the end.
 
 1. **Inline, 100 columns, 40+ rows.** Banner reads "rich-ui" with a gradient, `3 of 3 on`
-   at the right, a divider, three rows with `● on`, the footer is visible as the last line.
+   at the right, a divider, three rows with `● on` and a blank row above each, a blank row, and
+   the footer as the last line (the pane is 15 rows, so this needs a terminal of roughly 50 rows).
 2. **Keys.** The first row is highlighted (reverse video) on open. Enter turns it off: pill
    becomes `○ off`, summary `2 of 3 on`. Tab moves to the next row; Enter toggles; Esc closes.
 3. **Mouse.** Click a row to toggle. Hover a row: its background lifts and the description
