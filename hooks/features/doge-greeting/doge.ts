@@ -149,7 +149,8 @@ export function layoutFor(width: number, height: number): Layout {
   const bits = textBitmap(CAPTION)
   const textW = (bits[0]?.length ?? 0) * scale
   const textH = GLYPH_H * scale
-  const gap = Math.max(1, scale)
+  // A visible breath between the chin and the caption, a little more in a taller band.
+  const gap = Math.max(3, Math.round(height / 12))
   const faceH = Math.max(4, Math.min(height - textH - gap, Math.round(width / FACE_ASPECT)))
   const faceW = Math.round(faceH * FACE_ASPECT)
   const faceX = Math.round((width - faceW) / 2)

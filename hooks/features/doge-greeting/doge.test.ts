@@ -73,6 +73,8 @@ test('the face is laid out centred, with the caption centred under it', () => {
     near(layout.faceW / layout.faceH, FACE_ASPECT, 0.06)
     near(layout.faceX + layout.faceW / 2, width / 2, 0.5)
     expect(layout.faceY + layout.faceH).toBeLessThanOrEqual(layout.textY)
+    // Room between the face and the caption: at least three pixel rows (a row and a half of cells).
+    expect(layout.textY - (layout.faceY + layout.faceH)).toBeGreaterThanOrEqual(3)
     const textW = (layout.bits[0]?.length ?? 0) * layout.scale
     near(layout.textX + textW / 2, width / 2, 0.5)
     expect(layout.textY + 5 * layout.scale).toBeLessThanOrEqual(rows * 2)
