@@ -7,7 +7,7 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 ```
  ▀     █           ▀
  █▀▀ █ █▀▀ █▀▄ ▄▄▄ █ █ █
- █   █ █▄▄ █ █     █▄█ █                                     4 of 4 on
+ █   █ █▄▄ █ █     █▄█ █                                     5 of 6 on
  ──────────────────────────────────────────────────────────────────────
 
  ● on   Mermaid diagrams
@@ -26,6 +26,12 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
         ╭────────────────────────────────────────╮
         │ Text: welcome                     7/20 │
         ╰────────────────────────────────────────╯
+
+ ● on   Zen spinner
+        Replace the working row with one quiet line and trim the turn-end line
+
+ ○ off  Zen footer
+        Replace the hint line under the prompt with a zen saying, and hide the dim notices under the logo
 
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
@@ -89,6 +95,16 @@ or more, one line appears in the status row under the prompt, for example
 `context ██████░░ 70%  ·  5h 92% (resets in 1h 00m)`. A healthy session shows nothing.
 `/clear` resets it, and turning Status band off in `/rich-ui` hides it at once. Details:
 [`features/status-band.md`](features/status-band.md).
+
+## Zen spinner and Zen footer
+
+Experimental; each has its own switch under Experimental in `/rich-ui`. The Zen spinner is on by default and the Zen footer is off.
+The Zen spinner makes the working row one line such as `  · • ● · · · · ·  thinking 42s`,
+the line that ends a turn a dim `3s`, and hides the background-task hint. The Zen footer
+replaces the hint line under the prompt with a random zen saying that changes each turn
+(`⏵⏵ auto mode on · Chop wood, carry water.`). To hide tool rows and the lines Claude
+writes between tool calls, use Claude Code's own `/focus` view (fullscreen only). Details:
+[`features/zen.md`](features/zen.md).
 
 ## Mermaid diagrams
 
