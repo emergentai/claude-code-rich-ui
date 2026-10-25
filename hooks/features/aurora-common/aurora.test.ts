@@ -172,3 +172,107 @@ test('a narrow or short window, or no measurement, keeps the stock spinner', () 
   expect(bandSize({ columns: Number.NaN, rows: 40 })).toBeUndefined()
   expect(bandSize({ columns: 120, rows: Number.POSITIVE_INFINITY })).toBeUndefined()
 })
+
+// ---- sweep, meter, wordmark, pacer
+
+import {
+  MAX_MISSES,
+  WORDMARK_ROWS,
+  createPacer,
+  meterWords,
+  sweepWords,
+  wordmarkBitmap,
+  wordmarkWidth,
+  wordmarkWords,
+} from './aurora'
+
+const BLANK_WORDS = [0x20, 0x01000000, 0x01000000]
+
+test('a sweep shows only the columns between from and to, the rest in default colours', () => {
+  const words = sweepWords(10, 2, 3, 'dark', 0.2, 0.6)
+
+  for (let r = 0; r < 2; r++) {
+    for (let c = 0; c < 10; c++) {
+      const cell = words.slice((r * 10 + c) * 3, (r * 10 + c) * 3 + 3)
+      if (c >= 2 && c < 6) expect(cell[0]).toBe(0x2580)
+      else expect(cell).toEqual(BLANK_WORDS)
+    }
+  }
+})
+
+test('a full sweep is the whole field and an empty one is blank', () => {
+  expect(sweepWords(12, 3, 5, 'light', 0, 1)).toEqual(auroraWords(12, 3, 5, 'light'))
+  expect(sweepWords(12, 3, 5, 'light', 0, 0).every((w, i) => w === BLANK_WORDS[i % 3])).toBe(true)
+  // Out-of-range and reversed bounds draw nothing or clamp, never throw.
+  expect(sweepWords(6, 1, 0, 'dark', -4, 9)).toEqual(auroraWords(6, 1, 0, 'dark'))
+  expect(sweepWords(6, 1, 0, 'dark', 0.8, 0.2).every((w, i) => w === BLANK_WORDS[i % 3])).toBe(true)
+})
+
+test('a meter fills the asked fraction, the rest is a dim shade', () => {
+  const words = meterWords(10, 0.3, 4, 'dark')
+  const filled = words.filter((_, i) => i % 3 === 0 && words[i] === 0x2588).length
+
+  expect(words).toHaveLength(30)
+  expect(filled).toBe(3)
+  expect(words.filter((_, i) => i % 3 === 0 && words[i] === 0x2591)).toHaveLength(7)
+})
+
+test('a meter clamps odd fractions and handles no width', () => {
+  expect(meterWords(8, 2, 0, 'dark').filter((w, i) => i % 3 === 0 && w === 0x2588)).toHaveLength(8)
+  expect(meterWords(8, -1, 0, 'dark').filter((w, i) => i % 3 === 0 && w === 0x2588)).toHaveLength(0)
+  expect(meterWords(8, Number.NaN, 0, 'dark').filter((w, i) => i % 3 === 0 && w === 0x2588)).toHaveLength(0)
+  expect(meterWords(0, 0.5, 0, 'dark')).toEqual([])
+})
+
+test('the wordmark is 5 pixels tall and as wide as its letters plus one-pixel gaps', () => {
+  const bitmap = wordmarkBitmap('rich-ui')
+
+  expect(bitmap).toHaveLength(5)
+  expect(wordmarkWidth('rich-ui')).toBe(4 + 3 + 4 + 4 + 3 + 4 + 3 + 6)
+  expect(new Set(bitmap.map(row => row.length)).size).toBe(1)
+  expect(bitmap.flat().some(Boolean)).toBe(true)
+  // Unknown characters are skipped, not drawn as holes.
+  expect(wordmarkWidth('r?i')).toBe(wordmarkWidth('ri'))
+  expect(wordmarkWidth('')).toBe(0)
+})
+
+test('the wordmark cells match its size, light only where a pixel is lit', () => {
+  const width = wordmarkWidth('rich-ui')
+  const words = wordmarkWords('rich-ui', 2, 'dark')
+
+  expect(words).toHaveLength(width * WORDMARK_ROWS * 3)
+  const glyphs = words.filter((_, i) => i % 3 === 0)
+  expect(new Set(glyphs).size).toBeGreaterThan(1)
+  for (const glyph of glyphs) expect([0x20, 0x2580, 0x2584, 0x2588]).toContain(glyph)
+  // Blank cells use the terminal's colours, lit ones a real colour.
+  for (let i = 0; i < words.length; i += 3) {
+    if (words[i] === 0x20) expect(words.slice(i, i + 3)).toEqual(BLANK_WORDS)
+    else expect(words[i + 1]).toBeLessThanOrEqual(0xffffff)
+  }
+})
+
+test('the pacer drops a frame while one is in flight', () => {
+  const pacer = createPacer()
+
+  expect(pacer.begin()).toBe(true)
+  expect(pacer.begin()).toBe(false)
+  expect(pacer.end(false)).toBe(false)
+  expect(pacer.begin()).toBe(true)
+})
+
+test('the pacer stops after a run of denials and forgives a success', () => {
+  const pacer = createPacer(3)
+  const run = (denied: boolean) => {
+    pacer.begin()
+
+    return pacer.end(denied)
+  }
+
+  expect(run(true)).toBe(false)
+  expect(run(true)).toBe(false)
+  expect(run(false)).toBe(false) // a success resets the run
+  expect(run(true)).toBe(false)
+  expect(run(true)).toBe(false)
+  expect(run(true)).toBe(true)
+  expect(MAX_MISSES).toBeGreaterThan(10)
+})

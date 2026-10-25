@@ -17,7 +17,16 @@ rich-ui features
      Open a markdown file Claude links to, rendered, in a pane
 
  [ ] Aurora spinner
-     A slowly shifting gradient above the spinner while Claude works
+     A small drifting gradient swatch beside the spinner while Claude works
+
+ [ ] Aurora greeting
+     A brief aurora sweep above the prompt once per session, then it fades away
+
+ [ ] Aurora pane header
+     The rich-ui wordmark in pixel type, shimmering, on top of this pane
+
+ [ ] Aurora usage meter
+     Show the status band as a row above the prompt with a drifting gradient bar
 
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
@@ -71,12 +80,13 @@ or more, one line appears in the status row under the prompt, for example
 `/clear` resets it, and turning Status band off in `/rich-ui` hides it at once. Details:
 [`features/status-band.md`](features/status-band.md).
 
-## Aurora spinner
+## Aurora (four features)
 
-Off until you turn it on in `/rich-ui`. While Claude works, a three-row gradient drifts above
-the spinner line and goes away when the turn ends. The spinner line itself (the verb, elapsed time,
-tokens, `esc to interrupt`) is untouched. In a window under 50 columns or 24 rows the stock
-spinner is drawn. Details: [`features/aurora-spinner.md`](features/aurora-spinner.md).
+Four separate toggles in `/rich-ui`, all off until you turn them on, all using a slowly shifting
+aurora gradient: a small swatch beside the spinner while Claude works; a short sweep above the
+prompt once per session; the `rich-ui` wordmark shimmering on top of this pane; and the status
+band drawn as a row with a gradient bar. None adds anything to the transcript, and the stock
+spinner line is never altered. Details: [`features/aurora-spinner.md`](features/aurora-spinner.md).
 
 ## Mermaid diagrams
 

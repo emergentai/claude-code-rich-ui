@@ -32,7 +32,7 @@ Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 | Mermaid diagrams | Complete mermaid blocks in Claude's replies are drawn as text diagrams. A dim `show source` line above each one swaps it back to the code. |
 | Status band | A line under the prompt shows context and plan usage, only when they run high. |
 | Markdown preview | Click a link to a markdown file in a reply and it opens, rendered, in a pane. |
-| Aurora spinner | A slowly shifting gradient above the spinner while Claude works. Off until you turn it on. |
+| Aurora (four toggles) | A slowly shifting gradient: a swatch beside the spinner, a short greeting sweep, an animated `/rich-ui` header, a gradient usage meter. All off until you turn them on. |
 
 Flowcharts (subgraphs included), sequence, class, state, ER, XY chart, pie, C4 and
 architecture diagrams are drawn. Any other type stays the code block it always was, and so does anything too big for your

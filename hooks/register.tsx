@@ -1,6 +1,9 @@
 import type { Register } from 'claude-code'
 
-import { renderSpinner, stopOnTurnComplete } from './features/aurora-spinner'
+import { renderGreeting } from './features/aurora-greeting'
+import { renderHeader } from './features/aurora-header'
+import { renderMeter } from './features/aurora-meter'
+import { onTurnComplete, renderSpinner } from './features/aurora-spinner'
 import { refreshOnWrite, renderLinkedReply, renderPreview } from './features/markdown-preview'
 import { renderAssistantMessage } from './features/mermaid'
 import { onSessionEnd, recordUsage } from './features/status-band'
@@ -11,6 +14,9 @@ import { renderPane, runCommand, startSession } from './manager'
 // exported handler. Each feature handler checks its own feature's flag.
 export const register: Register = on => {
   on('session.start', startSession)
+  // Before the manager's own pane hook: an earlier hook wraps the later ones, and the
+  // manager answers without calling next, so a header registered after it never runs.
+  on('ui.render', { component: 'Pane', requestId: 'rich-ui' }, renderHeader)
   on('command.run', { command: 'rich-ui' }, runCommand)
   on('ui.render', { component: 'Pane', requestId: 'rich-ui' }, renderPane)
 
@@ -21,7 +27,9 @@ export const register: Register = on => {
   on('ui.render', { component: 'Pane', requestId: 'rich-ui-preview' }, renderPreview)
 
   on('ui.render', { component: 'Spinner' }, renderSpinner)
-  on('turn.complete', stopOnTurnComplete)
+  on('ui.render', { component: 'AbovePrompt' }, renderGreeting)
+  on('ui.render', { component: 'AbovePrompt' }, renderMeter)
+  on('turn.complete', onTurnComplete)
 
   on('session.measure', recordUsage)
   on('session.end', onSessionEnd)

@@ -3,6 +3,7 @@
 
 export const FRAME_MS = 80 // about 12.5 frames a second
 export const BAND_ROWS = 3
+export const MAX_MISSES = 25 // blits denied in a row before a timer gives up (about 2 s)
 export const MIN_COLUMNS = 50
 export const MIN_ROWS = 24
 export const MAX_COLUMNS = 120
@@ -132,4 +133,162 @@ export function encodeBase64(bytes: readonly number[]): string {
 // A Raster's `cells` for the field at time `t` (seconds).
 export function auroraCells(columns: number, rows: number, t: number, tone: Tone): string {
   return encodeWords(auroraWords(columns, rows, t, tone))
+}
+
+const DEFAULT_COLOR = 0x01000000 // bit 24 alone: the terminal's own colour
+const BLANK = [0x20, DEFAULT_COLOR, DEFAULT_COLOR]
+
+// The field with only the columns from `from` to `to` (fractions of the width, 0 to 1)
+// drawn, the rest blank in the terminal's own colours: a sweep in is (0, p), a sweep out
+// is (p, 1), and (0, 1) is the whole field.
+export function sweepWords(
+  columns: number,
+  rows: number,
+  t: number,
+  tone: Tone,
+  from: number,
+  to: number,
+): number[] {
+  const words = auroraWords(columns, rows, t, tone)
+  const first = Math.round(Math.max(0, Math.min(1, from)) * columns)
+  const last = Math.round(Math.max(0, Math.min(1, to)) * columns)
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < columns; c++) {
+      if (c >= first && c < last) continue
+      words.splice((r * columns + c) * 3, 3, ...BLANK)
+    }
+  }
+
+  return words
+}
+
+export function sweepCells(
+  columns: number,
+  rows: number,
+  t: number,
+  tone: Tone,
+  from: number,
+  to: number,
+): string {
+  return encodeWords(sweepWords(columns, rows, t, tone, from, to))
+}
+
+// ---- a gradient bar: `fraction` of the width filled with the drifting field, the rest dim.
+
+const UNFILLED = 0x2591 // light shade
+const FULL = 0x2588
+
+export function meterWords(columns: number, fraction: number, t: number, tone: Tone): number[] {
+  if (columns < 1) return []
+  const filled = Math.round(Math.max(0, Math.min(1, Number.isFinite(fraction) ? fraction : 0)) * columns)
+  const dim = tone === 'light' ? 0xb4b4b4 : 0x6a6a6a
+  const words: number[] = []
+
+  for (let c = 0; c < columns; c++) {
+    if (c < filled) {
+      const [v, b] = pixelAt(c, 0, t, columns) as [number, number]
+      words.push(FULL, colorAt(v, Math.max(b, 0.55), tone), DEFAULT_COLOR)
+    } else {
+      words.push(UNFILLED, dim, DEFAULT_COLOR)
+    }
+  }
+
+  return words
+}
+
+export function meterCells(columns: number, fraction: number, t: number, tone: Tone): string {
+  return encodeWords(meterWords(columns, fraction, t, tone))
+}
+
+// ---- a wordmark in half-block pixel type, filled with the field.
+
+// 5 pixels tall; '#' is a lit pixel.
+const FONT: Record<string, readonly string[]> = {
+  r: ['###.', '#..#', '###.', '#.#.', '#..#'],
+  i: ['###', '.#.', '.#.', '.#.', '###'],
+  c: ['.###', '#...', '#...', '#...', '.###'],
+  h: ['#..#', '#..#', '####', '#..#', '#..#'],
+  '-': ['...', '...', '###', '...', '...'],
+  u: ['#..#', '#..#', '#..#', '#..#', '.##.'],
+}
+const GLYPH_ROWS = 5
+export const WORDMARK_ROWS = 3
+
+// The wordmark as a bitmap (rows of booleans), letters one pixel apart; unknown
+// characters are skipped.
+export function wordmarkBitmap(text: string): boolean[][] {
+  const bitmap: boolean[][] = Array.from({ length: GLYPH_ROWS }, () => [])
+  let isFirst = true
+
+  for (const ch of text) {
+    const glyph = FONT[ch]
+    if (glyph === undefined) continue
+    for (let y = 0; y < GLYPH_ROWS; y++) {
+      const row = bitmap[y] as boolean[]
+      if (!isFirst) row.push(false)
+      for (const px of glyph[y] as string) row.push(px === '#')
+    }
+    isFirst = false
+  }
+
+  return bitmap
+}
+
+export function wordmarkWidth(text: string): number {
+  return (wordmarkBitmap(text)[0] ?? []).length
+}
+
+// Cells of the wordmark, `WORDMARK_ROWS` tall, `wordmarkWidth(text)` wide: lit pixels
+// take the field's colour, the rest is the terminal's own background.
+export function wordmarkWords(text: string, t: number, tone: Tone): number[] {
+  const bitmap = wordmarkBitmap(text)
+  const width = (bitmap[0] ?? []).length
+  const words: number[] = []
+  const lit = (x: number, y: number) => bitmap[y]?.[x] === true
+
+  for (let r = 0; r < WORDMARK_ROWS; r++) {
+    for (let c = 0; c < width; c++) {
+      const top = lit(c, r * 2)
+      const bottom = lit(c, r * 2 + 1)
+      const [v, b] = pixelAt(c, r * 2, t, width) as [number, number]
+      const color = colorAt(v, Math.max(b, 0.6), tone)
+      if (top && bottom) words.push(FULL, color, DEFAULT_COLOR)
+      else if (top) words.push(UPPER_HALF, color, DEFAULT_COLOR)
+      else if (bottom) words.push(0x2584, color, DEFAULT_COLOR)
+      else words.push(...BLANK)
+    }
+  }
+
+  return words
+}
+
+export function wordmarkCells(text: string, t: number, tone: Tone): string {
+  return encodeWords(wordmarkWords(text, t, tone))
+}
+
+// ---- the frame loop's bookkeeping, pure so every feature's timer shares it.
+
+// One frame in flight at a time (a host slower than a frame drops frames, nothing
+// queues), and a run of denied blits (the Raster is gone) ends the timer.
+export function createPacer(maxMisses: number = MAX_MISSES) {
+  let isBusy = false
+  let misses = 0
+
+  return {
+    // False when the previous frame has not come back.
+    begin(): boolean {
+      if (isBusy) return false
+      isBusy = true
+
+      return true
+    },
+    // True when the timer should stop.
+    end(isDenied: boolean): boolean {
+      isBusy = false
+      misses = isDenied ? misses + 1 : 0
+
+      return misses >= maxMisses
+    },
+  }
 }

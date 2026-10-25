@@ -7,6 +7,8 @@ import { isOn } from '../core/gate'
 import { parseStored, serialize, STORE_KEY, toggled } from '../core/prefs'
 import { features } from '../core/registry'
 import { bandText, segmentsFor } from '../features/status-band/band'
+import { auroraHeader, HEADER_ROWS } from '../features/aurora-header'
+import { auroraMeter } from '../features/aurora-meter'
 import { statusBand } from '../features/status-band'
 import { VERSION } from '../core/version'
 import { buildPane } from './pane'
@@ -72,7 +74,9 @@ export const runCommand: MatchedHook<
     title: 'rich-ui',
     focus: true,
     closeOnEscape: true,
-    rows: contentRows(features.length, statusLines, saveFailed),
+    rows:
+      contentRows(features.length, statusLines, saveFailed) +
+      (isOn(await read($, enabledAtom), auroraHeader) ? HEADER_ROWS : 0),
   })
 
   return {}
@@ -97,10 +101,13 @@ export const renderPane: MatchedHook<
       const enabled = await update($, enabledAtom, map => toggled(map, feature))
       await update($, statusAtom, map => withoutStatus(map, feature.id))
       // The status band's line sits in the engine's status row, so toggling its
-      // feature clears or restores that line at once.
-      if (feature.id === statusBand.id) {
+      // feature (or the aurora meter, which takes the figures over) clears or restores
+      // that line at once.
+      if (feature.id === statusBand.id || feature.id === auroraMeter.id) {
         const segments = segmentsFor(await read($, usageAtom), await $.clock.now())
-        $.ui.status(isOn(enabled, statusBand) ? bandText(segments) : undefined)
+        $.ui.status(
+          isOn(enabled, statusBand) && !isOn(enabled, auroraMeter) ? bandText(segments) : undefined,
+        )
       }
       try {
         await $.store.set(STORE_KEY, serialize(enabled))

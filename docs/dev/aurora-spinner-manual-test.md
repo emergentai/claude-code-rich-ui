@@ -1,37 +1,66 @@
-# Manual test: aurora spinner
+# Manual test: the aurora features
 
-The unit tests run under the engine's harness. A first real run in tmux (130 x 40, 256 colours)
-saw the band animate, keep the stock line, and disappear at the end of a turn and on Esc.
-Everything in the table below still needs a person in a real terminal, ideally a truecolor one
-(iTerm2, Ghostty, kitty) in both a dark and a light theme.
+Four toggles, all off by default: **Aurora spinner**, **Aurora greeting**, **Aurora pane header**,
+**Aurora usage meter**. The tests run under the engine's harness, and a first real run in tmux
+(130 x 40, 256 colours, fullscreen UI) saw the spinner swatch, the greeting, the header and a
+usage row. Everything below still needs a person in a real terminal, ideally truecolor
+(iTerm2, Ghostty, kitty), in a dark and a light theme.
 
 ```
 claude --plugin-dir <this worktree>
 ```
 
-The feature is off by default: run `/rich-ui` and press the **Aurora spinner** row first.
+Open `/rich-ui` and turn on one feature at a time (Enter or click on its row).
 
-To get a turn that lasts, ask: `Run the shell command: sleep 20 && echo finished. Then say done.`
-or `Count from 1 to 40, one per line, with a fun fact each.`
+## Aurora spinner
 
 | # | Do | Expected |
 |---|---|---|
-| 1 | Start `claude` with the mod and ask for a 20 second turn without turning the feature on | The stock spinner only. |
-| 2 | `/rich-ui`, turn Aurora spinner on, ask for the 20 second turn | A 3-row gradient appears above the spinner line and drifts slowly; no flicker. |
-| 3 | Look at the spinner line while it runs | The verb, `(12s · ↓ 300 tokens)`, `esc to interrupt` and the tip are all there, unchanged. |
-| 4 | Wait for the turn to end | The band is gone at the same moment the `Cooked for 20s` line appears. |
-| 5 | Start a turn and press Esc | The band is gone at once. |
-| 6 | After a turn, run `/clear`, then start a new turn | A fresh turn animates normally; nothing stale from the last one. |
-| 7 | Mid-turn, open `/rich-ui` and turn the feature off | The band disappears and the stock spinner remains. Turn it on: it returns on the next redraw (the next word or mode change). |
-| 8 | Shrink the window under 50 columns mid-turn | The band is replaced by the stock spinner. Widen it again: it returns at the next redraw. |
-| 9 | Start a turn in a window under 24 rows | The stock spinner. |
-| 10 | Dark theme (`/theme`), then light | Dark: a dim glow. Light: pastel. Neither hurts to read, and the text around stays legible. |
-| 11 | Type in the prompt while a turn runs | Keys are not delayed or dropped; the prompt echoes immediately. |
-| 12 | Ask for a long tool call (a 60 second sleep) and watch CPU in Activity Monitor | The terminal and `claude` process stay low (a few percent at most); compare with the feature off. |
-| 13 | A turn that asks a permission question | The band is not drawn over the dialog; it resumes (or not) afterwards, no stuck frame. |
-| 14 | tmux or screen, and a terminal over ssh | Works, or falls back; note any garbage characters. |
-| 15 | After many turns, check `claude --debug-file` output | No `ui.render ... refused` or `skipped` lines mentioning rich-ui. |
+| 1 | Ask: `Run the shell command: sleep 20 && echo finished. Then say done.` | A 4-cell drifting swatch to the left of the spinner line (`▀▀▀▀ · Thundering… (4s · ↓ 91 tokens)`); the line itself is unchanged, with `esc to interrupt` and the tip. |
+| 2 | Wait for the end, or press Esc | The swatch is gone with the spinner. |
+| 3 | Shrink the window under 50 columns, or 24 rows, mid-turn | The stock spinner (the swatch goes at the next redraw). |
+| 4 | Turn the feature off mid-turn | The swatch disappears. |
+| 5 | Type in the prompt while a turn runs | No lag or dropped keys. |
+| 6 | Esc during a tool turn, then type while the next turn runs (fullscreen) | No garbled screen. (A garbled redraw was seen once with the earlier band version.) |
 
-Watch for: a band left on screen after a turn, a band that freezes while the spinner counts on,
-a flicker of the whole spinner area, colours that are hard on the eyes, and CPU that does not
-fall when the turn ends. Record results in [`verification-notes.md`](verification-notes.md).
+## Aurora greeting
+
+| # | Do | Expected |
+|---|---|---|
+| 7 | Turn it on at an idle prompt | A 3-row aurora sweeps in from the left, holds about 1 s, sweeps out, and leaves no gap above the prompt. |
+| 8 | Toggle off and on again | It does not replay (once per session). |
+| 9 | `/clear` | It plays once more. |
+| 10 | Start a new `claude` with it already on | It plays at startup. |
+| 11 | Open a survey or start typing a slash command during it | No overlap, no leftover rows. |
+
+## Aurora pane header
+
+| # | Do | Expected |
+|---|---|---|
+| 12 | `/rich-ui` with it on | `rich-ui` in pixel type above "rich-ui features", its colours drifting; all rows below still readable and pressable. |
+| 13 | Close the pane with Esc, reopen | Header again, no stuck frames. |
+| 14 | Turn the header off from the pane | It disappears at once; the pane keeps working. |
+| 15 | Inline (narrow) pane and docked pane | Both fit; under about 33 columns it is simply not drawn. |
+
+## Aurora usage meter
+
+Needs context at 60% or a plan limit at 75% to show anything (a long session, or an account near
+its limit).
+
+| # | Do | Expected |
+|---|---|---|
+| 16 | With the meter on and context high | A row above the prompt: `context ▇▇▇▇▇▇░░░ 72%` with a drifting gradient bar, then any limit text. The old text line under the prompt is gone. |
+| 17 | Turn the meter off | The text line under the prompt returns. |
+| 18 | Healthy session | Nothing extra. |
+
+## All
+
+| # | Do | Expected |
+|---|---|---|
+| 19 | Light and dark themes (`/theme`) | Dark: a dim glow. Light: pastel. Text beside stays legible. |
+| 20 | Watch CPU during a 60 s tool call | `claude` stays low; compare with everything off. |
+| 21 | `claude --debug-file /tmp/x.log` after a session | No `ui.render ... refused` or `skipped` lines for rich-ui. |
+
+Watch for: anything left on screen after its moment, a frozen frame, a flicker of surrounding
+rows, colours that are hard to read against, and CPU that does not drop when idle. Record results
+in [`verification-notes.md`](verification-notes.md).

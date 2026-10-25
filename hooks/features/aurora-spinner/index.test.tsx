@@ -1,8 +1,7 @@
 import { expect, test } from 'claude-code/testing'
 
 import { boot } from '../../core/test-harness'
-import { FRAME_MS } from './aurora'
-import { MAX_MISSES } from '.'
+import { FRAME_MS, MAX_MISSES } from '../aurora-common/aurora'
 
 const ON = { prefs: { v: 1, enabled: { 'aurora-spinner': true } } }
 
@@ -59,7 +58,7 @@ test('the timer repaints the Raster at the frame rate and no faster', async ($, 
   expect(FRAME_MS).toBeGreaterThanOrEqual(66)
   expect(blits.calls.length).toBeGreaterThanOrEqual(10)
   expect(blits.calls.length).toBeLessThanOrEqual(Math.ceil(1000 / FRAME_MS))
-  expect(blits.calls.every(c => c.requestId === 'main' && c.key === 'aurora')).toBe(true)
+  expect(blits.calls.every(c => c.requestId === 'main' && c.key === 'aurora-spinner')).toBe(true)
   expect(new Set(blits.calls.map(c => c.cells)).size).toBe(blits.calls.length)
   await ui.unmount()
 })

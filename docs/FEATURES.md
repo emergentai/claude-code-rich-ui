@@ -60,11 +60,13 @@ nothing opens by itself. The pane follows the file when Claude edits it.
 Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike:
 [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 
-### Aurora spinner (unreleased, off by default)
+### Aurora (unreleased; four toggles, all off by default)
 
-While Claude works, a slowly shifting aurora gradient (half-block cells, theme-aware, three
-rows) is drawn above the spinner line and removed when the turn ends. The spinner line is kept
-whole. Pure delight, so it is off until turned on in `/rich-ui`; terminal only.
+A slowly shifting aurora gradient (half-block cells, theme-aware) in places where it adds no
+clutter: a swatch beside the spinner, a once-per-session greeting sweep above the prompt, an
+animated wordmark atop the `/rich-ui` pane, and a gradient bar for the usage band. Pure delight,
+so each is off until turned on; terminal only; the stock UI is untouched when off. These are
+candidates to be judged by hand: the ones not liked will be cut before a release.
 
 Reference: [`features/aurora-spinner.md`](features/aurora-spinner.md). Manual test:
 [`dev/aurora-spinner-manual-test.md`](dev/aurora-spinner-manual-test.md).

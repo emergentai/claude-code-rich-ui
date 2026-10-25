@@ -1,96 +1,113 @@
-# Aurora spinner
+# Aurora spinner (and the other aurora features)
 
-While Claude works, a slowly shifting gradient (teal, green, blue, violet) is drawn above the
-spinner line, three rows tall, and goes away when the turn ends. Pure delight: it tells you
-nothing the spinner does not, so it is off until you turn it on.
+A family of four small, off-by-default features that use the half-block `Raster` to put a
+slowly shifting aurora gradient (teal, green, blue, violet) where it adds no clutter. An
+earlier version drew a 3-row band above the spinner; it looked like added furniture and was
+replaced. Each feature has its own row in `/rich-ui`, is terminal-only, and when off leaves
+the stock UI untouched.
 
-- id `aurora-spinner`, name "Aurora spinner", `defaultEnabled: false`
-- Toggle: its own row in `/rich-ui`. Off, the spinner is exactly Claude Code's own.
-- Terminal surface only. The desktop app and VS Code keep their own spinner.
+| Feature | id | Where | When |
+|---|---|---|---|
+| Aurora spinner | `aurora-spinner` | a 4x1 swatch to the left of the spinner line | while Claude works |
+| Aurora greeting | `aurora-greeting` | a 3-row band above the prompt | once per session (and after `/clear`), about 2.8 s |
+| Aurora pane header | `aurora-header` | the `rich-ui` wordmark in pixel type above the `/rich-ui` pane | while the pane is open |
+| Aurora usage meter | `aurora-meter` | the status band as a row above the prompt with a gradient bar | only when the status band would show |
 
-## What you see
+## Aurora spinner
 
-The spinner line is not touched. The mod asks the engine for the spinner it would have drawn
-(the verb, the elapsed time, tokens, effort, `esc to interrupt`, the tool timer and the tips)
-and puts the band above it, so what Claude is doing stays exactly as visible as without the mod.
+While Claude works, a four-cell, one-row swatch drifts to the left of the spinner block. The
+stock block is kept whole: the hook awaits `next(e)` (the engine's own drawing: the verb,
+elapsed time, tokens, `esc to interrupt`, the tool timer, the tips) and places it to the right
+of the swatch. The mod never rewrites `word`, `message` or `suffix`. The swatch is pushed down
+one row (`marginTop`) because the stock block starts with a blank row.
 
-The band is a `Raster` of half-block cells, two pixels per cell, so it is 3 rows by 6 pixels
-and as wide as the window (up to 120 columns). The field is a plasma: a few sine waves
-summed, mapped onto a cyclic aurora palette, with a second slow wave for the curtain
-brightness. One drift takes about half a minute; a frame changes a colour channel by
-a few steps out of 255.
+- Frame rate 12.5 fps (80 ms) through `$.clock.every` and `$.ui.blit`, one frame in flight (a
+  slow host drops frames; nothing queues). A frame costs well under a millisecond.
+- The spinner hook runs when the word, mode or message changes (the engine's source memoizes
+  the render input on those), not on every frame.
+- A window under 50 columns or 24 rows, or with no measured size, keeps the stock line.
+
+## Aurora greeting
+
+On the first idle draw of the band above the prompt, a 3-row aurora sweeps in from the left over
+0.9 s, holds for 1 s and sweeps out over 0.9 s, then the band goes back to the engine's. It plays
+once per session and again after `/clear`. Turned on mid-session it plays at the next redraw, so
+it can be judged without restarting. It does not start while a turn is running or a survey holds
+the band. A redraw during the sweep continues it from the clock; it never restarts.
+
+## Aurora pane header
+
+The word `rich-ui` in a 5-pixel-tall block font (31 columns by 3 rows, half-block cells), its
+pixels filled with the drifting field, above the pane's own content. It wraps the manager's pane
+hook, which is why its `on(...)` line sits before the manager's in `hooks/register.tsx` (an
+earlier hook wraps later ones, and the manager answers without calling `next`). The pane's
+height is raised by 4 rows only while the header is on. Panes narrower than 33 columns are drawn
+without it. When the pane closes, the repaint is denied and the timer ends within about 2 s.
+
+## Aurora usage meter
+
+Takes over the status band: the same segments with the same thresholds (context from 60%, plan
+limits from 75%; a healthy session shows nothing), drawn as one row above the prompt with the
+context bar as a gradient that drifts, filled to the context percent over a dim shade. Plan limits
+stay plain text beside it. While this is on, the status band's own text line in the status row
+is cleared, so the same figures are never shown twice, and restored when it is off. Needs a band
+at least 44 columns wide, and yields to a survey. Only a context segment animates; a limit alone
+starts no timer.
 
 ## Theme
 
-A `Raster` takes raw colours, not theme keys, so the band reads the `theme` setting when the
-spinner is drawn:
+A `Raster` takes raw colours, so each feature reads the `theme` setting when it draws.
 
 | Theme | Look |
 |---|---|
 | `dark`, `dark-daltonized`, `dark-ansi` | Colours dimmed toward black: a soft glow, not a glare. |
-| `light`, `light-daltonized`, `light-ansi` | Colours washed toward white: pastel curtains. |
+| `light`, `light-daltonized`, `light-ansi` | Colours washed toward white: pastel. |
 | `auto`, a custom theme | A middle tone. `auto` follows the terminal, which a mod cannot see. |
 
-A theme changed in the middle of a turn shows from the next turn. In a 256-colour terminal
-(tmux without truecolor) the gradient is quantized and looks coarser.
+A theme changed mid-turn shows from the next draw. In a 256-colour terminal (tmux without
+truecolor) the gradient is quantized and looks coarser.
 
-## Decisions
+## When timers stop
 
-- **Wrap, do not replace.** The spinner site allows a tree in place of the whole line, but the
-  line carries things no prop exposes (elapsed time, tokens, the tool timer, the interrupt hint).
-  A tree would lose them. Wrapping `next(e)` keeps all of it. The mod never rewrites `word`,
-  `message` or `suffix`.
-- **Frame rate: 12.5 fps** (80 ms), the cap. The engine takes 60 blits a second; a slow drift
-  gains nothing from more. One frame costs about 0.15 ms to compute for 120 columns (measured in
-  Node), so about 0.2% of a core, plus one `$.ui.blit` round trip per frame.
-- **No render pass per frame.** The spinner hook runs when the word, mode or message changes
-  (checked in the engine's source), not on every frame. A timer repaints the mounted Raster
-  with `$.ui.blit`, which skips the render pass.
-- **One frame in flight.** If the host is slower than a frame, the next frame is dropped, not
-  queued.
+There is at most one timer per feature (`aurora-common/ticker.ts`); starting one cancels the
+previous.
 
-## When it stops
-
-There is one timer, and it is cancelled by each of these:
-
-| Event | How |
-|---|---|
-| The turn ends, is interrupted or fails | `turn.complete` for the main loop (a subagent's end is ignored). Immediate. |
-| `/clear`, exit, any session end | `session.end`, through the status band's handler (the engine allows one unmatched hook per event). |
-| The feature is turned off | The spinner hook reads the toggle, so it draws again, returns the stock line and cancels. |
-| The window becomes narrow or short | The same redraw falls back to the stock line and cancels. |
-| The spinner went away without an event | 25 blits in a row denied (about two seconds), then the timer cancels itself. |
-| A hot reload | The engine cancels a plugin's timers with the old module. |
-
-Starting a second timer cancels the first, so there is never more than one.
-
-## Narrow and short windows
-
-The band needs a measured window at least 50 columns wide and 24 rows tall. Below that, or with
-no measurement, the stock spinner is drawn and no timer runs. The width is checked when the
-spinner is drawn, and a width change redraws it; a change of height alone does not, so a window
-made shorter in mid-turn keeps the band until the next redraw.
+| Event | Spinner | Greeting | Header | Meter |
+|---|---|---|---|---|
+| Turn ends, is interrupted or fails (`turn.complete`, main loop) | stops | - | - | - |
+| Session end, `/clear`, exit (`session.end`, through the status band's handler: the engine allows one unmatched hook per event) | stops | stops | stops | stops |
+| Feature turned off (the hook draws again, subscribed to the toggle) | stops | stops | stops | stops |
+| Window narrow or short | stops | - | - | - |
+| 25 denied blits in a row (the Raster is gone) | stops | stops | stops | stops |
+| Sweep finished | - | stops | - | - |
+| Usage no longer high | - | - | - | stops |
+| Hot reload | the engine cancels a plugin's timers with the old module | | | |
 
 ## Does it get in the way
 
-It registers no hook on `tool.call`, `prompt.submit` or any other event on the path of a tool
-or the prompt. Its two hooks are the spinner draw, which awaits only the engine's own drawing,
-the toggle and the theme, and `turn.complete`, which stops the timer synchronously and returns
-the engine's answer unchanged. Any error in the spinner hook falls back to the stock line.
+None registers a hook on `tool.call` or `prompt.*`. The hooks are render hooks that await the
+engine's own drawing, the toggle and the theme, and one `turn.complete` hook that stops a timer
+synchronously and returns the turn's answer unchanged. Any error in a render hook falls back to
+the stock drawing.
 
-## Limits
+## Tried and dropped
 
-- Two spinners on screen at once share the one timer: the one drawn last animates, the other
-  shows a still frame. This is not expected in normal use.
-- The band sits above the tool list line and below the transcript, between the last message
-  and the spinner line.
+- **A band above the spinner** (the first version): looked like clutter; replaced by the swatch.
+- **A swatch on the "Cooked for 12s" line.** The `TurnDuration` hook ran and reserved the columns
+  (the stock text moved right), but neither a `Raster` nor coloured `Text` of ours painted in
+  that transcript row in a real run (three variants tried; blits were accepted but nothing
+  showed), and a redraw of the row is cached, so a sweep cannot be played by redrawing. Not
+  shipped. Putting the swatch to the right of the stock text was clipped by the line's full width.
 
 ## Code
 
 | File | Role |
 |---|---|
-| `hooks/features/aurora-spinner/aurora.ts` | the field, palette, tone, band size, base64 (pure) |
-| `hooks/features/aurora-spinner/ticker.ts` | the one timer handle and its stop |
-| `hooks/features/aurora-spinner/index.tsx` | metadata, the spinner hook, the `turn.complete` hook |
-| `hooks/features/status-band/index.tsx` | calls `stopAurora()` from its `session.end` handler |
-| `hooks/register.tsx` | the two `on(...)` lines |
+| `hooks/features/aurora-common/aurora.ts` | the field, palette, tone, sweep, meter, wordmark, pacer, base64 (pure) |
+| `hooks/features/aurora-common/ticker.ts` | the timer handles and the greeting clock |
+| `hooks/features/aurora-spinner/index.tsx` | spinner hook, the plugin's one `turn.complete` hook |
+| `hooks/features/aurora-greeting/index.tsx` | greeting hook (`AbovePrompt`) |
+| `hooks/features/aurora-header/index.tsx` | header hook (wraps the manager's `Pane`) |
+| `hooks/features/aurora-meter/index.tsx` | meter hook (`AbovePrompt`) |
+| `hooks/features/status-band/index.tsx` | stops every timer on `session.end`; clears its line while the meter is on |
+| `hooks/manager/index.ts` | reserves the header rows; refreshes the status line when the meter toggles |
