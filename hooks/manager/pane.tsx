@@ -10,17 +10,19 @@ export type PaneView = {
   enabled: EnabledMap
   status: StatusMap
   saveFailed: boolean
+  welcome: string
   width: number
   isDocked: boolean
   version: string
   onToggle: (feature: Feature) => void
+  onWelcome: (text: string) => void
 }
 
 // Builds the pane from plain data and a callback: the engine's module scan
 // rejects a function that is handed `$`, so the hook reads the state and writes
 // the toggle itself.
 export function buildPane(view: PaneView) {
-  const { Box, Text, Button } = view.elements
+  const { Box, Text, Button, Input } = view.elements
 
   return (
     <Box flexDirection="column" paddingX={view.isDocked ? 1 : 0}>
@@ -63,9 +65,18 @@ export function buildPane(view: PaneView) {
         )
       })}
       <Text> </Text>
+      <Input
+        key="welcome-text"
+        label="Welcome sign text: "
+        placeholder="welcome"
+        value={view.welcome}
+        submitLabel="save"
+        onSubmit={text => view.onWelcome(text)}
+      />
+      <Text> </Text>
       {view.saveFailed && <Text color="warning">Couldn't save your choice</Text>}
       <Text dimColor>
-        {clip(`Enter toggles · Esc closes · rich-ui ${view.version}`, view.width)}
+        {clip(`Enter toggles or saves · Esc closes · rich-ui ${view.version}`, view.width)}
       </Text>
     </Box>
   )

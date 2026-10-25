@@ -6,13 +6,19 @@ import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
 import { FRAME_MS, bandSize, createPacer } from '../aurora-common/aurora'
 import { playStartedAt, setTicker, startPlay, stopTicker } from '../aurora-common/ticker'
-import { TOTAL_MS, dogeCells, rowsFor } from './doge'
+import { CAPTION, TOTAL_MS, dogeCells, rowsFor } from './doge'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
 const enabledAtom = atom(
   { plugin: 'rich-ui', key: 'enabled' } as const,
   {} as EnabledMap,
   { shape: 'enabled-1' },
+)
+
+const welcomeAtom = atom(
+  { plugin: 'rich-ui', key: 'welcome' } as const,
+  CAPTION,
+  { shape: 'welcome-1' },
 )
 
 export const dogeGreeting: Feature = {
@@ -29,7 +35,7 @@ const RASTER_KEY = 'doge-greeting'
 // session (and once more after /clear) on an idle prompt, repainted by one timer, then
 // handed back to the engine. The band is as wide as the prompt and as tall as the engine
 // allows (at most half the terminal, less one row); "welcome" is centred in it over
-// the terminal's own background, fading in from the left and gone at the end.
+// the terminal's own background, fading in from the left and out from the left.
 export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> = async (
   $,
   e,
@@ -57,20 +63,21 @@ export const renderDoge: MatchedHook<'ui.render', { component: 'AbovePrompt' }> 
     if (now - start >= TOTAL_MS) return next(e)
 
     const rest = await next(e)
+    const text = await read($, welcomeAtom)
     const { Box, Raster } = $.ui.resolve(e)
     const requestId = e.requestId
     const columns = Math.max(1, Math.min(MAX_COLUMNS, e.props.bodyColumns ?? 80))
 
     let elapsed = now - start
-    let lastCells = dogeCells(columns, rows, elapsed)
+    let lastCells = dogeCells(columns, rows, elapsed, text)
     const pacer = createPacer()
     const timer: Timer = $.clock.every(FRAME_MS, async () => {
       if (!pacer.begin()) return
       let isDenied = true
       try {
         elapsed += FRAME_MS
-        // Once it has dissolved in the picture holds still: nothing to send until it ends.
-        const cells = dogeCells(columns, rows, elapsed)
+        // While it holds the picture is still: nothing to send until it ends.
+        const cells = dogeCells(columns, rows, elapsed, text)
         if (cells === lastCells) isDenied = false
         else {
           lastCells = cells

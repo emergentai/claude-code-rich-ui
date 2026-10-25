@@ -4,7 +4,8 @@ import type { Hook, MatchedHook } from 'claude-code'
 import type { EnabledMap, StatusMap, UsageSnapshot } from '../../types'
 import { withoutStatus } from '../core/errors'
 import { isOn } from '../core/gate'
-import { parseStored, serialize, STORE_KEY, toggled } from '../core/prefs'
+import { cleanText, CAPTION } from '../features/doge-greeting/doge'
+import { parseStored, parseWelcome, serialize, STORE_KEY, toggled } from '../core/prefs'
 import { features } from '../core/registry'
 import { bandText, segmentsFor } from '../features/status-band/band'
 import { auroraHeader, HEADER_ROWS } from '../features/aurora-header'
@@ -12,9 +13,12 @@ import { auroraMeter } from '../features/aurora-meter'
 import { statusBand } from '../features/status-band'
 import { VERSION } from '../core/version'
 import { buildPane } from './pane'
-import { contentRows } from './size'
+import { contentRows, WELCOME_ROWS } from './size'
 
 const PANE_ID = 'rich-ui'
+
+// Only a text the person changed is stored; the default stays unsaved.
+const custom = (welcome: string) => (welcome === CAPTION ? undefined : welcome)
 
 // Declared here, not imported: the engine's module scan reads a state source
 // only where it is written (docs/dev/architecture.md 4.0).
@@ -22,6 +26,11 @@ const enabledAtom = atom(
   { plugin: 'rich-ui', key: 'enabled' } as const,
   {} as EnabledMap,
   { shape: 'enabled-1' },
+)
+const welcomeAtom = atom(
+  { plugin: 'rich-ui', key: 'welcome' } as const,
+  CAPTION,
+  { shape: 'welcome-1' },
 )
 const statusAtom = atom(
   { plugin: 'rich-ui', key: 'status' } as const,
@@ -43,12 +52,16 @@ const saveFailedAtom = atom(
 // unmatched hook per event: it loads the saved choices and registers /rich-ui.
 export const startSession: Hook<'session.start'> = async ($, e, next) => {
   let stored: EnabledMap = {}
+  let welcome = CAPTION
   try {
-    stored = parseStored(await $.store.get(STORE_KEY))
+    const raw = await $.store.get(STORE_KEY)
+    stored = parseStored(raw)
+    welcome = cleanText(parseWelcome(raw))
   } catch {
     // An unreadable store means every feature uses its default (an empty map).
   }
   await update($, enabledAtom, () => stored)
+  await update($, welcomeAtom, () => welcome)
 
   await $.command.register({
     name: 'rich-ui',
@@ -76,6 +89,7 @@ export const runCommand: MatchedHook<
     closeOnEscape: true,
     rows:
       contentRows(features.length, statusLines, saveFailed) +
+      WELCOME_ROWS +
       (isOn(await read($, enabledAtom), auroraHeader) ? HEADER_ROWS : 0),
   })
 
@@ -94,9 +108,20 @@ export const renderPane: MatchedHook<
     enabled: await read($, enabledAtom),
     status: await read($, statusAtom),
     saveFailed: await read($, saveFailedAtom),
+    welcome: await read($, welcomeAtom),
     width: (e.props.bodyColumns ?? 80) - (e.props.placement === 'dock' ? 2 : 0),
     isDocked: e.props.placement === 'dock',
     version: VERSION,
+    onWelcome: async text => {
+      const welcome = cleanText(text)
+      await update($, welcomeAtom, () => welcome)
+      try {
+        await $.store.set(STORE_KEY, serialize(await read($, enabledAtom), custom(welcome)))
+        await update($, saveFailedAtom, () => false)
+      } catch {
+        await update($, saveFailedAtom, () => true)
+      }
+    },
     onToggle: async feature => {
       const enabled = await update($, enabledAtom, map => toggled(map, feature))
       await update($, statusAtom, map => withoutStatus(map, feature.id))
@@ -110,7 +135,7 @@ export const renderPane: MatchedHook<
         )
       }
       try {
-        await $.store.set(STORE_KEY, serialize(enabled))
+        await $.store.set(STORE_KEY, serialize(enabled, custom(await read($, welcomeAtom))))
         await update($, saveFailedAtom, () => false)
       } catch {
         // The choice holds for this session; the footer says it was not saved.

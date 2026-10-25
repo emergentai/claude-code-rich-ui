@@ -32,9 +32,9 @@ rich-ui features
      A nyan cat flies across the window once per session, then it is gone
 
  [ ] Doge greeting
-     A big orange "welcome" fades in from the left above the prompt, then disappear, once per session
+     A big orange "welcome" fades in from the left above the prompt, then fades out from the left, once per session
 
- Enter toggles · Esc closes · rich-ui 0.3.0
+ Enter toggles or saves · Esc closes · rich-ui 0.3.0
 ```
 
 Press a row, or press Enter on it, to flip the feature. Esc closes the pane. The

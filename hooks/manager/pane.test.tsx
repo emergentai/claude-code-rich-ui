@@ -132,3 +132,26 @@ test('toggling the status band clears and restores its line', async ($, on) => {
   expect(status.line).toMatch(/80%/)
   await ui.unmount()
 })
+
+test('the welcome text is typed into the pane, cleaned and saved with the choices', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'welcome' })
+  await ui.input({ key: 'welcome-text', text: 'Hello World!!!!!!!!!' })
+  await clock.settle()
+
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'hello world!' })
+  expect(JSON.stringify(saved.get('prefs'))).toBe(
+    JSON.stringify({ v: 1, enabled: {}, welcome: 'hello world!' }),
+  )
+  await ui.unmount()
+})
+
+test('a saved welcome text comes back in the pane', async ($, on) => {
+  await boot($, on, { prefs: { v: 1, enabled: {}, welcome: 'hi team' } })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  expect((await ui.find({ key: 'welcome-text' }))?.props).toMatchObject({ value: 'hi team' })
+  await ui.unmount()
+})

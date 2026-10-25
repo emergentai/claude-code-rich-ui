@@ -2,7 +2,10 @@ import { expect, test } from 'claude-code/testing'
 
 import {
   CAPTION,
+  MAX_TEXT,
+  cleanText,
   FADE_IN_MS,
+  FADE_OUT_MS,
   HOLD_MS,
   MAX_ROWS,
   MIN_ROWS,
@@ -49,19 +52,22 @@ test('the letters are Claude orange, lighter at the top than the bottom', () => 
   expect(letterColor(0, 0, 1)).toBe(top)
 })
 
-test('it sweeps in from the left, holds, then is simply gone', () => {
+test('it sweeps in from the left, holds, then sweeps out from the left', () => {
   expect(FADE_IN_MS).toBe(900)
   expect(HOLD_MS).toBe(1000)
-  expect(TOTAL_MS).toBe(FADE_IN_MS + HOLD_MS)
-  // Part way through, the left is in before the right.
-  const mid = FADE_IN_MS / 2
-  expect(columnVisibility(0, 80, mid)).toBeGreaterThan(columnVisibility(79, 80, mid))
+  expect(TOTAL_MS).toBe(FADE_IN_MS + HOLD_MS + FADE_OUT_MS)
+  // Part way in, the left is in before the right.
+  expect(columnVisibility(0, 80, FADE_IN_MS / 2)).toBeGreaterThan(columnVisibility(79, 80, FADE_IN_MS / 2))
   expect(columnVisibility(79, 80, 0)).toBe(0)
   // Fully in across the hold.
-  for (const ms of [FADE_IN_MS, FADE_IN_MS + HOLD_MS / 2, TOTAL_MS - 1]) {
+  for (const ms of [FADE_IN_MS, FADE_IN_MS + HOLD_MS / 2, FADE_IN_MS + HOLD_MS]) {
     expect(columnVisibility(0, 80, ms)).toBe(1)
     expect(columnVisibility(79, 80, ms)).toBe(1)
   }
+  // Part way out, the left has gone before the right.
+  const out = FADE_IN_MS + HOLD_MS + FADE_OUT_MS / 2
+  expect(columnVisibility(0, 80, out)).toBeLessThan(columnVisibility(79, 80, out))
+  expect(columnVisibility(0, 80, TOTAL_MS - 1)).toBe(0)
   expect(columnVisibility(0, 80, TOTAL_MS)).toBe(0)
 })
 
@@ -77,7 +83,7 @@ test('only the word is drawn: blank cells keep the terminal\'s own colours', () 
   expect(drawn).toBeGreaterThan(20)
 })
 
-test('the picture grows from the left and is empty at the start and the end', () => {
+test('the picture grows from the left, is empty at the start and the end, and holds still', () => {
   const count = (ms: number, from: number, to: number) => {
     const words = dogeWords(80, 8, ms)
     let n = 0
@@ -88,6 +94,7 @@ test('the picture grows from the left and is empty at the start and the end', ()
   expect(count(0, 0, 80)).toBe(0)
   expect(count(FADE_IN_MS * 0.4, 0, 40)).toBeGreaterThan(count(FADE_IN_MS * 0.4, 40, 80))
   expect(count(TOTAL_MS, 0, 80)).toBe(0)
+  expect(count(FADE_IN_MS + HOLD_MS + FADE_OUT_MS * 0.4, 0, 40)).toBeLessThan(count(FADE_IN_MS + HOLD_MS + FADE_OUT_MS * 0.4, 40, 80))
   expect(dogeCells(80, 8, FADE_IN_MS)).toBe(dogeCells(80, 8, FADE_IN_MS + 300))
 })
 
@@ -106,4 +113,29 @@ test('rows follow the room the engine gives, within the picture limits', () => {
 test('tiny and huge sizes do not throw', () => {
   expect(() => dogeCells(1, 1, FADE_IN_MS)).not.toThrow()
   expect(() => dogeCells(400, 28, FADE_IN_MS)).not.toThrow()
+})
+
+test('typed text is cleaned to what the font can draw, with the default when nothing is left', () => {
+  expect(cleanText('Hello   World')).toBe('hello world')
+  expect(cleanText('  hi!  ')).toBe('hi!')
+  expect(cleanText('héllo ☃ 42')).toBe('hllo 42')
+  expect(cleanText('x'.repeat(50))).toHaveLength(MAX_TEXT)
+  for (const empty of ['', '   ', '☃☃', undefined, 7]) expect(cleanText(empty)).toBe(CAPTION)
+})
+
+test('the font draws every letter and digit', () => {
+  for (const ch of 'abcdefghijklmnopqrstuvwxyz0123456789') {
+    expect(textBitmap(ch).flat().some(Boolean)).toBe(true)
+  }
+  expect(textBitmap('Hi')).toEqual(textBitmap('hi'))
+})
+
+test('the sign draws whatever text it is given, centred and sized to fit', () => {
+  const short = layoutFor(80, 16, 'hi')
+  const long = layoutFor(80, 16, 'hello world')
+
+  expect(short.scale).toBeGreaterThan(long.scale)
+  expect(short.textX).toBeGreaterThan(0)
+  expect(dogeCells(80, 8, FADE_IN_MS, 'hi')).not.toBe(dogeCells(80, 8, FADE_IN_MS))
+  expect(layoutFor(80, 16)).not.toBe(short)
 })

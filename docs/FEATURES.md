@@ -66,7 +66,7 @@ A slowly shifting aurora gradient (half-block cells, theme-aware) in places wher
 clutter: a swatch beside the spinner, a once-per-session greeting sweep above the prompt, an
 animated wordmark atop the `/rich-ui` pane, a gradient bar for the usage band, and a nyan cat
 that flies across the whole window once per session, and a big orange
-"welcome" that fades in from the left and then disappears. Pure delight,
+"welcome" that fades in and out from the left. Pure delight,
 so each is off until turned on; terminal only; the stock UI is untouched when off. These are
 candidates to be judged by hand: the ones not liked will be cut before a release.
 

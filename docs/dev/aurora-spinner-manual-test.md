@@ -66,7 +66,7 @@ its limit).
 
 | # | Do | Expected |
 |---|---|---|
-| e | Turn it on at an idle prompt | A big orange "welcome" fades in from the left in the middle above the prompt, holds about one second, then vanishes at once (no fade out), about two seconds in all; the terminal's own background shows around it, no coloured block; nothing is left above the prompt. |
+| e | Turn it on at an idle prompt | A big orange "welcome" fades in from the left in the middle above the prompt, holds about one second, then fades out from the left, about three seconds in all; the terminal's own background shows around it, no coloured block; nothing is left above the prompt. |
 | f | A tall window, a short one (24 rows), a narrow one (under 50 columns) | Taller window, bigger word; a short or narrow one has none. |
 | g | Dark and light themes | The orange reads on both. |
 | h | `/clear` | It plays again. |

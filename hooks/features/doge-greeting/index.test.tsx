@@ -3,7 +3,7 @@ import { expect, test } from 'claude-code/testing'
 import { boot } from '../../core/test-harness'
 import { FRAME_MS } from '../aurora-common/aurora'
 import { MAX_COLUMNS } from '.'
-import { FADE_IN_MS, TOTAL_MS } from './doge'
+import { FADE_IN_MS, FADE_OUT_MS, TOTAL_MS, dogeCells } from './doge'
 
 const ON = { prefs: { v: 1, enabled: { 'doge-greeting': true } } }
 
@@ -40,9 +40,9 @@ test('on: a banner as wide as the band, over the engine band, repainted until th
 
   await clock.advance(TOTAL_MS + 1000)
   const total = blits.calls.length
-  // Only the sweep-in changes the picture; the hold sends nothing, the end is handed back.
-  expect(total).toBeGreaterThanOrEqual(Math.floor(FADE_IN_MS / FRAME_MS) - 3)
-  expect(total).toBeLessThanOrEqual(Math.ceil(FADE_IN_MS / FRAME_MS) + 2)
+  // Only the sweeps change the picture; the hold sends nothing, the end is handed back.
+  expect(total).toBeGreaterThanOrEqual(Math.floor((FADE_IN_MS + FADE_OUT_MS) / FRAME_MS) - 6)
+  expect(total).toBeLessThanOrEqual(Math.ceil((FADE_IN_MS + FADE_OUT_MS) / FRAME_MS) + 3)
   expect(blits.calls.every(c => c.key === 'doge-greeting' && c.requestId === 'band-1')).toBe(true)
   expect(new Set(blits.calls.map(c => c.cells)).size).toBe(total)
   await clock.advance(5000)
@@ -75,14 +75,14 @@ test('once played, a later draw hands the band back to the engine', async ($, on
 test('a redraw during the show carries on, not a restart', async ($, on) => {
   const { clock, blits } = await boot($, on, ON)
   const first = await $.ui.mount(band())
-  await clock.advance(2000)
+  await clock.advance(FADE_IN_MS + 300)
   await first.unmount()
   const second = await $.ui.mount(band({ requestId: 'band-2' }))
   blits.calls.length = 0
 
   await clock.advance(TOTAL_MS)
 
-  expect(blits.calls.length).toBeLessThanOrEqual(2)
+  expect(blits.calls.length).toBeLessThanOrEqual(Math.ceil(FADE_OUT_MS / FRAME_MS) + 3)
   await second.unmount()
 })
 
@@ -130,7 +130,7 @@ test('a narrow or unmeasured window, or another surface, keeps the engine band',
     expect(await ui.find({ type: 'Raster' })).toBeUndefined()
     await ui.unmount()
   }
-  await clock.advance(2000)
+  await clock.advance(FADE_IN_MS + 300)
   expect(blits.calls).toHaveLength(0)
 })
 
@@ -181,5 +181,15 @@ test('turning it off mid-flight stops it', async ($, on) => {
   expect(blits.calls.length).toBeLessThanOrEqual(after + 1)
   expect(await ui.find({ type: 'Raster' })).toBeUndefined()
   await pane.unmount()
+  await ui.unmount()
+})
+
+test('it draws the text the person set in the pane', async ($, on) => {
+  const { blits, clock } = await boot($, on, { prefs: { v: 1, enabled: { 'doge-greeting': true }, welcome: 'hi' } })
+  const ui = await $.ui.mount(band())
+  await clock.advance(FADE_IN_MS + FRAME_MS * 2)
+
+  expect(blits.calls.at(-1)?.cells).toBe(dogeCells(100, 19, FADE_IN_MS, 'hi'))
+  expect(blits.calls.at(-1)?.cells).not.toBe(dogeCells(100, 19, FADE_IN_MS))
   await ui.unmount()
 })

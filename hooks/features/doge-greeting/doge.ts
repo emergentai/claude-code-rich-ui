@@ -9,30 +9,79 @@ export const MIN_ROWS = 7
 export const MAX_ROWS = 28
 export const FADE_IN_MS = 900
 export const HOLD_MS = 1000
-// It fades in, stays, and is then simply gone: no fade out.
-export const TOTAL_MS = FADE_IN_MS + HOLD_MS
+export const FADE_OUT_MS = 900
+// It fades in from the left, stays, and fades out from the left the same way.
+export const TOTAL_MS = FADE_IN_MS + HOLD_MS + FADE_OUT_MS
 
 const UPPER_HALF = 0x2580
 const LOWER_HALF = 0x2584
 const DEFAULT_COLOR = 0x01000000 // bit 24 alone: the terminal's own colour
 export const CAPTION = 'welcome'
 
-// 3 or 5 wide, 5 tall; '#' is lit. Only the letters of the caption.
+// 3 (or 5) wide, 5 tall; '#' is lit. Letters are drawn as capitals whatever case is typed.
 const FONT: Record<string, readonly string[]> = {
-  w: ['#...#', '#...#', '#.#.#', '##.##', '#...#'],
-  e: ['###', '#..', '##.', '#..', '###'],
-  l: ['#..', '#..', '#..', '#..', '###'],
+  a: ['.#.', '#.#', '###', '#.#', '#.#'],
+  b: ['##.', '#.#', '##.', '#.#', '##.'],
   c: ['.##', '#..', '#..', '#..', '.##'],
-  o: ['.#.', '#.#', '#.#', '#.#', '.#.'],
+  d: ['##.', '#.#', '#.#', '#.#', '##.'],
+  e: ['###', '#..', '##.', '#..', '###'],
+  f: ['###', '#..', '##.', '#..', '#..'],
+  g: ['.##', '#..', '#.#', '#.#', '.##'],
+  h: ['#.#', '#.#', '###', '#.#', '#.#'],
+  i: ['###', '.#.', '.#.', '.#.', '###'],
+  j: ['..#', '..#', '..#', '#.#', '.#.'],
+  k: ['#.#', '#.#', '##.', '#.#', '#.#'],
+  l: ['#..', '#..', '#..', '#..', '###'],
   m: ['#...#', '##.##', '#.#.#', '#...#', '#...#'],
+  n: ['##.', '#.#', '#.#', '#.#', '#.#'],
+  o: ['.#.', '#.#', '#.#', '#.#', '.#.'],
+  p: ['##.', '#.#', '##.', '#..', '#..'],
+  q: ['.#.', '#.#', '#.#', '##.', '.##'],
+  r: ['##.', '#.#', '##.', '#.#', '#.#'],
+  s: ['.##', '#..', '.#.', '..#', '##.'],
+  t: ['###', '.#.', '.#.', '.#.', '.#.'],
+  u: ['#.#', '#.#', '#.#', '#.#', '###'],
+  v: ['#.#', '#.#', '#.#', '#.#', '.#.'],
+  w: ['#...#', '#...#', '#.#.#', '##.##', '#...#'],
+  x: ['#.#', '#.#', '.#.', '#.#', '#.#'],
+  y: ['#.#', '#.#', '.#.', '.#.', '.#.'],
+  z: ['###', '..#', '.#.', '#..', '###'],
+  '0': ['###', '#.#', '#.#', '#.#', '###'],
+  '1': ['.#.', '##.', '.#.', '.#.', '###'],
+  '2': ['##.', '..#', '.#.', '#..', '###'],
+  '3': ['##.', '..#', '.#.', '..#', '##.'],
+  '4': ['#.#', '#.#', '###', '..#', '..#'],
+  '5': ['###', '#..', '##.', '..#', '##.'],
+  '6': ['.##', '#..', '###', '#.#', '###'],
+  '7': ['###', '..#', '.#.', '.#.', '.#.'],
+  '8': ['###', '#.#', '###', '#.#', '###'],
+  '9': ['###', '#.#', '###', '..#', '##.'],
+  '!': ['.#.', '.#.', '.#.', '...', '.#.'],
+  '?': ['##.', '..#', '.#.', '...', '.#.'],
+  '.': ['...', '...', '...', '...', '.#.'],
+  '-': ['...', '...', '###', '...', '...'],
+  ' ': ['..', '..', '..', '..', '..'],
 }
 const GLYPH_H = 5
+
+// What the person typed, as the sign can draw it: the letters, digits and a few marks, one
+// space between words, at most MAX_TEXT characters; the default when nothing is left.
+export const MAX_TEXT = 12
+
+export function cleanText(raw: unknown): string {
+  if (typeof raw !== 'string') return CAPTION
+  let out = ''
+  for (const ch of raw.toLowerCase()) if (FONT[ch] !== undefined) out += ch
+  out = out.replace(/ +/g, ' ').trim().slice(0, MAX_TEXT).trim()
+
+  return out === '' ? CAPTION : out
+}
 
 export function textBitmap(text: string): boolean[][] {
   const bitmap: boolean[][] = Array.from({ length: GLYPH_H }, () => [])
   let isFirst = true
 
-  for (const ch of text) {
+  for (const ch of text.toLowerCase()) {
     const glyph = FONT[ch]
     if (glyph === undefined) continue
     for (let y = 0; y < GLYPH_H; y++) {
@@ -54,30 +103,25 @@ function hash01(x: number, y: number): number {
   return (h >>> 0) / 4294967296
 }
 
-// How far the sweep has got (0 to 1 across the width) at `ms`; 1 once it is in, and the
-// show is over after TOTAL_MS (see `isOver`).
-export function progressAt(ms: number): number {
-  if (ms <= 0) return 0
-
-  return Math.min(1, ms / FADE_IN_MS)
-}
-
-export function isOver(ms: number): boolean {
-  return ms >= TOTAL_MS
-}
-
 // The share of the soft edge, as a fraction of the width, over which a column goes from
-// nothing to fully there.
+// nothing to fully there (or back).
 const EDGE = 0.35
 
-// How much of column `x` of `width` shows at `ms` (0 to 1): the sweep's front moves left to
-// right and leaves each column fading up behind it.
-export function columnVisibility(x: number, width: number, ms: number): number {
-  if (isOver(ms)) return 0
-  const front = progressAt(ms) * (1 + EDGE)
-  const v = (front - x / width) / EDGE
+// How far a sweep of `ms` into its `duration` has got, in widths plus the soft edge.
+function front(ms: number, duration: number): number {
+  return Math.max(0, Math.min(1, ms / duration)) * (1 + EDGE)
+}
 
-  return Math.max(0, Math.min(1, v))
+// How much of column `x` of `width` shows at `ms` (0 to 1): a front moves left to right
+// fading each column up behind it; after the hold a second front fades them out the same
+// way, left first.
+export function columnVisibility(x: number, width: number, ms: number): number {
+  if (ms >= TOTAL_MS) return 0
+  const at = x / width
+  const up = Math.max(0, Math.min(1, (front(ms, FADE_IN_MS) - at) / EDGE))
+  const down = Math.max(0, Math.min(1, (front(ms - FADE_IN_MS - HOLD_MS, FADE_OUT_MS) - at) / EDGE))
+
+  return up * (1 - down)
 }
 
 // Claude's orange, a touch lighter at the top of the letters and deeper at the bottom.
@@ -101,12 +145,12 @@ export type Layout = {
   bits: boolean[][]
 }
 
-let cached: Layout | undefined
+let cached: (Layout & { text: string }) | undefined
 
 // The word as big as the band allows (a whole number of pixels a dot), centred.
-export function layoutFor(width: number, height: number): Layout {
-  if (cached !== undefined && cached.width === width && cached.height === height) return cached
-  const bits = textBitmap(CAPTION)
+export function layoutFor(width: number, height: number, text: string = CAPTION): Layout {
+  if (cached?.width === width && cached.height === height && cached.text === text) return cached
+  const bits = textBitmap(text)
   const bitsW = bits[0]?.length ?? 1
   const scale = Math.max(
     1,
@@ -115,6 +159,7 @@ export function layoutFor(width: number, height: number): Layout {
   const textW = bitsW * scale
   const textH = GLYPH_H * scale
   cached = {
+    text,
     width,
     height,
     textX: Math.round((width - textW) / 2),
@@ -137,10 +182,10 @@ export function sourcePixel(x: number, y: number, layout: Layout): number | unde
 }
 
 // The banner's cells at `ms`, `columns` wide and `rows` tall, as 32-bit words. Pixels that
-// are not part of the word, or have not faded in, leave the terminal's own colours.
-export function dogeWords(columns: number, rows: number, ms: number): number[] {
+// are not part of the word, or are not faded in (or have faded out), leave the terminal's own colours.
+export function dogeWords(columns: number, rows: number, ms: number, text: string = CAPTION): number[] {
   if (columns < 1 || rows < 1) return []
-  const layout = layoutFor(columns, rows * 2)
+  const layout = layoutFor(columns, rows * 2, text)
   const words: number[] = []
   const pixel = (x: number, y: number) =>
     hash01(x, y) < columnVisibility(x, columns, ms) ? sourcePixel(x, y, layout) : undefined
@@ -159,8 +204,8 @@ export function dogeWords(columns: number, rows: number, ms: number): number[] {
   return words
 }
 
-export function dogeCells(columns: number, rows: number, ms: number): string {
-  return encodeWords(dogeWords(columns, rows, ms))
+export function dogeCells(columns: number, rows: number, ms: number, text: string = CAPTION): string {
+  return encodeWords(dogeWords(columns, rows, ms, text))
 }
 
 // How tall the band may be: the engine's room less one row, within the sizes the picture

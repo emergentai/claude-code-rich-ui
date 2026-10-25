@@ -13,7 +13,7 @@ the stock UI untouched.
 | Aurora pane header | `aurora-header` | the `rich-ui` wordmark in pixel type above the `/rich-ui` pane | while the pane is open |
 | Aurora usage meter | `aurora-meter` | the status band as a row above the prompt with a gradient bar | only when the status band would show |
 | Nyan greeting | `nyan-greeting` | a 7-row banner across the whole window above the prompt | once per session (and after `/clear`), about 4.3 s |
-| Doge greeting | `doge-greeting` | a big orange "welcome" above the prompt, fading in from the left | once per session (and after `/clear`), about 2 s |
+| Doge greeting | `doge-greeting` | a big orange "welcome" above the prompt, fading in and out from the left | once per session (and after `/clear`), about 3 s |
 
 ## Aurora spinner
 
@@ -72,10 +72,14 @@ runs or a survey holds the band. `nyan.ts` is pure: `pixelAt(x, y, ms, width)` i
 (The id and name are kept from an earlier doge version; it is now a plain sign.) A big "welcome" in
 Claude's orange (lighter at the top of the letters, deeper at the bottom) centred in the band, in
 lowercase pixel type as large as the band allows, over the terminal's own background. It fades in
-from the left over 0.9 s, holds for 1 s, and is then simply gone: there is no fade out, the band goes
-straight back to the engine's (about two seconds in all). The fade gives each pixel a fixed random
+from the left over 0.9 s, holds for 1 s, then fades out from the left over 0.9 s and the band goes
+back to the engine's (about three seconds in all). The fade gives each pixel a fixed random
 threshold, so it needs no knowledge of the background colour. Once per session and again after
 `/clear`. While it holds still nothing is sent to the terminal.
+
+The word can be changed in the `/rich-ui` pane: type in the "Welcome sign text" field and press Enter. It
+is kept with the on/off choices, drawn in pixel type, limited to letters, digits and
+`! ? . -` and 12 characters; an empty field goes back to "welcome".
 
 The band is as wide as the prompt and as tall as the engine allows (`maxRows - 1`, 7 to 28 rows, at
 most half the terminal), so the word is largest in a big window. Skipped when the band has fewer than
