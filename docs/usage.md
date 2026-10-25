@@ -2,24 +2,29 @@
 
 ## Turning features on and off
 
-Type `/rich-ui`. A small pane lists every feature with a checkbox:
+Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 
 ```
-rich-ui features
+ ▀     █           ▀
+ █▀▀ █ █▀▀ █▀▄ ▄▄▄ █ █ █
+ █   █ █▄▄ █ █     █▄█ █                                     3 of 3 on
+ ──────────────────────────────────────────────────────────────────────
 
- [x] Mermaid diagrams
-     Draw mermaid diagrams as text diagrams
+ ● on   Mermaid diagrams
+        Draw mermaid diagrams as text diagrams
 
- [x] Status band
-     Show context and plan usage under the prompt when they run high
+ ● on   Status band
+        Show context and plan usage under the prompt when they run high
 
- [x] Markdown preview
-     Open a markdown file Claude links to, rendered, in a pane
+ ● on   Markdown preview
+        Open a markdown file Claude links to, rendered, in a pane
 
  Enter toggles · Esc closes · rich-ui 0.3.0
 ```
 
-Press a row, or press Enter on it, to flip the feature. Esc closes the pane. The
+Press a row, or press Enter on it, to flip the feature. Under the mouse a row
+lightens. A small `error` or `note` tag beside a name means that feature has
+something to tell you on the line below. Esc closes the pane. The
 pane stays open after a toggle, so you can change several features in one visit.
 
 - A change applies right away, to everything in the chat: turning Mermaid off puts
