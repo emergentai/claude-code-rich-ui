@@ -33,7 +33,7 @@ Out of v1: reset to defaults, number hotkeys, per-feature settings, and any way 
  ○ off  Status band
         Show context and plan usage under the prompt when they run high
 
- Enter toggles · Esc closes · rich-ui 0.3.0
+ Enter toggles · Esc closes · rich-ui 0.4.0
 ```
 
 Elements, top to bottom, all inside a one-cell gutter (plus one more when docked, because the dock supplies none):

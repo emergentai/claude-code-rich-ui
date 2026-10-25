@@ -60,7 +60,7 @@ nothing opens by itself. The pane follows the file when Claude edits it.
 Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike:
 [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 
-### Zen spinner and Zen footer (experimental, not yet released)
+### Zen spinner and Zen footer (experimental, v0.4.0)
 
 Two switches under Experimental in `/rich-ui`, the spinner on by default and the footer off. The Zen spinner makes the
 working row one line with a gliding highlight on a short track, the mode and the seconds, in
@@ -78,7 +78,7 @@ Reference: [`features/zen.md`](features/zen.md). Spike, design and the `/focus` 
 [`dev/calm-mode-spike.md`](dev/calm-mode-spike.md), [`dev/calm-mode-design.md`](dev/calm-mode-design.md),
 [`dev/calm-mode-focus-research.md`](dev/calm-mode-focus-research.md).
 
-### Manager pane refresh (not yet released)
+### Manager pane refresh (v0.4.0)
 
 `/rich-ui` looks finished: a block-letter banner with a gradient (terminal only), real
 `● on` / `○ off` switches, rows that lighten under the mouse, a small `error` or `note`
@@ -94,7 +94,7 @@ Reference: [`features/manager-refresh.md`](features/manager-refresh.md). Manual 
 Features here are tried out and may be removed in any future version. Each has its own switch in
 `/rich-ui`, under an **Experimental** header.
 
-### Welcome greeting (unreleased)
+### Welcome greeting (v0.4.0)
 
 A big orange "welcome" sweeps in from the left above the prompt, holds a moment and sweeps out, once per
 session, and ends at once when you send a message. On by default. The word can be changed in

@@ -21,7 +21,7 @@ with a switch: the manager is always present. Behaviour and keys are unchanged.
  ● on   Markdown preview
         Open a markdown file Claude links to, rendered, in a pane
 
- Enter toggles · Esc closes · rich-ui 0.3.0
+ Enter toggles · Esc closes · rich-ui 0.4.0
 ```
 
 - **Banner.** "rich-ui" in half-block type with an orange-to-violet gradient, three rows,
