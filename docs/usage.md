@@ -52,7 +52,7 @@ Features under **Experimental** are tried out and may be removed in any future v
 
 ## Welcome greeting (experimental)
 
-On by default (switch it off in `/rich-ui`). Once per session (and after `/clear`) a big orange "welcome" sweeps
+On by default (switch it off in `/rich-ui`). Once per session a big orange "welcome" sweeps
 in from the left above the prompt, holds half a second and sweeps out. Send a message and it is gone at
 once. Change the word in the text box under the row: it saves as you type. Details:
 [`features/welcome-greeting.md`](features/welcome-greeting.md).

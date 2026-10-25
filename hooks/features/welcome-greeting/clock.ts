@@ -33,9 +33,3 @@ export function playStartedAt(): number | undefined {
 export function startPlay(at: number): void {
   startedAt = at
 }
-
-// The session ended or was cleared: stop painting, and let it play once more after a /clear.
-export function resetGreeting(): void {
-  stopTicker()
-  startedAt = undefined
-}

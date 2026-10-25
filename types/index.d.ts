@@ -35,6 +35,7 @@ declare module 'claude-code' {
       enabled: Shaped<EnabledMap>
       welcome: Shaped<string>
       welcomeRev: Shaped<number>
+      'welcome-played': Shaped<boolean>
       status: Shaped<StatusMap>
       saveFailed: Shaped<boolean>
       shown: Shaped<ShownMap>

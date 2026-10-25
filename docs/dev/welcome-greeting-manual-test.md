@@ -12,7 +12,7 @@ claude --plugin-dir <this worktree>
 |---|---|---|
 | 1 | `/rich-ui` | Mermaid, Status band and Markdown preview, then an **Experimental · may be removed in a future version** header, then Welcome greeting (on) with a rounded text box under it (and an `n/20` counter at its right edge). The summary counts it ("4 of 4 on"). |
 | 2 | Start a fresh session (it is on by default), or turn it off and on and close the pane | Within a moment a big orange "welcome" sweeps in from the left above the prompt, holds half a second, sweeps out from the left; nothing is left above the prompt. |
-| 3 | `/clear` | It plays again; running it twice in a row without `/clear` does not. |
+| 3 | `/clear`, or reload the plugin | It does not play again. |
 | 4 | Type a message and press Enter while it is still showing | It is gone at once; your message and the answer are fully visible; it does not return. |
 | 5 | A short window (under 24 rows), a narrow one (under 50 columns) | No greeting. |
 | 6 | Dark and light themes | The orange word reads on both. |
