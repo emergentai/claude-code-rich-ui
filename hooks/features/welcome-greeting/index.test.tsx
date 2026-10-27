@@ -108,6 +108,35 @@ test('/clear does not play it again', async ($, on) => {
   await again.unmount()
 })
 
+test('the greeting is recorded for its session', async ($, on) => {
+  const { clock, saved } = await boot($, on, ON)
+  const ui = await $.ui.mount(band())
+  await clock.advance(10)
+
+  expect(saved.get('welcome-played')).toBe('s1')
+  await ui.unmount()
+})
+
+test('a session that comes back in a new process is not greeted again', async ($, on) => {
+  // A new process: the module's clock and the atom are fresh, the store is not.
+  const { clock } = await boot($, on, { ...ON, 'welcome-played': 's1' })
+  const ui = await $.ui.mount(band())
+  await clock.advance(10)
+
+  expect(await ui.find({ type: 'Raster' })).toBeUndefined()
+  await ui.unmount()
+})
+
+test('a session that already has prompts is not greeted', async ($, on) => {
+  const { clock, session } = await boot($, on, ON)
+  session.turns = 3
+  const ui = await $.ui.mount(band())
+  await clock.advance(10)
+
+  expect(await ui.find({ type: 'Raster' })).toBeUndefined()
+  await ui.unmount()
+})
+
 test('a band with too little room keeps the engine band', async ($, on) => {
   await boot($, on, ON)
   const ui = await $.ui.mount(band({}, { maxRows: 6 }))
