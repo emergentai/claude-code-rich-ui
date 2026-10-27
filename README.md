@@ -35,13 +35,22 @@ Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 | Mermaid diagrams | Complete mermaid blocks in Claude's replies are drawn as text diagrams. A dim `show source` line above each one swaps it back to the code. |
 | Status band | A line under the prompt shows context and plan usage, only when they run high. |
 | Markdown preview | Click a link to a markdown file in a reply and it opens, rendered, in a pane. |
-| Attachment peek (experimental) | A small tile above the prompt for each image you drop, showing the picture. On by default; may be removed in a future version. |
-| Welcome greeting (experimental) | A big orange "welcome" sweeps in above the prompt once per session. On by default (switch it off in `/rich-ui`); may be removed in a future version. |
-| Zen spinner and Zen footer (experimental) | A quiet one-line spinner with the seconds and a dim turn-end time (on by default), and a random zen saying in place of the hint line under the prompt (off by default). Their own rows in `/rich-ui`; may be removed in a future version. |
 
 Flowcharts (subgraphs included), sequence, class, state, ER, XY chart, pie, C4 and
 architecture diagrams are drawn. Any other type stays the code block it always was, and so does anything too big for your
 window.
+
+### 🧪 Experimental
+
+Newer and more of a taste. They sit under **Experimental** in `/rich-ui`, on by default
+unless noted, and any of them may change or be removed in a future version.
+
+| Feature | What it does |
+|---|---|
+| Attachment peek | A small tile above the prompt for each image you drop, showing the picture. |
+| Welcome greeting | A big orange "welcome" sweeps in above the prompt once per session. You can change the word in `/rich-ui`. |
+| Zen spinner | A quiet one-line spinner with the seconds and a dim turn-end time. |
+| Zen footer | A random zen saying in place of the hint line under the prompt. Off by default. |
 
 It all runs locally. No network calls, no telemetry.
 
