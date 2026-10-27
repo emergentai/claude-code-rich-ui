@@ -64,7 +64,10 @@ export const refreshOnWrite: Hook<'tool.call'> = async ($, e, next) => {
     if ((await read($, previewAtom)).path !== path) return result
 
     const { text, isTruncated } = clipText(await $.fs.read(path))
-    await update($, previewAtom, () => ({ path, text, isTruncated }))
+    // Dropped if the pane has moved to another file while the read was out.
+    await update($, previewAtom, current =>
+      current.path === path ? { path, text, isTruncated } : current,
+    )
   } catch {
     // The preview is a convenience; it must not fail a tool call.
   }
@@ -110,14 +113,20 @@ export const renderLinkedReply: MatchedHook<
         if (!opened.isPlaced) $.ui.toast(`Markdown preview could not open: ${opened.reason}`)
 
         const path = pathFromHref(href, cwd)
+        // The pane is on this file from now on. A read for an earlier press that
+        // finishes later finds another path here and is dropped.
+        await update($, previewAtom, () => ({ path }))
         try {
           const { text: body, isTruncated } = clipText(await $.fs.read(path))
-          await update($, previewAtom, () => ({ path, text: body, isTruncated }))
+          await update($, previewAtom, current =>
+            current.path === path ? { path, text: body, isTruncated } : current,
+          )
         } catch (error) {
-          await update($, previewAtom, () => ({
-            path,
-            error: `Could not read ${path}: ${describeError(error)}`,
-          }))
+          await update($, previewAtom, current =>
+            current.path === path
+              ? { path, error: `Could not read ${path}: ${describeError(error)}` }
+              : current,
+          )
         }
       })()
     },

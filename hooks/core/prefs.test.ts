@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { parseStored, parseWelcome, serialize, toggled } from './prefs'
+import { mergePrefs, parseStored, parseWelcome, serialize, toggled } from './prefs'
 
 const FEATURE = { id: 'mermaid', defaultEnabled: true }
 
@@ -39,4 +39,21 @@ test('the welcome text is kept beside the choices, and left out when unset', () 
   expect(parseWelcome(null)).toBeUndefined()
   // Choices saved before the text existed still load.
   expect(parseStored(serialize({ a: false }, 'hi'))).toEqual({ a: false })
+})
+
+test('a save keeps what another session stored and changes only what it names', async () => {
+  const stored = { v: 1, enabled: { mermaid: false, zen: true }, welcome: 'Hi from B' }
+
+  const toggle = mergePrefs(stored, { enabled: { 'markdown-preview': false } })
+  expect(JSON.stringify(toggle.enabled)).toBe(
+    JSON.stringify({ mermaid: false, zen: true, 'markdown-preview': false }),
+  )
+  expect(toggle.welcome).toBe('Hi from B')
+
+  const typed = mergePrefs(stored, { welcome: { text: 'Mine' } })
+  expect(JSON.stringify(typed.enabled)).toBe(JSON.stringify({ mermaid: false, zen: true }))
+  expect(typed.welcome).toBe('Mine')
+
+  expect(mergePrefs(stored, { welcome: { text: undefined } }).welcome).toBe(undefined)
+  expect(JSON.stringify(mergePrefs(undefined, {}).enabled)).toBe('{}')
 })

@@ -205,6 +205,72 @@ test('a second link replaces the first file, and a failed one replaces it with t
   await third.ui.unmount()
 })
 
+test('a slow read for an earlier link does not replace the file chosen after it', async ($, on) => {
+  const { files, clock, readGates } = await boot($, on)
+  files.set('/repo/a.md', 'alpha')
+  files.set('/repo/b.md', 'beta')
+  let release = () => {}
+  readGates.set('/repo/a.md', new Promise<void>(resolve => (release = resolve)))
+  const ui = await $.ui.mount(message('[a](/repo/a.md) [b](/repo/b.md)') as never)
+
+  await ui.press({ key: 'reply', link: { href: '/repo/a.md' } } as never)
+  await ui.press({ key: 'reply', link: { href: '/repo/b.md' } } as never)
+  const pane = await mountPane($)
+  expect(await pane.find({ type: 'Markdown', text: 'beta' })).toBeDefined()
+
+  release()
+  await clock.settle()
+
+  expect(await pane.find({ type: 'Markdown', text: 'beta' })).toBeDefined()
+  expect(await pane.find({ type: 'Markdown', text: 'alpha' })).toBeUndefined()
+  await pane.unmount()
+  await ui.unmount()
+})
+
+test('a failed read for an earlier link does not replace the file chosen after it', async ($, on) => {
+  const { files, clock, readGates } = await boot($, on)
+  files.set('/repo/b.md', 'beta')
+  let release = () => {}
+  readGates.set('/repo/gone.md', new Promise<void>(resolve => (release = resolve)))
+  const ui = await $.ui.mount(message('[g](/repo/gone.md) [b](/repo/b.md)') as never)
+
+  await ui.press({ key: 'reply', link: { href: '/repo/gone.md' } } as never)
+  await ui.press({ key: 'reply', link: { href: '/repo/b.md' } } as never)
+  const pane = await mountPane($)
+
+  release()
+  await clock.settle()
+
+  expect(await pane.find({ type: 'Markdown', text: 'beta' })).toBeDefined()
+  expect(await pane.find({ type: 'Text', text: /Could not read/ })).toBeUndefined()
+  await pane.unmount()
+  await ui.unmount()
+})
+
+test('a refresh that finishes after another file was chosen is dropped', async ($, on) => {
+  const { files, clock, readGates } = await boot($, on)
+  files.set('/repo/a.md', 'alpha v1')
+  files.set('/repo/b.md', 'beta')
+  const ui = await $.ui.mount(message('[a](/repo/a.md) [b](/repo/b.md)') as never)
+  await ui.press({ key: 'reply', link: { href: '/repo/a.md' } } as never)
+  const pane = await mountPane($)
+  expect(await pane.find({ type: 'Markdown', text: 'alpha v1' })).toBeDefined()
+
+  let release = () => {}
+  readGates.set('/repo/a.md', new Promise<void>(resolve => (release = resolve)))
+  files.set('/repo/a.md', 'alpha v2')
+  void $.tool.call({ tool: 'Write', file_path: '/repo/a.md', content: 'x' } as never)
+  await clock.settle()
+  await ui.press({ key: 'reply', link: { href: '/repo/b.md' } } as never)
+  release()
+  await clock.settle()
+
+  expect(await pane.find({ type: 'Markdown', text: 'beta' })).toBeDefined()
+  expect(await pane.find({ type: 'Markdown', text: /alpha/ })).toBeUndefined()
+  await pane.unmount()
+  await ui.unmount()
+})
+
 test('an edit to a different file leaves the preview alone', async ($, on) => {
   const { files, clock } = await boot($, on)
   files.set('/repo/a.md', 'alpha')

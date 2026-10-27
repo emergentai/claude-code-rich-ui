@@ -4,7 +4,8 @@ import type { Hook, MatchedHook, Timer } from 'claude-code'
 import type { EnabledMap, StatusMap, UsageSnapshot } from '../../types'
 import { withoutStatus } from '../core/errors'
 import { isOn } from '../core/gate'
-import { parseStored, parseWelcome, serialize, STORE_KEY, toggled } from '../core/prefs'
+import { mergePrefs, parseStored, parseWelcome, serialize, STORE_KEY, toggled } from '../core/prefs'
+import type { PrefsChange } from '../core/prefs'
 import { features } from '../core/registry'
 import { bandText, segmentsFor } from '../features/status-band/band'
 import { statusBand } from '../features/status-band'
@@ -20,6 +21,9 @@ const MAX_FIELD = MAX_TEXT
 const SAVE_PAUSE_MS = 400
 // The pending write after the last keystroke, so a burst of typing is one write.
 let saveTimer: Timer | undefined
+// Typed in this session and not yet stored. Only then does a save carry the welcome text;
+// otherwise the stored one stands, which may have been changed by another session.
+let isWelcomeUnsaved = false
 
 // Only a text the person changed is stored; the default stays unsaved.
 const custom = (welcome: string) => (welcome === CAPTION ? undefined : welcome)
@@ -60,6 +64,44 @@ const saveFailedAtom = atom(
   false,
   { shape: 'save-failed-1' },
 )
+
+// Saves go one at a time, each reading the store just before it writes, so two quick
+// saves do not both start from the same old copy.
+let saving: Promise<unknown> = Promise.resolve()
+
+// Writes only what `change` names on top of the store as it is now, so a value another
+// session saved since this one loaded is not written back over. Returns what was stored,
+// or undefined when the write failed (the footer then says it was not saved).
+function savePrefs(
+  $: Parameters<Hook<'session.start'>>[0],
+  change: PrefsChange,
+) {
+  const run = async () => {
+    try {
+      let raw: unknown
+      try {
+        raw = await $.store.get(STORE_KEY)
+      } catch {
+        // Unreadable: start from what this session holds, as before.
+        raw = serialize(await read($, enabledAtom), custom(cleanText(await read($, welcomeAtom))))
+      }
+      const merged = mergePrefs(raw, change)
+      await $.store.set(STORE_KEY, serialize(merged.enabled, merged.welcome))
+      if (change.welcome) isWelcomeUnsaved = false
+      await update($, saveFailedAtom, () => false)
+
+      return merged
+    } catch {
+      await update($, saveFailedAtom, () => true)
+
+      return undefined
+    }
+  }
+  const result = saving.then(run)
+  saving = result
+
+  return result
+}
 
 // One session.start hook does both jobs, because the engine allows only one
 // unmatched hook per event: it loads the saved choices and registers /rich-ui.
@@ -131,28 +173,19 @@ export const renderPane: MatchedHook<
     // draws, and the store write waits for a pause in typing. Enter just writes it at once.
     onWelcome: async text => {
       await update($, welcomeAtom, () => text.slice(0, MAX_FIELD))
+      isWelcomeUnsaved = true
       saveTimer?.cancel()
       saveTimer = $.clock.after(SAVE_PAUSE_MS, () => {
         void (async () => {
           const welcome = cleanText(await read($, welcomeAtom))
-          try {
-            await $.store.set(STORE_KEY, serialize(await read($, enabledAtom), custom(welcome)))
-            await update($, saveFailedAtom, () => false)
-          } catch {
-            await update($, saveFailedAtom, () => true)
-          }
+          await savePrefs($, { welcome: { text: custom(welcome) } })
         })()
       })
     },
     onWelcomeDone: async () => {
       saveTimer?.cancel()
       const welcome = cleanText(await read($, welcomeAtom))
-      try {
-        await $.store.set(STORE_KEY, serialize(await read($, enabledAtom), custom(welcome)))
-        await update($, saveFailedAtom, () => false)
-      } catch {
-        await update($, saveFailedAtom, () => true)
-      }
+      await savePrefs($, { welcome: { text: custom(welcome) } })
       // Enter emptied the field: draw it again with the text.
       await update($, welcomeRevAtom, n => n + 1)
     },
@@ -167,13 +200,14 @@ export const renderPane: MatchedHook<
       }
       // Rows already in the transcript were drawn under the old choice.
       $.ui.invalidate('ui.render')
-      try {
-        await $.store.set(STORE_KEY, serialize(enabled, custom(cleanText(await read($, welcomeAtom)))))
-        await update($, saveFailedAtom, () => false)
-      } catch {
-        // The choice holds for this session; the footer says it was not saved.
-        await update($, saveFailedAtom, () => true)
-      }
+      // Only this feature's flag is written; the rest comes from the store, and
+      // what another session saved is taken up here.
+      const welcome = cleanText(await read($, welcomeAtom))
+      const merged = await savePrefs($, {
+        enabled: { [feature.id]: enabled[feature.id] ?? false },
+        ...(isWelcomeUnsaved && { welcome: { text: custom(welcome) } }),
+      })
+      if (merged) await update($, enabledAtom, map => ({ ...map, ...merged.enabled }))
     },
   })
 }
