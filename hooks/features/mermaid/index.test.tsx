@@ -57,10 +57,11 @@ test('an unsupported diagram type stays a code block', async ($, on) => {
   await ui.unmount()
 })
 
-test('a diagram too big for the window stays a code block', async ($, on) => {
+test('a diagram too big for the window shows the source and a note, with no toggle', async ($, on) => {
   await boot($, on)
   const ui = await $.ui.mount(message(reply(FLOW), { columns: 20, rows: 12 }))
 
+  expect(await ui.find({ type: 'Text', text: /rich-ui: couldn't render, window too small/ })).toBeDefined()
   expect(await ui.find({ type: 'Markdown', text: /graph TD/ })).toBeDefined()
   expect(await ui.find({ key: 'toggle1' })).toBeUndefined()
   await ui.unmount()

@@ -60,6 +60,10 @@ export async function boot(
     ],
   }))
   on('session.cwd', () => ({ value: '/repo' }))
+  // Which session this is and how many prompts it has had, for what only fresh sessions do.
+  const session = { id: 's1', turns: 0 }
+  on('session.id', () => ({ value: session.id }))
+  on('session.turns', () => ({ value: session.turns }))
   on('tool.call', () => ({ result: {}, text: 'ok' }) as never)
   const opened: string[] = []
   on('ui.open', (_, e) => {
@@ -100,5 +104,5 @@ export async function boot(
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  return { clock, saved, failSaves, status, files, opened, order, rendered, blits, readGates }
+  return { clock, saved, failSaves, status, files, opened, order, rendered, blits, readGates, session }
 }
