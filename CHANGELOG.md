@@ -2,6 +2,19 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## 0.5.1 - 2026-10-26
+
+### Fixed
+- Welcome greeting: it no longer plays again when a session returns from the agents panel in a
+  new process. ([#30](https://github.com/emergentai/claude-code-rich-ui/pull/30), closes
+  [#26](https://github.com/emergentai/claude-code-rich-ui/issues/26))
+- Preferences: a toggle or greeting edit no longer overwrites changes another session saved,
+  and the markdown preview no longer jumps back to an earlier link when a slow read finishes
+  late. ([#29](https://github.com/emergentai/claude-code-rich-ui/pull/29))
+- Mermaid: a diagram too big for the window now shows its source with a dim
+  "rich-ui: couldn't render, window too small" line instead of a bare code block.
+  ([#31](https://github.com/emergentai/claude-code-rich-ui/pull/31))
+
 ## 0.5.0 - 2026-10-25
 
 ### Added
