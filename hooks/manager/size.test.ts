@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { clip, contentRows, wrap } from './size'
+import { clip, contentRows, stepFocus, wrap } from './size'
 
 test('content rows cover banner, dividers, feature rows, status and footer', async () => {
   // 3 banner + 1 divider + 1 blank + 1 footer = 6, plus three rows a feature
@@ -22,4 +22,14 @@ test('wrap breaks on words, at most two lines, cutting the rest with an ellipsis
   expect(wrap('one two three four', 10)).toEqual(['one two', 'three four'])
   expect(wrap('one two three four five six', 10)).toEqual(['one two', 'three fou…'])
   expect(contentRows(1, 0, false, 0, 1)).toBe(10)
+})
+
+test('an arrow moves the focus one feature, stopping at the ends, and leaves a ring elsewhere alone', () => {
+  const ids = ['a', 'b', 'c']
+  expect(stepFocus(ids, 'a', 1)).toBe('b')
+  expect(stepFocus(ids, 'b', -1)).toBe('a')
+  expect(stepFocus(ids, 'a', -1)).toBe('a')
+  expect(stepFocus(ids, 'c', 1)).toBe('c')
+  expect(stepFocus(ids, 'welcome-text-0', 1)).toBeUndefined()
+  expect(stepFocus(ids, '', 1)).toBeUndefined()
 })

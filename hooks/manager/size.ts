@@ -63,3 +63,12 @@ export function wrap(text: string, width: number, maxLines = DESCRIPTION_MAX_LIN
 
   return lines.length > 0 ? lines : ['']
 }
+
+// The id an arrow moves the focus ring to: one place up (`by` -1) or down (1) the list from `current`,
+// stopping at the ends; undefined when `current` is not on the list (the ring is somewhere else).
+export function stepFocus(ids: readonly string[], current: string, by: number): string | undefined {
+  const from = ids.indexOf(current)
+  if (from < 0) return undefined
+
+  return ids[Math.min(ids.length - 1, Math.max(0, from + by))]
+}
