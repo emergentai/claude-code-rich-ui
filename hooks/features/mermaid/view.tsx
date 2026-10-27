@@ -2,7 +2,7 @@ import type { Elements } from 'claude-code'
 
 import type { ShownMap } from '../../../types'
 import type { Segment } from './detect'
-import { fitDiagram } from './fit'
+import { fitOutcome } from './fit'
 import type { Viewport } from './fit'
 
 export type ReplyView = {
@@ -26,9 +26,18 @@ export function buildReply(view: ReplyView) {
       return <Markdown key={`t${i}`} text={segment.text} />
     }
 
-    const lines = fitDiagram(segment.source, view.viewport)
+    const lines = fitOutcome(segment.source, view.viewport)
     if (lines === null) {
       return <Markdown key={`r${i}`} text={segment.raw} />
+    }
+
+    if (lines === 'too-small') {
+      return (
+        <Box key={`s${i}`} flexDirection="column">
+          <Markdown text={segment.raw} />
+          <Text dimColor>rich-ui: couldn't render, window too small</Text>
+        </Box>
+      )
     }
 
     const id = `${view.requestId}:${i}`
