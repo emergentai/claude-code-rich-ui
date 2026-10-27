@@ -5,17 +5,14 @@ import type { EnabledMap, PeekItem, PeekTag, PeekView } from '../../../types'
 import type { Feature } from '../../core/feature'
 import { isOn } from '../../core/gate'
 import {
-  SNIPPET_ROWS,
-  SNIPPET_WIDTH,
   fitCells,
   idOf,
   pngSize,
   sameTags,
-  snippetOf,
   tagsIn,
   tileCaptionOf,
 } from './peek'
-import { clipboardArgvs, drawsPictures, engineRoot, osOf, parseSips, projectOf, sizeArgv, thumbArgv } from './platform'
+import { drawsPictures, engineRoot, osOf, parseSips, projectOf, sizeArgv, thumbArgv } from './platform'
 import type { Os } from './platform'
 
 // Declared here, not imported: the engine reads a state source only where it is written (docs/dev/architecture.md 4.0).
@@ -27,13 +24,13 @@ const enabledAtom = atom(
 const EMPTY: PeekView = { session: '', tags: [], items: [] }
 const viewAtom = atom({ plugin: 'rich-ui', key: 'peek-view' } as const, EMPTY, { shape: 'peek-view-1' })
 
-// A tile above the prompt for each drop or paste in the draft: the picture, or the paste's opening
-// lines, over a caption (docs/features/attachment-peek.md). The draft is read on a timer, and what a tag stands for is
-// found on disk or on the clipboard.
+// A tile above the prompt for each dropped image in the draft: the picture over a caption
+// (docs/features/attachment-peek.md). The draft is read on a timer, and what a tag stands for is
+// found on disk.
 export const attachmentPeek: Feature = {
   id: 'attachment-peek',
   name: 'Attachment peek',
-  description: 'Show a small snippet of a dropped image or long paste above the prompt',
+  description: 'Show a small picture of each dropped image above the prompt',
   isExperimental: true,
   defaultEnabled: true,
 }
@@ -49,7 +46,7 @@ const DRAWABLE_BASE64 = 1_400_000
 const TILE_ROWS = 5
 const TILE_COLUMNS = 28
 
-type World = { os: Os; root: string; isWayland: boolean; env: Record<string, string | undefined>; isMouseOff: boolean }
+type World = { os: Os; root: string; env: Record<string, string | undefined>; isMouseOff: boolean }
 
 // Module variables start over on a reload; what a drawing reads is in $.state.
 let world: World | undefined
@@ -71,10 +68,9 @@ async function setUp($: EngineInterface): Promise<World> {
   const uname = osVariable === 'Windows_NT' ? '' : (await $.process.run(['uname', '-s'])).stdout
   const os = osOf(uname, osVariable)
   const uid = os === 'windows' ? '' : (await $.process.run(['id', '-u'])).stdout.trim()
-  const [claudeTmp, tmpdir, wayland, mouseOff, clicksOff] = await Promise.all([
+  const [claudeTmp, tmpdir, mouseOff, clicksOff] = await Promise.all([
     $.env.get('CLAUDE_CODE_TMPDIR'),
     $.env.get('TMPDIR'),
-    $.env.get('WAYLAND_DISPLAY'),
     $.env.get('CLAUDE_CODE_DISABLE_MOUSE'),
     $.env.get('CLAUDE_CODE_DISABLE_MOUSE_CLICKS'),
   ])
@@ -94,7 +90,6 @@ async function setUp($: EngineInterface): Promise<World> {
   world = {
     os,
     root: engineRoot(os, claudeTmp, tmpdir, uid),
-    isWayland: Boolean(wayland),
     env: {
       TERM: term,
       TERM_PROGRAM: termProgram,
@@ -215,29 +210,11 @@ async function makeThumb($: EngineInterface, argv: string[], out: string): Promi
   return false
 }
 
-// A collapsed paste is only a tag in the draft, but the clipboard still holds what was just
-// pasted. It counts as the same paste when its lines are as many as the tag says (a trailing
-// newline may be there or not) and it is long enough to have been collapsed at all.
-async function captureText($: EngineInterface, tag: PeekTag): Promise<PeekItem | undefined> {
-  const { os, isWayland } = await setUp($)
-  for (const argv of clipboardArgvs(os, isWayland)) {
-    const done = await $.process.run(argv).catch(() => undefined)
-    if (done === undefined || done.exitCode !== 0) continue
-    const text = done.stdout
-    const newlines = (text.match(/\r\n|\r|\n/g) ?? []).length
-    if (text.length < 200 || Math.abs(newlines - tag.lines) > 1) continue
-
-    return { kind: 'text', n: tag.n, ...snippetOf(text, SNIPPET_ROWS, SNIPPET_WIDTH), chars: text.length }
-  }
-
-  return undefined
-}
-
 async function capture($: EngineInterface, session: string, tag: PeekTag) {
   const key = `${session}:${idOf(tag)}`
   capturing.add(key)
   try {
-    const item = tag.kind === 'image' ? await captureImage($, session, tag) : await captureText($, tag)
+    const item = await captureImage($, session, tag)
     if (item === undefined) {
       failed.add(key)
 
@@ -280,7 +257,7 @@ async function check($: EngineInterface) {
       await update($, viewAtom, () => ({ session, tags, items: kept }))
       // Only the pictures of what is still in the draft are held.
       for (const path of pictures.keys()) {
-        if (!kept.some(item => item.kind === 'image' && item.thumb === path)) pictures.delete(path)
+        if (!kept.some(item => item.thumb === path)) pictures.delete(path)
       }
       $.ui.invalidate('ui.render')
     }
@@ -302,8 +279,19 @@ export function startPeek($: EngineInterface) {
   })
 }
 
+// The tiles go the moment a prompt is sent, not at the next read of the draft (up to POLL_MS later).
+export const clearPeeks: Hook<'prompt.submit'> = async ($, e, next) => {
+  const view = await read($, viewAtom)
+  if (view.tags.length > 0 || view.items.length > 0) {
+    await update($, viewAtom, () => EMPTY)
+    $.ui.invalidate('ui.render')
+  }
+
+  return next(e)
+}
+
 async function pictureOf($: EngineInterface, item: PeekItem): Promise<ImageSource | undefined> {
-  if (item.kind !== 'image' || item.thumb === '') return undefined
+  if (item.thumb === '') return undefined
   const held = pictures.get(item.thumb)
   if (held !== undefined) return { png: held }
   const bytes = await $.fs.read(item.thumb, { as: 'bytes' }).catch(() => undefined)
@@ -332,31 +320,8 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
   const rows = Math.min(TILE_ROWS, e.props.maxRows - 3)
   if (rows < 1) return rest
 
-  // One tile: a picture or a paste's opening lines over a one-line caption, in a round frame.
+  // One tile: a picture over a one-line caption, in a round frame.
   const tileOf = async (item: PeekItem) => {
-    if (item.kind === 'text') {
-      const lines = item.lines.slice(0, rows)
-
-      return (
-        <Box
-          key={`peek-tile-${idOf(item)}`}
-          flexDirection="column"
-          alignItems="center"
-          borderStyle="round"
-          borderDimColor
-          paddingX={1}
-          width={tileWidth(item, rows)}
-          flexShrink={0}
-        >
-          {lines.map((line, i) => (
-            <Text key={`line-${i}`} wrap="truncate">
-              {line === '' ? ' ' : line}
-            </Text>
-          ))}
-          <Text dimColor wrap="truncate">{tileCaptionOf(item)}</Text>
-        </Box>
-      )
-    }
     const source = hasPictures ? await pictureOf($, item) : undefined
     const cells = fitCells(item.width, item.height, rows, TILE_COLUMNS)
 
@@ -410,14 +375,11 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
   )
 }
 
-// A tile's width in cells, as tileOf lays it out: as wide as its picture or snippet or its caption,
+// A tile's width in cells, as tileOf lays it out: as wide as its picture or its caption,
 // whichever is more, and the frame.
 function tileWidth(item: PeekItem, rows: number): number {
   const caption = [...tileCaptionOf(item)].length
-  const body =
-    item.kind === 'text'
-      ? Math.max(...item.lines.map(line => [...line].length), 0)
-      : fitCells(item.width, item.height, rows, TILE_COLUMNS).columns
+  const body = fitCells(item.width, item.height, rows, TILE_COLUMNS).columns
 
   return Math.max(caption, body) + 4
 }

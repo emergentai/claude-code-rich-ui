@@ -11,8 +11,8 @@ export const features: Feature[] = [
   mermaid,
   markdownPreview,
   statusBand,
+  attachmentPeek,
   welcomeGreeting,
   calmSpinner,
   quietFooter,
-  attachmentPeek,
 ]

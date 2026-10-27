@@ -1,29 +1,24 @@
 import type { PeekItem, PeekTag } from '../../../types'
 
 // Pure helpers for the attachment peek: reading the engine's tags out of a draft, sizing a
-// picture to cells, clipping a paste to a snippet, and the words under a card.
+// picture to cells, and the words under a card.
 
 // A terminal cell is a little under twice as tall as it is wide (1.75 to 2 in the usual fonts).
 export const CELL_ASPECT = 1.8
 export const MIN_COLUMNS = 4
 
-// The engine writes "[Image #3]" for a drop or an image paste and "[Pasted text #4 +12 lines]"
-// for a long text paste (no "+N lines" for a paste of one line). The numbers run up through
-// a session, images and pastes together.
-const TAG = /\[(Image|Pasted text) #(\d+)(?: \+(\d+) lines?)?\]/g
+// The engine writes "[Image #3]" for a drop or an image paste. The numbers run up through a
+// session (a long text paste, "[Pasted text #4 +12 lines]", takes one too, and is left alone).
+const TAG = /\[Image #(\d+)\]/g
 
-export const idOf = (thing: { kind: 'image' | 'text'; n: number }) => `${thing.kind === 'image' ? 'i' : 't'}${thing.n}`
+export const idOf = (thing: { n: number }) => `i${thing.n}`
 
 // The tags a draft holds, each once, in the order they first stand.
 export function tagsIn(draft: string): PeekTag[] {
   const seen = new Set<string>()
   const tags: PeekTag[] = []
   for (const match of draft.matchAll(TAG)) {
-    const tag: PeekTag = {
-      kind: match[1] === 'Image' ? 'image' : 'text',
-      n: Number(match[2]),
-      lines: match[1] === 'Image' ? 0 : Number(match[3] ?? 0),
-    }
+    const tag: PeekTag = { kind: 'image', n: Number(match[1]) }
     if (seen.has(idOf(tag))) continue
     seen.add(idOf(tag))
     tags.push(tag)
@@ -33,7 +28,7 @@ export function tagsIn(draft: string): PeekTag[] {
 }
 
 export const sameTags = (a: readonly PeekTag[], b: readonly PeekTag[]) =>
-  a.length === b.length && a.every((tag, i) => idOf(tag) === idOf(b[i]!) && tag.lines === b[i]!.lines)
+  a.length === b.length && a.every((tag, i) => idOf(tag) === idOf(b[i]!))
 
 export type Cells = { columns: number; rows: number }
 
@@ -71,29 +66,5 @@ export function pngSize(base64: string): { width: number; height: number } | und
   return width > 0 && height > 0 ? { width, height } : undefined
 }
 
-export const SNIPPET_ROWS = 3
-export const SNIPPET_WIDTH = 34
-
-// The first lines of a paste, each clipped to a width, and how many lines it has in all.
-export function snippetOf(text: string, rows = SNIPPET_ROWS, width = SNIPPET_WIDTH) {
-  const all = text.replace(/\s+$/, '').split(/\r\n|\r|\n/)
-  const clip = (line: string) => {
-    // Tabs become two spaces; other control characters would break the drawing.
-    const plain = line.replace(/\t/g, '  ').replace(/[\u0000-\u001f\u007f]/g, '')
-
-    return plain.length > width ? `${plain.slice(0, width - 1)}…` : plain
-  }
-
-  return {
-    lines: all.slice(0, rows).map(clip),
-    more: Math.max(0, all.length - rows),
-    total: all.length,
-  }
-}
-
-// The line under a tile's picture or snippet: its tag, and for a paste its length.
-export function tileCaptionOf(item: PeekItem): string {
-  if (item.kind === 'text') return `#${item.n} · ${item.total} ${item.total === 1 ? 'line' : 'lines'}`
-
-  return `#${item.n}`
-}
+// The line under a tile's picture: its tag's number.
+export const tileCaptionOf = (item: PeekItem) => `#${item.n}`

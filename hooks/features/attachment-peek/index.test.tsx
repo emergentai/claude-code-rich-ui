@@ -137,6 +137,25 @@ test('a draft with no tag, or with its tag deleted, shows nothing', async ($, on
   await ui.unmount()
 })
 
+test('sending the prompt takes the tiles away at once, not at the next read of the draft', async ($, on) => {
+  on('prompt.submit', (_, e) => ({ text: e.text }))
+  const { clock, world } = await boot($, on, NO_WELCOME)
+  world.env.TERM_PROGRAM = 'ghostty'
+  withSips(world)
+  drop(world, 7)
+  world.draft.text = '[Image #7]'
+  await settle(clock)
+  let ui = await $.ui.mount(band())
+  expect(await ui.find({ type: 'Image' })).toBeDefined()
+  await ui.unmount()
+
+  await $.prompt.submit({ text: '[Image #7]' } as never)
+  ui = await $.ui.mount(band())
+  expect(await ui.find({ type: 'Image' })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: '#7' })).toBeUndefined()
+  await ui.unmount()
+})
+
 test('an image Claude Code has not saved shows nothing, and the draft is not stuck on it', async ($, on) => {
   const { clock, world } = await boot($, on, NO_WELCOME)
   withSips(world)
@@ -149,29 +168,15 @@ test('an image Claude Code has not saved shows nothing, and the draft is not stu
   await ui.unmount()
 })
 
-test('a long paste: its opening lines, read from the clipboard when the tag lands', async ($, on) => {
+test('a long paste is left alone: no tile, and the clipboard is not read', async ($, on) => {
   const { clock, world } = await boot($, on, NO_WELCOME)
-  const rows = Array.from({ length: 7 }, (_, i) => `row ${i} ${'x'.repeat(30)}`)
-  world.answer = argv => (argv[0] === 'pbpaste' ? { stdout: rows.join('\n') } : undefined)
-  world.draft.text = '[Pasted text #11 +6 lines]'
-  await settle(clock)
-
-  const ui = await $.ui.mount(band())
-  expect(await ui.find({ type: 'Text', text: /^row 0 / })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /^row 3 / })).toBeUndefined()
-  expect(await ui.find({ type: 'Text', text: '#11 · 7 lines' })).toBeDefined()
-  await ui.unmount()
-})
-
-test('a clipboard that is not the paste (another number of lines) is not shown as it', async ($, on) => {
-  const { clock, world } = await boot($, on, NO_WELCOME)
-  world.answer = argv => (argv[0] === 'pbpaste' ? { stdout: 'y'.repeat(300) } : undefined)
   world.draft.text = '[Pasted text #2 +20 lines]'
   await settle(clock)
 
   const ui = await $.ui.mount(band())
   expect(await ui.find({ type: 'Text', text: /#2/ })).toBeUndefined()
   await ui.unmount()
+  expect(world.runs.some(argv => argv[0] === 'pbpaste')).toBe(false)
 })
 
 test('where the terminal cannot draw pictures the tile names the image instead', async ($, on) => {

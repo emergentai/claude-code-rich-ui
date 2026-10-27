@@ -21,6 +21,9 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 
  Experimental  ·  may be removed in a future version
 
+ ● on   Attachment peek
+        Show a small picture of each dropped image above the prompt
+
  ● on   Welcome greeting
         A big orange "welcome" sweeps in above the prompt once per session, then is gone
         ╭────────────────────────────────────────╮
@@ -50,18 +53,18 @@ pane stays open after a toggle, so you can change several features in one visit.
 
 Features under **Experimental** are tried out and may be removed in any future version.
 
+## Attachment peek (experimental)
+
+On by default (switch it off in `/rich-ui`). Drop an image into the prompt and a small
+tile appears above the prompt for each, showing the picture. Details:
+[`features/attachment-peek.md`](features/attachment-peek.md).
+
 ## Welcome greeting (experimental)
 
 On by default (switch it off in `/rich-ui`). Once per session a big orange "welcome" sweeps
 in from the left above the prompt, holds half a second and sweeps out. Send a message and it is gone at
 once. Change the word in the text box under the row: it saves as you type. Details:
 [`features/welcome-greeting.md`](features/welcome-greeting.md).
-
-## Attachment peek (experimental)
-
-On by default (switch it off in `/rich-ui`). Drop an image into the prompt, or paste a long text, and a small
-tile appears above the prompt for each: a snippet of the picture or the paste, with its size. Details:
-[`features/attachment-peek.md`](features/attachment-peek.md).
 
 ## Install from a shell
 

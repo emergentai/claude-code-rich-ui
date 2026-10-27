@@ -30,15 +30,12 @@ export type PreviewState = {
 }
 
 // What the attachment peek knows of the prompt draft. The engine leaves a tag in the draft
-// for each drop or paste ("[Image #3]", "[Pasted text #4 +12 lines]"); `lines` is the
-// "+12" of a paste's tag, 0 for an image.
-export type PeekTag = { kind: 'image' | 'text'; n: number; lines: number }
+// for each dropped image ("[Image #3]").
+export type PeekTag = { kind: 'image'; n: number }
 
-// What was learnt of a tag: for an image its size and a small PNG the band can draw
-// (`thumb`, a path, '' where there is none); for a paste its opening lines.
-export type PeekItem =
-  | { kind: 'image'; n: number; ext: string; bytes: number; width: number; height: number; thumb: string }
-  | { kind: 'text'; n: number; lines: string[]; more: number; total: number; chars: number }
+// What was learnt of a tag: its size and a small PNG the band can draw (`thumb`, a path, ''
+// where there is none).
+export type PeekItem = { kind: 'image'; n: number; ext: string; bytes: number; width: number; height: number; thumb: string }
 
 // The tags in the draft, in order, and what is known of them, for one session.
 export type PeekView = { session: string; tags: PeekTag[]; items: PeekItem[] }

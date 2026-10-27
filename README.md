@@ -35,8 +35,8 @@ Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 | Mermaid diagrams | Complete mermaid blocks in Claude's replies are drawn as text diagrams. A dim `show source` line above each one swaps it back to the code. |
 | Status band | A line under the prompt shows context and plan usage, only when they run high. |
 | Markdown preview | Click a link to a markdown file in a reply and it opens, rendered, in a pane. |
+| Attachment peek (experimental) | A small tile above the prompt for each image you drop, showing the picture. On by default; may be removed in a future version. |
 | Welcome greeting (experimental) | A big orange "welcome" sweeps in above the prompt once per session. On by default (switch it off in `/rich-ui`); may be removed in a future version. |
-| Attachment peek (experimental) | A small tile above the prompt for each image you drop and each long text you paste: a snippet of it and its tag. On by default; may be removed in a future version. |
 | Zen spinner and Zen footer (experimental) | A quiet one-line spinner with the seconds and a dim turn-end time (on by default), and a random zen saying in place of the hint line under the prompt (off by default). Their own rows in `/rich-ui`; may be removed in a future version. |
 
 Flowcharts (subgraphs included), sequence, class, state, ER, XY chart, pie, C4 and

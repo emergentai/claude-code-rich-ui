@@ -2,24 +2,19 @@ import { expect, test } from 'claude-code/testing'
 
 import type { PeekItem } from '../../../types'
 
-import { fitCells, pngSize, sameTags, snippetOf, tagsIn, tileCaptionOf } from './peek'
-import { clipboardArgvs, drawsPictures, engineRoot, osOf, parseSips, projectOf } from './platform'
+import { fitCells, pngSize, sameTags, tagsIn, tileCaptionOf } from './peek'
+import { drawsPictures, engineRoot, osOf, parseSips, projectOf } from './platform'
 
-test('the tags of a draft: images and pastes, each once, in the order they stand', () => {
-  expect(tagsIn('see [Image #3] and [Pasted text #4 +12 lines] then [Image #3] again, and [Image #5]')).toEqual([
-    { kind: 'image', n: 3, lines: 0 },
-    { kind: 'text', n: 4, lines: 12 },
-    { kind: 'image', n: 5, lines: 0 },
+test('the tags of a draft: images, each once, in the order they stand', () => {
+  expect(tagsIn('see [Image #3] and [Image #5] then [Image #3] again')).toEqual([
+    { kind: 'image', n: 3 },
+    { kind: 'image', n: 5 },
   ])
 })
 
-test('a paste of one line has no "+N lines" in its tag', () => {
-  expect(tagsIn('[Pasted text #1]')).toEqual([{ kind: 'text', n: 1, lines: 0 }])
-  expect(tagsIn('[Pasted text #2 +1 line]')).toEqual([{ kind: 'text', n: 2, lines: 1 }])
-})
-
-test('text that only looks like a tag is not one', () => {
-  expect(tagsIn('[Image 3] [Image #] Image #3 [image #3] [Pasted text #x]')).toEqual([])
+test('a paste tag, and text that only looks like a tag, is not one', () => {
+  expect(tagsIn('[Pasted text #4 +12 lines] [Pasted text #1]')).toEqual([])
+  expect(tagsIn('[Image 3] [Image #] Image #3 [image #3]')).toEqual([])
   expect(tagsIn('')).toEqual([])
 })
 
@@ -55,21 +50,9 @@ test('a PNG size comes from its first bytes; anything else has none', () => {
   expect(pngSize('%%%')).toBeUndefined()
 })
 
-test('a snippet: the opening lines clipped to a width, and the count of the rest', () => {
-  const text = ['alpha', 'beta\tgamma', 'x'.repeat(80), 'delta', 'epsilon', 'zeta', ''].join('\n')
-  const snippet = snippetOf(text)
-  expect(snippet.lines).toEqual(['alpha', 'beta  gamma', `${'x'.repeat(33)}…`])
-  expect(snippet.more).toBe(3)
-  expect(snippet.total).toBe(6)
-  expect(snippetOf('one line').more).toBe(0)
-  expect(snippetOf('a\r\nb\rc').total).toBe(3)
-})
-
 test('what a tile says under its picture', () => {
   const image: PeekItem = { kind: 'image', n: 7, ext: 'png', bytes: 28590, width: 1124, height: 158, thumb: '' }
-  const text: PeekItem = { kind: 'text', n: 11, lines: [], more: 0, total: 7, chars: 412 }
   expect(tileCaptionOf(image)).toBe('#7')
-  expect(tileCaptionOf(text)).toBe('#11 · 7 lines')
 })
 
 test('the system, and where Claude Code keeps a session', () => {
@@ -81,13 +64,6 @@ test('the system, and where Claude Code keeps a session', () => {
   expect(engineRoot('linux', undefined, undefined, '1000')).toBe('/tmp/claude-1000')
   expect(engineRoot('mac', '/scratch/', undefined, '501')).toBe('/scratch/claude-501')
   expect(projectOf('/Users/me/my repo.v2')).toBe('-Users-me-my-repo-v2')
-})
-
-test('the clipboard tool follows the session: Wayland first where there is one', () => {
-  expect(clipboardArgvs('mac', false)).toEqual([['pbpaste']])
-  expect(clipboardArgvs('linux', true)[0]).toEqual(['wl-paste'])
-  expect(clipboardArgvs('linux', false)[0]?.[0]).toBe('xclip')
-  expect(clipboardArgvs('windows', false)).toEqual([])
 })
 
 test('what sips says of a picture', () => {

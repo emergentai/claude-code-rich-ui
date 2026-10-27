@@ -1,6 +1,6 @@
 import type { Register } from 'claude-code'
 
-import { renderPeeks } from './features/attachment-peek'
+import { clearPeeks, renderPeeks } from './features/attachment-peek'
 import { renderSpinner, renderToolProgress, renderTurnDuration } from './features/calm-spinner'
 import { addPromptSection, refreshOnWrite, renderLinkedReply, renderPreview } from './features/markdown-preview'
 import { renderAssistantMessage } from './features/mermaid'
@@ -27,6 +27,7 @@ export const register: Register = on => {
   on('ui.render', { component: 'AbovePrompt' }, renderWelcome)
 
   on('ui.render', { component: 'AbovePrompt' }, renderPeeks)
+  on('prompt.submit', clearPeeks)
 
   on('ui.render', { component: 'Spinner' }, renderSpinner)
   on('ui.render', { component: 'TurnDuration' }, renderTurnDuration)

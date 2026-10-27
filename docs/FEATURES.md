@@ -62,14 +62,13 @@ Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike
 
 ### Attachment peek (experimental, unreleased)
 
-A drop or paste is only `[Image #3]` or `[Pasted text #4 +12 lines]` in the prompt, and three
-attachments later you cannot tell which is which. A small tile for each sits above the prompt: a snippet of
-the picture (or the paste's first lines) and its size. Hover cards and a preview button were tried and
-dropped as more than a snippet needs.
+A drop is only `[Image #3]` in the prompt, and three images later you cannot tell which is which.
+A small tile for each sits above the prompt: the picture and its number. Long text pastes are not covered
+(a first-lines tile, and a first line painted after the tag, were both tried and dropped). Hover cards and a
+preview button were tried and dropped as more than a picture needs.
 
 Built from what Claude Code leaves on disk: it saves each drop as `<tmp>/claude-<uid>/<project>/<session>/images/<N>.<ext>`
-before the prompt is sent, and a paste is still on the clipboard when its tag lands. Neither is an API,
-so the feature is experimental. Same idea as the community mods paste-preview, claude-image-view and
+before the prompt is sent. That is not an API, so the feature is experimental. Same idea as the community mods paste-preview, claude-image-view and
 image-preview.
 
 Reference: [`features/attachment-peek.md`](features/attachment-peek.md).
