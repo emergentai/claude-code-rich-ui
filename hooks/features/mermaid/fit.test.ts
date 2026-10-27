@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { fitDiagram, flipDirection } from './fit'
+import { fitDiagram, fitOutcome, flipDirection } from './fit'
 import type { DiagramResult } from './render'
 
 function fake(width: number, height: number): DiagramResult {
@@ -29,6 +29,17 @@ test('the other direction is tried when the first does not fit', async () => {
 test('nothing is returned when neither direction fits', async () => {
   const lines = fitDiagram('graph TD\n A-->B', VIEWPORT, () => fake(200, 100))
   expect(lines).toBe(null)
+})
+
+test('a diagram that drew but does not fit is reported as too small', async () => {
+  expect(fitOutcome('graph TD\n A-->B', VIEWPORT, () => fake(200, 100))).toBe('too-small')
+  expect(fitOutcome('sequenceDiagram\n A->>B: hi', VIEWPORT, () => fake(200, 10))).toBe(
+    'too-small',
+  )
+})
+
+test('a diagram that cannot be drawn is not reported as too small', async () => {
+  expect(fitOutcome('graph TD\n A-->B', VIEWPORT, () => null)).toBe(null)
 })
 
 test('non-flowcharts are rendered once and never flipped', async () => {
