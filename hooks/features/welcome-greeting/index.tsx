@@ -27,6 +27,23 @@ const playedAtom = atom({ plugin: 'rich-ui', key: 'welcome-played' } as const, f
   shape: 'welcome-played-1',
 })
 
+// The id of the session the greeting last began in, kept in the store. The atom above lives
+// only as long as the process, so a session that comes back in a new one (from the agents
+// panel, or resumed) would otherwise greet again.
+const PLAYED_KEY = 'welcome-played'
+
+// A session that already has prompts, or that was greeted before, is not new. An unreadable
+// answer counts as new: a repeated greeting is the lesser fault.
+async function isGreeted($: Parameters<MatchedHook<'ui.render', { component: 'AbovePrompt' }>>[0]) {
+  try {
+    if ((await $.session.turns()) > 0) return true
+
+    return (await $.store.get(PLAYED_KEY)) === (await $.session.id())
+  } catch {
+    return false
+  }
+}
+
 export const welcomeGreeting: Feature = {
   id: 'welcome-greeting',
   name: 'Welcome greeting',
@@ -64,11 +81,17 @@ export const renderWelcome: MatchedHook<'ui.render', { component: 'AbovePrompt' 
       // Not begun: only start on an idle prompt.
       if (e.props.hasSurvey || e.props.isWorking) return next(e)
       if (await read($, playedAtom)) return next(e)
+      if (await isGreeted($)) return next(e)
       start = now
       startPlay(now)
       // The engine refuses state writes while a ui.render hook draws.
       $.clock.after(0, async () => {
         await update($, playedAtom, () => true)
+        try {
+          await $.store.set(PLAYED_KEY, await $.session.id())
+        } catch {
+          // Only the guard against a repeat in a new process is lost.
+        }
       })
     }
     // A turn has started (the person pressed Enter): the greeting is over at once, so it
