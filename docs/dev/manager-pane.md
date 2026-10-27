@@ -62,7 +62,8 @@ Rules:
 
 ### 4.2 Interaction
 
-- Tab and the arrow keys move between rows; Enter or a click presses the focused row; Esc closes the pane. No other keys are bound.
+- Tab and the arrow keys move between rows; Enter or a click presses the focused row (a click on its description too: the name, chip and description lines are all children of the row's one `Button`, which takes only strings and `Text`); Esc closes the pane. No other keys are bound.
+- A pane taller than its room (an inline one in a short window) scrolls on the arrows instead of moving the ring, so the `ui.scroll` hook `arrowsMoveFocus` turns an up or down arrow into a move of the ring (`$.ui.focus`, which brings the row into view), from the key `trackFocus` last saw. The wheel, page keys, Home and End still scroll.
 - Pressing a row runs the toggle written inline in the manager's render handler (the engine's module scan forbids passing `$` to helpers; `prefs.ts` supplies the pure `toggled` and `serialize`): it flips the feature's flag in `$.state`, clears that feature's status entry, and writes `$.store`. Because `$.state` changed, the pane redraws and every hook sees the new flag at its next event.
 - Toggling affects new output only; nothing already on screen is redrawn.
 - The pane stays open after a toggle so several features can be changed in one visit.

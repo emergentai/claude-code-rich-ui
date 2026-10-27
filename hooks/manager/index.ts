@@ -12,7 +12,7 @@ import { statusBand } from '../features/status-band'
 import { CAPTION, MAX_TEXT, cleanText } from '../features/welcome-greeting/welcome'
 import { VERSION } from '../core/version'
 import { buildPane } from './pane'
-import { contentRows, experimentalCount } from './size'
+import { contentRows, experimentalCount, stepFocus } from './size'
 
 const PANE_ID = 'rich-ui'
 
@@ -146,6 +146,35 @@ export const runCommand: MatchedHook<
     closeOnEscape: true,
     rows: contentRows(features.length, statusLines, saveFailed, experimentalCount(features)),
   })
+
+  return {}
+}
+
+// The feature button the pane's focus ring is on, by key (a feature's id); anything else (the welcome
+// text field, nothing) is ''. Kept from the ring's moves so the arrows know where to go from.
+let focusedKey = ''
+
+export const trackFocus: MatchedHook<'ui.focus', { component: 'Pane'; requestId: 'rich-ui' }> = async (
+  _,
+  e,
+  next,
+) => {
+  focusedKey = e.element ?? ''
+
+  return next(e)
+}
+
+// A pane that does not fit (an inline one in a short window) scrolls on the arrows instead of moving
+// the ring from button to button, which a pane that fits does. Up and down move it here too, and the
+// ring brings the row into view (as Tab does). The wheel, the page keys, Home and End still scroll.
+export const arrowsMoveFocus: MatchedHook<'ui.scroll', { component: 'Pane'; requestId: 'rich-ui' }> = async (
+  $,
+  e,
+  next,
+) => {
+  const to = stepFocus(features.map(feature => feature.id), focusedKey, e.by)
+  if (e.origin.kind !== 'person' || e.pointer !== undefined || Math.abs(e.by) !== 1 || to === undefined) return next(e)
+  if (to !== focusedKey) await $.ui.focus({ requestId: PANE_ID, key: to })
 
   return {}
 }

@@ -207,6 +207,18 @@ test('the first row takes the focus and the footer hints stay', async ($, on) =>
   await ui.unmount()
 })
 
+test('a click on a row\'s description toggles it: the description is inside the row\'s Button', async ($, on) => {
+  await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  for (const feature of features) {
+    const button = JSON.stringify(await ui.find({ key: feature.id }))
+    expect(button).toContain(feature.name)
+    expect(button).toContain(feature.description.split(' ')[0]!)
+  }
+  await ui.unmount()
+})
+
 test('a docked pane and an inline pane both draw every row', async ($, on) => {
   await boot($, on)
   for (const placement of ['dock', 'inline'] as const) {

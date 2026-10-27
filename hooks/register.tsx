@@ -6,7 +6,7 @@ import { renderAssistantMessage } from './features/mermaid'
 import { advanceFooter, renderInfoNotice, renderPromptHint } from './features/quiet-footer'
 import { onSessionEnd, recordUsage } from './features/status-band'
 import { renderWelcome } from './features/welcome-greeting'
-import { renderPane, runCommand, startSession } from './manager'
+import { arrowsMoveFocus, renderPane, runCommand, startSession, trackFocus } from './manager'
 
 // The engine only accepts literal `on("event", hook)` calls here, so `on` is
 // never wrapped or passed on, and every hook is listed below by the name of an
@@ -15,6 +15,8 @@ export const register: Register = on => {
   on('session.start', startSession)
   on('command.run', { command: 'rich-ui' }, runCommand)
   on('ui.render', { component: 'Pane', requestId: 'rich-ui' }, renderPane)
+  on('ui.focus', { component: 'Pane', requestId: 'rich-ui' }, trackFocus)
+  on('ui.scroll', { component: 'Pane', requestId: 'rich-ui' }, arrowsMoveFocus)
 
   on('ui.render', { component: 'AssistantMessage' }, renderAssistantMessage)
 

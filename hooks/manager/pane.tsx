@@ -116,31 +116,29 @@ export function buildPane(view: PaneView) {
         marginTop={1}
         hover={{ backgroundColor: "subtle" }}
       >
-        <Box>
-          <Button
-            key={feature.id}
-            plain
-            autoFocus={index === 0 ? true : undefined}
-            onPress={() => view.onToggle(feature)}
-          >
-            <Text color={isOn ? "success" : "inactive"} bold={isOn}>
-              {isOn ? PILL_ON : PILL_OFF}
-            </Text>
-            <Text color="text">{" ".repeat(PILL_GAP)}</Text>
-            <Text color="text">{clip(feature.name, nameWidth)}</Text>
-          </Button>
+        <Button
+          key={feature.id}
+          plain
+          autoFocus={index === 0 ? true : undefined}
+          onPress={() => view.onToggle(feature)}
+        >
+          <Text color={isOn ? "success" : "inactive"} bold={isOn}>
+            {isOn ? PILL_ON : PILL_OFF}
+          </Text>
+          <Text color="text">{" ".repeat(PILL_GAP)}</Text>
+          <Text color="text">{clip(feature.name, nameWidth)}</Text>
           {chip && (
             <Text color={chip.color}>
               {" ".repeat(CHIP_GAP)}
               {chip.text}
             </Text>
           )}
-        </Box>
-        {descriptionLines(feature).map((line) => (
-          <Text dimColor hover={{ dimColor: false }}>
-            {`${indent}${line}`}
-          </Text>
-        ))}
+          {descriptionLines(feature).map((line) => (
+            <Text dimColor hover={{ dimColor: false }}>
+              {`\n${indent}${line}`}
+            </Text>
+          ))}
+        </Button>
         {entry?.error && (
           <Text color="warning">
             {clip(
