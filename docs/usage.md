@@ -57,6 +57,12 @@ in from the left above the prompt, holds half a second and sweeps out. Send a me
 once. Change the word in the text box under the row: it saves as you type. Details:
 [`features/welcome-greeting.md`](features/welcome-greeting.md).
 
+## Attachment peek (experimental)
+
+On by default (switch it off in `/rich-ui`). Drop an image into the prompt, or paste a long text, and a small
+tile appears above the prompt for each: a snippet of the picture or the paste, with its size. Details:
+[`features/attachment-peek.md`](features/attachment-peek.md).
+
 ## Install from a shell
 
 The one-line form works from a normal shell too (Claude Code 2.1.292 or later):

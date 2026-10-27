@@ -1,3 +1,4 @@
+import { attachmentPeek } from '../features/attachment-peek'
 import { calmSpinner } from '../features/calm-spinner'
 import { markdownPreview } from '../features/markdown-preview'
 import { mermaid } from '../features/mermaid'
@@ -13,4 +14,5 @@ export const features: Feature[] = [
   welcomeGreeting,
   calmSpinner,
   quietFooter,
+  attachmentPeek,
 ]

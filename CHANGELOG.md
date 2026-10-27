@@ -2,6 +2,12 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## Unreleased
+
+### Added
+- Attachment peek (experimental, on by default): a small tile above the prompt for each image you
+  drop and each long text you paste, showing a snippet of it.
+
 ## 0.5.1 - 2026-10-26
 
 ### Fixed
