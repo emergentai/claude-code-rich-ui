@@ -8,6 +8,7 @@ import { mergePrefs, parseStored, parseWelcome, serialize, STORE_KEY, toggled } 
 import type { PrefsChange } from '../core/prefs'
 import { features } from '../core/registry'
 import { bandText, segmentsFor } from '../features/status-band/band'
+import { startPeek } from '../features/attachment-peek'
 import { statusBand } from '../features/status-band'
 import { CAPTION, MAX_TEXT, cleanText } from '../features/welcome-greeting/welcome'
 import { VERSION } from '../core/version'
@@ -124,6 +125,8 @@ export const startSession: Hook<'session.start'> = async ($, e, next) => {
     name: 'rich-ui',
     description: 'Choose which rich-ui features are on',
   })
+  // The attachment peek reads the prompt draft on a timer; it checks its own flag each time.
+  startPeek($)
 
   return next(e)
 }

@@ -29,6 +29,17 @@ export type PreviewState = {
   error?: string
 }
 
+// What the attachment peek knows of the prompt draft. The engine leaves a tag in the draft
+// for each dropped image ("[Image #3]").
+export type PeekTag = { kind: 'image'; n: number }
+
+// What was learnt of a tag: its size and a small PNG the band can draw (`thumb`, a path, ''
+// where there is none).
+export type PeekItem = { kind: 'image'; n: number; ext: string; bytes: number; width: number; height: number; thumb: string }
+
+// The tags in the draft, in order, and what is known of them, for one session.
+export type PeekView = { session: string; tags: PeekTag[]; items: PeekItem[] }
+
 declare module 'claude-code' {
   interface PluginState {
     'rich-ui': {
@@ -42,6 +53,7 @@ declare module 'claude-code' {
       'zen-quote': Shaped<number>
       usage: Shaped<UsageSnapshot>
       preview: Shaped<PreviewState>
+      'peek-view': Shaped<PeekView>
     }
   }
 }

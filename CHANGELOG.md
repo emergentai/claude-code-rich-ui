@@ -4,6 +4,10 @@ Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
 ## Unreleased
 
+### Added
+- Attachment peek (experimental, on by default): a small tile above the prompt for each image you
+  drop, showing the picture.
+
 ### Fixed
 - `/rich-ui` pane: a click anywhere on a feature's row, its description included, toggles it (it was
   only the pill and name). In a pane that scrolls, such as the one above the prompt in a short window,

@@ -21,6 +21,9 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
 
  Experimental  ·  may be removed in a future version
 
+ ● on   Attachment peek
+        Show a small picture of each dropped image above the prompt
+
  ● on   Welcome greeting
         A big orange "welcome" sweeps in above the prompt once per session, then is gone
         ╭────────────────────────────────────────╮
@@ -49,6 +52,12 @@ pane stays open after a toggle, so you can change several features in one visit.
   terminal, beside the conversation in a wide fullscreen one.
 
 Features under **Experimental** are tried out and may be removed in any future version.
+
+## Attachment peek (experimental)
+
+On by default (switch it off in `/rich-ui`). Drop an image into the prompt and a small
+tile appears above the prompt for each, showing the picture. Details:
+[`features/attachment-peek.md`](features/attachment-peek.md).
 
 ## Welcome greeting (experimental)
 
