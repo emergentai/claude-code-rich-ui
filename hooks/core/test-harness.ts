@@ -36,8 +36,11 @@ export async function boot(
   const files = new Map<string, string>()
   // The order of reads and pane opens, for what must happen before an await.
   const order: string[] = []
-  on('fs.read', (_, e) => {
+  // A read of a path waits here until the test lets it go, to finish reads out of order.
+  const readGates = new Map<string, Promise<void>>()
+  on('fs.read', async (_, e) => {
     order.push('read')
+    await readGates.get(e.path)
     const text = files.get(e.path)
     if (text === undefined) throw new Error(`ENOENT: ${e.path}`)
 
@@ -101,5 +104,5 @@ export async function boot(
   on('session.end', (_, e) => ({ sessionId: e.sessionId }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  return { clock, saved, failSaves, status, files, opened, order, rendered, blits, session }
+  return { clock, saved, failSaves, status, files, opened, order, rendered, blits, readGates, session }
 }

@@ -38,3 +38,17 @@ export function toggled(
 
   return { ...enabled, [feature.id]: !current }
 }
+
+// What a save changes. Anything not named here is taken from the store as it is now,
+// so a save never writes back a value this session only remembers from when it loaded.
+export type PrefsChange = {
+  enabled?: EnabledMap
+  welcome?: { text: string | undefined }
+}
+
+export function mergePrefs(raw: unknown, change: PrefsChange) {
+  return {
+    enabled: { ...parseStored(raw), ...change.enabled },
+    welcome: change.welcome ? change.welcome.text : parseWelcome(raw),
+  }
+}

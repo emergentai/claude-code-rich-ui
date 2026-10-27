@@ -401,6 +401,20 @@ test('toggling a feature after typing keeps the field and its text, and saves bo
   await ui.unmount()
 })
 
+test('a toggle keeps what another session saved since this one loaded', async ($, on) => {
+  const { clock, saved } = await boot($, on)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  saved.set('prefs', { v: 1, enabled: { mermaid: false }, welcome: 'Hi from B' })
+  await ui.press({ key: 'markdown-preview' })
+  await clock.settle()
+
+  expect(JSON.stringify(saved.get('prefs'))).toBe(
+    JSON.stringify({ v: 1, enabled: { mermaid: false, 'markdown-preview': false }, welcome: 'Hi from B' }),
+  )
+  await ui.unmount()
+})
+
 test('the field stops at 20 characters', async ($, on) => {
   const { clock } = await boot($, on)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
