@@ -2,16 +2,18 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
-## Unreleased
+## 0.6.0 - 2026-10-27
 
 ### Added
 - Attachment peek (experimental, on by default): a small tile above the prompt for each image you
-  drop, showing the picture.
+  drop, showing the picture, gone the moment you send. Long text pastes are not covered.
+  ([#33](https://github.com/emergentai/claude-code-rich-ui/pull/33))
 
 ### Fixed
 - `/rich-ui` pane: a click anywhere on a feature's row, its description included, toggles it (it was
   only the pill and name). In a pane that scrolls, such as the one above the prompt in a short window,
   the up and down arrows now move between features instead of scrolling the pane.
+  ([#34](https://github.com/emergentai/claude-code-rich-ui/pull/34))
 
 ## 0.5.1 - 2026-10-26
 

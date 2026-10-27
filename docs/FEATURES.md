@@ -60,7 +60,7 @@ nothing opens by itself. The pane follows the file when Claude edits it.
 Reference: [`features/markdown-preview.md`](features/markdown-preview.md). Spike:
 [`dev/next-feature-spikes.md`](dev/next-feature-spikes.md).
 
-### Attachment peek (experimental, unreleased)
+### Attachment peek (experimental, v0.6.0)
 
 A drop is only `[Image #3]` in the prompt, and three images later you cannot tell which is which.
 A small tile for each sits above the prompt: the picture and its number. Long text pastes are not covered

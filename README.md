@@ -2,7 +2,7 @@
 
 ### The Claude Code interface I wished for, as add-ons you can switch on one at a time.
 
-[![Release](https://img.shields.io/github/v/release/emergentai/claude-code-rich-ui)](https://github.com/emergentai/claude-code-rich-ui/releases) [![License: MIT](https://img.shields.io/github/license/emergentai/claude-code-rich-ui)](LICENSE) [![Tested on Claude Code 2.1.310](https://img.shields.io/badge/tested%20on%20Claude%20Code-2.1.310-blue)](#-install) [![Stars](https://img.shields.io/github/stars/emergentai/claude-code-rich-ui?style=flat)](https://github.com/emergentai/claude-code-rich-ui/stargazers)
+[![Release](https://img.shields.io/github/v/release/emergentai/claude-code-rich-ui)](https://github.com/emergentai/claude-code-rich-ui/releases) [![License: MIT](https://img.shields.io/github/license/emergentai/claude-code-rich-ui)](LICENSE) [![Tested on Claude Code 2.1.311](https://img.shields.io/badge/tested%20on%20Claude%20Code-2.1.311-blue)](#-install) [![Stars](https://img.shields.io/github/stars/emergentai/claude-code-rich-ui?style=flat)](https://github.com/emergentai/claude-code-rich-ui/stargazers)
 
 rich-ui is a Claude Code mod: the interface changes I kept wishing for, built as add-ons.
 Some are real upgrades (mermaid diagrams drawn in the transcript, markdown files opened
@@ -23,7 +23,7 @@ own switch, so take what you like and leave the rest.
 That adds this repo as a marketplace and installs the plugin. Mods are on by default in
 the terminal from Claude Code 2.1.287, so there is nothing else to enable. Works in the
 terminal only (not the desktop app or the IDE extensions), and the mods API is still
-early access, so it can shift between Claude Code releases. Tested on 2.1.310.
+early access, so it can shift between Claude Code releases. Tested on 2.1.311.
 
 Marketplaces like this one don't auto-update by default; turn it on in `/plugin`
 (Marketplaces tab) if you want new features as they land.
