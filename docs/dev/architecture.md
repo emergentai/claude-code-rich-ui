@@ -42,7 +42,7 @@ claude-code-rich-ui/
       feature.ts             # Feature metadata type
       registry.ts            # the list of shipped features (for the pane)
       gate.ts                # isOn (effective flag) and guard (contain a throw)
-      prefs.ts               # parse/serialize/toggle the saved choices (pure)
+      prefs.ts               # read, key and toggle the saved choices (pure)
       errors.ts              # pure helpers over the per-feature status map
       version.ts             # plugin version string (checked by tools/check-version.mjs)
     manager/                 # the /rich-ui command and pane (always on, not a feature)
@@ -110,7 +110,7 @@ v1 features use non-streaming hooks (`ui.render`, `session.start`). Streaming ho
 ### 4.4 State and persistence
 
 Two layers, one rule: `$.store` is the source of truth across sessions, `$.state` is what hooks and the pane read.
-- `$.store` key `prefs` holds `{ enabled: Record<featureId, boolean> }`.
+- `$.store` holds each choice as its own key: `prefs.enabled.<featureId>` (a boolean) and `prefs.welcome` (the sign's text, `null` for the default). One key per choice because the store has no compare-and-set: a record holding every choice, read, merged and written back, loses a choice another session saves between the read and the write. A save writes only the keys it names. Until 0.6.0 one record `prefs` (`{ v: 1, enabled, welcome? }`) held them; it is still read, with each key laid over it, and no longer written.
 - `$.state` holds an `enabled` atom (the same map) and a `status` atom (errors and notes, 4.5).
 - On `session.start` the plugin loads `$.store` into the `enabled` atom, which holds only explicit choices. A feature's flag is `enabled[id] ?? defaultEnabled`, so adding a feature later never flips anyone's existing choices and a missing or unreadable store simply means defaults.
 - A toggle (the pane row's `onPress`, written inline in the manager's render handler) writes `$.state`, clears the feature's status entry and writes `$.store`. Writing `$.state` redraws the pane and every reader automatically.

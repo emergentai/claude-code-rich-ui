@@ -61,12 +61,16 @@ export const refreshOnWrite: Hook<'tool.call'> = async ($, e, next) => {
     if ('isError' in result && result.isError) return result
 
     const path = e.file_path
-    if ((await read($, previewAtom)).path !== path) return result
+    const before = await read($, previewAtom)
+    if (before.path !== path) return result
 
     const { text, isTruncated } = clipText(await $.fs.read(path))
-    // Dropped if the pane has moved to another file while the read was out.
+    // Applied only if the pane is still on the request it was on when the read began: it has moved on
+    // if another file or a later press came meanwhile. It then takes the next number itself, so a read
+    // of this file begun before the write, still out, is dropped when it finishes as the older text.
+    const request = (before.request ?? 0) + 1
     await update($, previewAtom, current =>
-      current.path === path ? { path, text, isTruncated } : current,
+      current.path === path && current.request === before.request ? { path, request, text, isTruncated } : current,
     )
   } catch {
     // The preview is a convenience; it must not fail a tool call.
@@ -113,18 +117,19 @@ export const renderLinkedReply: MatchedHook<
         if (!opened.isPlaced) $.ui.toast(`Markdown preview could not open: ${opened.reason}`)
 
         const path = pathFromHref(href, cwd)
-        // The pane is on this file from now on. A read for an earlier press that
-        // finishes later finds another path here and is dropped.
-        await update($, previewAtom, () => ({ path }))
+        // The pane is on this file from now on, under a request number of its own. A read for an earlier
+        // press, of this file or another, that finishes later finds a later number here and is dropped.
+        const started = await update($, previewAtom, current => ({ path, request: (current.request ?? 0) + 1 }))
+        const request = started.request
         try {
           const { text: body, isTruncated } = clipText(await $.fs.read(path))
           await update($, previewAtom, current =>
-            current.path === path ? { path, text: body, isTruncated } : current,
+            current.request === request ? { path, request, text: body, isTruncated } : current,
           )
         } catch (error) {
           await update($, previewAtom, current =>
-            current.path === path
-              ? { path, error: `Could not read ${path}: ${describeError(error)}` }
+            current.request === request
+              ? { path, request, error: `Could not read ${path}: ${describeError(error)}` }
               : current,
           )
         }

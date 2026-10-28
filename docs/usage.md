@@ -36,7 +36,7 @@ Type `/rich-ui`. A small pane lists every feature with an on/off switch:
  ○ off  Zen footer
         Replace the hint line under the prompt with a zen saying, and hide the dim notices under the logo
 
- Enter toggles · Esc closes · rich-ui 0.6.0
+ Enter toggles · Esc closes · rich-ui 0.6.1
 ```
 
 Press a row, or press Enter on it, to flip the feature. Under the mouse a row

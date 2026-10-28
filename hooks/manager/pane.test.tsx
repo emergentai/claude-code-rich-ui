@@ -43,9 +43,8 @@ test('pressing a row toggles the feature and saves the choice', async ($, on) =>
   await clock.settle()
 
   expect((await ui.find({ key: 'mermaid' }))?.text).toContain('○ off')
-  expect(JSON.stringify(saved.get('prefs'))).toBe(
-    JSON.stringify({ v: 1, enabled: { mermaid: false } }),
-  )
+  expect(saved.get('prefs.enabled.mermaid')).toBe(false)
+  expect([...saved.keys()]).toEqual(['prefs.enabled.mermaid'])
 
   await ui.press({ key: 'mermaid' })
   expect((await ui.find({ key: 'mermaid' }))?.text).toContain('● on')
@@ -323,9 +322,7 @@ test('the welcome text saves as it is typed, with no save step and no new field'
   // The field keeps what was typed (the same element, so nothing flickers)...
   expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'Hello World!!!!!!!!!' })
   // ...and the store holds the cleaned text the sign shows, written once after the pause.
-  expect(JSON.stringify(saved.get('prefs'))).toBe(
-    JSON.stringify({ v: 1, enabled: {}, welcome: 'hello world!!!!!!!!!' }),
-  )
+  expect(saved.get('prefs.welcome')).toBe('hello world!!!!!!!!!')
   await ui.unmount()
 })
 
@@ -335,13 +332,13 @@ test('typing writes after a pause, not on every key', async ($, on) => {
 
   await ui.input({ key: 'welcome-text-0', text: 'h', kind: 'change' })
   await clock.advance(100)
-  expect(saved.get('prefs')).toBeUndefined()
+  expect(saved.get('prefs.welcome')).toBeUndefined()
   await ui.input({ key: 'welcome-text-0', text: 'hi', kind: 'change' })
   await clock.advance(100)
-  expect(saved.get('prefs')).toBeUndefined()
+  expect(saved.get('prefs.welcome')).toBeUndefined()
   await clock.advance(500)
 
-  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {}, welcome: 'hi' }))
+  expect(saved.get('prefs.welcome')).toBe('hi')
   await ui.unmount()
 })
 
@@ -353,7 +350,7 @@ test('Enter writes it at once', async ($, on) => {
   await ui.input({ key: 'welcome-text-0', text: 'hey' })
   await clock.settle()
 
-  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {}, welcome: 'hey' }))
+  expect(saved.get('prefs.welcome')).toBe('hey')
   await ui.unmount()
 })
 
@@ -385,8 +382,8 @@ test('clearing the field is allowed: it is not refilled while typing, and the si
   await clock.advance(500)
 
   expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: '' })
-  // The default is not stored: back to nothing saved.
-  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: {} }))
+  // The default is stored as null, which stands over the text the older record holds.
+  expect(saved.get('prefs.welcome')).toBeNull()
   await ui.unmount()
 })
 
@@ -407,9 +404,8 @@ test('toggling a feature after typing keeps the field and its text, and saves bo
   await clock.settle()
 
   expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'hey' })
-  expect(JSON.stringify(saved.get('prefs'))).toBe(
-    JSON.stringify({ v: 1, enabled: { 'status-band': false }, welcome: 'hey' }),
-  )
+  expect(saved.get('prefs.enabled.status-band')).toBe(false)
+  expect(saved.get('prefs.welcome')).toBe('hey')
   await ui.unmount()
 })
 
@@ -417,13 +413,30 @@ test('a toggle keeps what another session saved since this one loaded', async ($
   const { clock, saved } = await boot($, on)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
 
-  saved.set('prefs', { v: 1, enabled: { mermaid: false }, welcome: 'Hi from B' })
+  // Session B, after this one loaded: its own entries, and an older record's text.
+  saved.set('prefs.enabled.mermaid', false)
+  saved.set('prefs.welcome', 'Hi from B')
   await ui.press({ key: 'markdown-preview' })
   await clock.settle()
 
-  expect(JSON.stringify(saved.get('prefs'))).toBe(
-    JSON.stringify({ v: 1, enabled: { mermaid: false, 'markdown-preview': false }, welcome: 'Hi from B' }),
-  )
+  expect(saved.get('prefs.enabled.mermaid')).toBe(false)
+  expect(saved.get('prefs.enabled.markdown-preview')).toBe(false)
+  expect(saved.get('prefs.welcome')).toBe('Hi from B')
+  // This session takes up what B chose.
+  expect((await ui.find({ key: 'mermaid' }))?.text).toContain('○ off')
+  await ui.unmount()
+})
+
+test('choices saved by version 0.6.0 and before (one record) still load, and a newer entry wins over them', async ($, on) => {
+  await boot($, on, {
+    prefs: { v: 1, enabled: { mermaid: false, 'status-band': false }, welcome: 'old' },
+    'prefs.enabled.status-band': true,
+  })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+
+  expect((await ui.find({ key: 'mermaid' }))?.text).toContain('○ off')
+  expect((await ui.find({ key: 'status-band' }))?.text).toContain('● on')
+  expect((await ui.find({ key: 'welcome-text-0' }))?.props).toMatchObject({ value: 'old' })
   await ui.unmount()
 })
 
@@ -460,7 +473,7 @@ test('the welcome greeting row is on by default and toggles like any feature, sa
   await ui.press({ key: 'welcome-greeting' })
   await clock.settle()
 
-  expect(JSON.stringify(saved.get('prefs'))).toBe(JSON.stringify({ v: 1, enabled: { 'welcome-greeting': false } }))
+  expect(saved.get('prefs.enabled.welcome-greeting')).toBe(false)
   expect(await ui.find({ type: 'Text', text: /5 of 7 on/ })).toBeDefined()
   await ui.unmount()
 })

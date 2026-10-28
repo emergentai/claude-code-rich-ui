@@ -2,6 +2,16 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## 0.6.1 - 2026-10-27
+
+### Fixed
+- Preferences: each choice is now saved under its own entry in the plugin store, so a choice another
+  session saves while this one is saving is no longer written back over. Saves from earlier versions
+  still load.
+- Markdown preview: each press of a link, and each refresh after a write, now has its own request
+  number, so a slow read for an earlier press of a file can no longer replace the text of a later
+  one, including when the same file is opened again. Errors and refreshes follow the same rule.
+
 ## 0.6.0 - 2026-10-27
 
 ### Added
