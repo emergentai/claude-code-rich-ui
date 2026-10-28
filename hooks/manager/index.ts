@@ -4,7 +4,7 @@ import type { Hook, MatchedHook, Timer } from 'claude-code'
 import type { EnabledMap, StatusMap, UsageSnapshot } from '../../types'
 import { withoutStatus } from '../core/errors'
 import { isOn } from '../core/gate'
-import { mergePrefs, parseStored, parseWelcome, serialize, STORE_KEY, toggled } from '../core/prefs'
+import { enabledKey, readPrefs, STORE_KEY, toggled, WELCOME_KEY, welcomeValue } from '../core/prefs'
 import type { PrefsChange } from '../core/prefs'
 import { features } from '../core/registry'
 import { bandText, segmentsFor } from '../features/status-band/band'
@@ -66,32 +66,41 @@ const saveFailedAtom = atom(
   { shape: 'save-failed-1' },
 )
 
-// Saves go one at a time, each reading the store just before it writes, so two quick
-// saves do not both start from the same old copy.
+// Saves go one at a time, so two quick saves of one choice land in the order they were made.
 let saving: Promise<unknown> = Promise.resolve()
 
-// Writes only what `change` names on top of the store as it is now, so a value another
-// session saved since this one loaded is not written back over. Returns what was stored,
-// or undefined when the write failed (the footer then says it was not saved).
-function savePrefs(
-  $: Parameters<Hook<'session.start'>>[0],
-  change: PrefsChange,
-) {
+type StoreHandle = Parameters<Hook<'session.start'>>[0]
+
+// The saved choices: the record older versions wrote, with each choice's own entry over it. An
+// entry that cannot be read is as if it were never set.
+async function loadPrefs($: StoreHandle) {
+  const get = (key: string) => $.store.get(key).catch(() => undefined)
+  const entries: Record<string, unknown> = {}
+  await Promise.all(
+    features.map(async feature => {
+      entries[feature.id] = await get(enabledKey(feature.id))
+    }),
+  )
+
+  return readPrefs(await get(STORE_KEY), entries, await get(WELCOME_KEY))
+}
+
+// Writes only the entries `change` names, each its own, so a choice another session saved since this
+// one loaded is never written back over. Returns the choices as stored now, or undefined when
+// the write failed (the footer then says it was not saved).
+function savePrefs($: StoreHandle, change: PrefsChange) {
   const run = async () => {
     try {
-      let raw: unknown
-      try {
-        raw = await $.store.get(STORE_KEY)
-      } catch {
-        // Unreadable: start from what this session holds, as before.
-        raw = serialize(await read($, enabledAtom), custom(cleanText(await read($, welcomeAtom))))
+      for (const [id, value] of Object.entries(change.enabled ?? {})) {
+        await $.store.set(enabledKey(id), value)
       }
-      const merged = mergePrefs(raw, change)
-      await $.store.set(STORE_KEY, serialize(merged.enabled, merged.welcome))
-      if (change.welcome) isWelcomeUnsaved = false
+      if (change.welcome) {
+        await $.store.set(WELCOME_KEY, welcomeValue(change.welcome.text))
+        isWelcomeUnsaved = false
+      }
       await update($, saveFailedAtom, () => false)
 
-      return merged
+      return await loadPrefs($)
     } catch {
       await update($, saveFailedAtom, () => true)
 
@@ -107,15 +116,10 @@ function savePrefs(
 // One session.start hook does both jobs, because the engine allows only one
 // unmatched hook per event: it loads the saved choices and registers /rich-ui.
 export const startSession: Hook<'session.start'> = async ($, e, next) => {
-  let stored: EnabledMap = {}
-  let welcome = CAPTION
-  try {
-    const raw = await $.store.get(STORE_KEY)
-    stored = parseStored(raw)
-    welcome = cleanText(parseWelcome(raw))
-  } catch {
-    // An unreadable store means every feature uses its default (an empty map).
-  }
+  // An unreadable store means every feature uses its default (an empty map).
+  const loaded = await loadPrefs($)
+  const stored: EnabledMap = loaded.enabled
+  const welcome = cleanText(loaded.welcome)
   await update($, enabledAtom, () => stored)
   await update($, welcomeAtom, () => welcome)
   // Rows can draw before the choices load (a resumed session does), so draw them again.

@@ -61,10 +61,12 @@ export async function boot(
   const readGates = new Map<string, Promise<void>>()
   on('fs.read', async (_, e) => {
     order.push('read')
-    await readGates.get(e.path)
+    // What the file holds as the read begins, as a real read would see it; the gate holds only the answer.
     const file = disk.get(e.path)
-    if (e.as === 'bytes' && file !== undefined && file !== 'dir') return { value: { base64: file.base64 } }
+    const gate = readGates.get(e.path)
     const text = files.get(e.path)
+    await gate
+    if (e.as === 'bytes' && file !== undefined && file !== 'dir') return { value: { base64: file.base64 } }
     if (text === undefined) throw new Error(`ENOENT: ${e.path}`)
 
     return { value: text }

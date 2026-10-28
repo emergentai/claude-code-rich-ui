@@ -25,10 +25,6 @@ export function parseWelcome(raw: unknown): string | undefined {
   return stored.welcome
 }
 
-export function serialize(enabled: EnabledMap, welcome?: string) {
-  return welcome === undefined ? { v: 1, enabled } : { v: 1, enabled, welcome }
-}
-
 // The flag a toggle would set: the opposite of the feature's effective flag.
 export function toggled(
   enabled: EnabledMap,
@@ -39,16 +35,32 @@ export function toggled(
   return { ...enabled, [feature.id]: !current }
 }
 
-// What a save changes. Anything not named here is taken from the store as it is now,
-// so a save never writes back a value this session only remembers from when it loaded.
+// What a save changes. Each choice is its own store entry, so a save writes only the entries it names
+// and cannot write back over one another session saved in the meantime: the store has no way to
+// change a record only if it is unchanged, and a record holding every choice would lose a race
+// between two sessions no matter how it was read first.
 export type PrefsChange = {
   enabled?: EnabledMap
   welcome?: { text: string | undefined }
 }
 
-export function mergePrefs(raw: unknown, change: PrefsChange) {
+export const enabledKey = (id: string) => `prefs.enabled.${id}`
+export const WELCOME_KEY = 'prefs.welcome'
+
+// What the store holds for the welcome sign: the text, or null for the default (told apart from
+// nothing, which leaves the legacy record's text standing).
+export const welcomeValue = (text: string | undefined) => text ?? null
+
+// The choices the store holds: one record under `prefs` (what v0.6.0 and before wrote) with each
+// entry of its own laid over it. `entries` is what the store gave for each feature's key.
+export function readPrefs(legacy: unknown, entries: Record<string, unknown>, welcome: unknown) {
+  const enabled = parseStored(legacy)
+  for (const [id, value] of Object.entries(entries)) {
+    if (typeof value === 'boolean') enabled[id] = value
+  }
+
   return {
-    enabled: { ...parseStored(raw), ...change.enabled },
-    welcome: change.welcome ? change.welcome.text : parseWelcome(raw),
+    enabled,
+    welcome: typeof welcome === 'string' ? welcome : welcome === null ? undefined : parseWelcome(legacy),
   }
 }

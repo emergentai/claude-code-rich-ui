@@ -227,6 +227,84 @@ test('a slow read for an earlier link does not replace the file chosen after it'
   await ui.unmount()
 })
 
+test('a read for an earlier press of a file does not replace its later, fresher read when the file is reopened', async ($, on) => {
+  const { files, clock, readGates } = await boot($, on)
+  files.set('/repo/a.md', 'alpha old')
+  files.set('/repo/b.md', 'beta')
+  let release = () => {}
+  readGates.set('/repo/a.md', new Promise<void>(resolve => (release = resolve)))
+  const ui = await $.ui.mount(message('[a](/repo/a.md) [b](/repo/b.md)') as never)
+
+  // A, whose read stays out; then B; then A again, after the file changed, read at once.
+  await ui.press({ key: 'reply', link: { href: '/repo/a.md' } } as never)
+  await ui.press({ key: 'reply', link: { href: '/repo/b.md' } } as never)
+  files.set('/repo/a.md', 'alpha fresh')
+  readGates.delete('/repo/a.md')
+  await ui.press({ key: 'reply', link: { href: '/repo/a.md' } } as never)
+  const pane = await mountPane($)
+  expect(await pane.find({ type: 'Markdown', text: 'alpha fresh' })).toBeDefined()
+
+  // The first read now finishes, with the text the file had when it began.
+  release()
+  await clock.settle()
+
+  expect(await pane.find({ type: 'Markdown', text: 'alpha fresh' })).toBeDefined()
+  expect(await pane.find({ type: 'Markdown', text: 'alpha old' })).toBeUndefined()
+  await pane.unmount()
+  await ui.unmount()
+})
+
+test('a failed read for an earlier press of a file does not replace its later read when the file is reopened', async ($, on) => {
+  const { files, clock, readGates } = await boot($, on)
+  files.set('/repo/b.md', 'beta')
+  let release = () => {}
+  readGates.set('/repo/a.md', new Promise<void>(resolve => (release = resolve)))
+  const ui = await $.ui.mount(message('[a](/repo/a.md) [b](/repo/b.md)') as never)
+
+  // A is missing at first, so its read will fail when it finishes; the file then appears and is reopened.
+  await ui.press({ key: 'reply', link: { href: '/repo/a.md' } } as never)
+  await ui.press({ key: 'reply', link: { href: '/repo/b.md' } } as never)
+  files.set('/repo/a.md', 'alpha now')
+  readGates.delete('/repo/a.md')
+  await ui.press({ key: 'reply', link: { href: '/repo/a.md' } } as never)
+  const pane = await mountPane($)
+  expect(await pane.find({ type: 'Markdown', text: 'alpha now' })).toBeDefined()
+
+  release()
+  await clock.settle()
+
+  expect(await pane.find({ type: 'Markdown', text: 'alpha now' })).toBeDefined()
+  expect(await pane.find({ type: 'Text', text: /Could not read/ })).toBeUndefined()
+  await pane.unmount()
+  await ui.unmount()
+})
+
+test('a refresh begun before a later press of the same file is dropped, and the press stands', async ($, on) => {
+  const { files, clock, readGates } = await boot($, on)
+  files.set('/repo/a.md', 'alpha v1')
+  const ui = await $.ui.mount(message('[a](/repo/a.md)') as never)
+  await ui.press({ key: 'reply', link: { href: '/repo/a.md' } } as never)
+  const pane = await mountPane($)
+
+  // A write to the file starts a refresh whose read stays out; the file then changes and is pressed again.
+  let release = () => {}
+  readGates.set('/repo/a.md', new Promise<void>(resolve => (release = resolve)))
+  void $.tool.call({ tool: 'Write', file_path: '/repo/a.md', content: 'x' } as never)
+  await clock.settle()
+  files.set('/repo/a.md', 'alpha v3')
+  readGates.delete('/repo/a.md')
+  await ui.press({ key: 'reply', link: { href: '/repo/a.md' } } as never)
+  expect(await pane.find({ type: 'Markdown', text: 'alpha v3' })).toBeDefined()
+
+  release()
+  await clock.settle()
+
+  expect(await pane.find({ type: 'Markdown', text: 'alpha v3' })).toBeDefined()
+  expect(await pane.find({ type: 'Markdown', text: 'alpha v1' })).toBeUndefined()
+  await pane.unmount()
+  await ui.unmount()
+})
+
 test('a failed read for an earlier link does not replace the file chosen after it', async ($, on) => {
   const { files, clock, readGates } = await boot($, on)
   files.set('/repo/b.md', 'beta')

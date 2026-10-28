@@ -21,9 +21,12 @@ export type UsageSnapshot = {
 }
 
 // What the markdown preview pane shows: the file whose link was last pressed,
-// its text, and why there is none.
+// its text, and why there is none. `request` counts the reads started (a press, or a refresh after
+// a write), so a read applies its result only while it is still the latest: a path alone cannot
+// tell a read from an earlier press of the same file.
 export type PreviewState = {
   path?: string
+  request?: number
   text?: string
   isTruncated?: boolean
   error?: string
