@@ -80,6 +80,7 @@ test('several images are tiles side by side, in draft order', async ($, on) => {
 
 test('what does not fit across is counted, not cut', async ($, on) => {
   const { clock, world } = await boot($, on, NO_WELCOME)
+  world.env.TERM_PROGRAM = 'ghostty'
   withSips(world, 400, 800)
   for (let n = 1; n <= 8; n++) drop(world, n)
   world.draft.text = Array.from({ length: 8 }, (_, i) => `[Image #${i + 1}]`).join(' ')
@@ -179,7 +180,7 @@ test('a long paste is left alone: no tile, and the clipboard is not read', async
   expect(world.runs.some(argv => argv[0] === 'pbpaste')).toBe(false)
 })
 
-test('where the terminal cannot draw pictures the tile names the image instead', async ($, on) => {
+test('where the terminal cannot draw pictures there is no tile', async ($, on) => {
   const { clock, world } = await boot($, on, NO_WELCOME)
   world.env.TERM_PROGRAM = 'Apple_Terminal'
   withSips(world)
@@ -189,8 +190,8 @@ test('where the terminal cannot draw pictures the tile names the image instead',
 
   const ui = await $.ui.mount(band())
   expect(await ui.find({ type: 'Image' })).toBeUndefined()
-  expect(await ui.find({ type: 'Text', text: '[Image #1]' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: '#1' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: '[Image #1]' })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: '#1' })).toBeUndefined()
   await ui.unmount()
 })
 
