@@ -27,7 +27,7 @@ removed in any future version.
   looked worse (the first pulled the transcript down row by row, the second only drew the jump out).
 - A tile is captioned with its tag's number (the original file's name is not known before the prompt is sent).
 - The picture is drawn where Claude Code draws pictures: kitty, Ghostty (so cmux), and iTerm2 3.5+ under
-  fullscreen rendering. Anywhere else (tmux, screen, Terminal.app) the tile says `[Image #N]`.
+  fullscreen rendering. Anywhere else (tmux, screen, Terminal.app) there is no tile: the tag in the prompt is all you get.
   Claude Code does not say whether a terminal draws pictures, so the mod guesses from the terminal's name;
   `RICH_UI_PEEK_IMAGES=1` (or `0`), set where you start Claude Code, overrides the guess.
 

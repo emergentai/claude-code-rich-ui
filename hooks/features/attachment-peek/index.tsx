@@ -11,7 +11,6 @@ import {
   sameTags,
   tagsIn,
   tileCaptionOf,
-  tileFallbackOf,
   tileWidthOf,
 } from './peek'
 import { drawsPictures, engineRoot, osOf, parseSips, projectOf, sizeArgv, thumbArgv } from './platform'
@@ -322,17 +321,24 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
   const rows = Math.min(TILE_ROWS, e.props.maxRows - 3)
   if (rows < 1) return rest
 
-  // The picture of each tile, where the terminal draws one; a tile without one is sized to its words.
-  const sources = new Map<string, ImageSource | undefined>()
-  await Promise.all(
-    items.map(async item => sources.set(idOf(item), hasPictures ? await pictureOf($, item) : undefined)),
-  )
-  const tileWidth = (item: PeekItem) =>
-    tileWidthOf(item, rows, TILE_COLUMNS, sources.get(idOf(item)) !== undefined)
+  // The picture of each tile. A terminal that draws none gets no tiles at all, nor does an image
+  // that cannot be read: a tile of words would only repeat the tag in the prompt.
+  const pictures = new Map<string, ImageSource>()
+  if (hasPictures) {
+    await Promise.all(
+      items.map(async item => {
+        const source = await pictureOf($, item)
+        if (source !== undefined) pictures.set(idOf(item), source)
+      }),
+    )
+  }
+  const drawn = items.filter(item => pictures.has(idOf(item)))
+  if (drawn.length === 0) return rest
+  const tileWidth = (item: PeekItem) => tileWidthOf(item, rows, TILE_COLUMNS)
 
   // One tile: a picture over a one-line caption, in a round frame.
   const tileOf = (item: PeekItem) => {
-    const source = sources.get(idOf(item))
+    const source = pictures.get(idOf(item))
     const cells = fitCells(item.width, item.height, rows, TILE_COLUMNS)
 
     return (
@@ -346,7 +352,7 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
         width={tileWidth(item)}
         flexShrink={0}
       >
-        {source !== undefined ? (
+        {source !== undefined && (
           <Image
             key={`peek-image-${idOf(item)}`}
             source={source}
@@ -354,8 +360,6 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
             rows={cells.rows}
             alt={`[Image #${item.n}]`}
           />
-        ) : (
-          <Text dimColor wrap="truncate">{tileFallbackOf(item)}</Text>
         )}
         <Text dimColor wrap="truncate">{tileCaptionOf(item)}</Text>
       </Box>
@@ -365,14 +369,14 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
   // As many tiles as fit across, with `+N` for the rest.
   const shown: PeekItem[] = []
   let used = 0
-  for (const item of items) {
+  for (const item of drawn) {
     const width = tileWidth(item)
     if (shown.length > 0 && used + width + 1 > columns - 4) break
     shown.push(item)
     used += width + 1
   }
   const tiles = shown.map(tileOf)
-  const hidden = items.length - shown.length
+  const hidden = drawn.length - shown.length
 
   return (
     <Box flexDirection="column">

@@ -2,6 +2,12 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## Unreleased
+
+### Changed
+- Attachment peek: where the terminal does not draw pictures (tmux, Terminal.app), there is no tile at
+  all, instead of a tile with the words `[Image #N]`. ([#38](https://github.com/emergentai/claude-code-rich-ui/issues/38))
+
 ## 0.6.2 - 2026-10-28
 
 ### Fixed
