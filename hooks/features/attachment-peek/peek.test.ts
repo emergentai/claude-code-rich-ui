@@ -2,7 +2,7 @@ import { expect, test } from 'claude-code/testing'
 
 import type { PeekItem } from '../../../types'
 
-import { fitCells, pngSize, sameTags, tagsIn, tileCaptionOf } from './peek'
+import { fitCells, pngSize, sameTags, tagsIn, tileCaptionOf, tileFallbackOf, tileWidthOf } from './peek'
 import { drawsPictures, engineRoot, osOf, parseSips, projectOf } from './platform'
 
 test('the tags of a draft: images, each once, in the order they stand', () => {
@@ -53,6 +53,15 @@ test('a PNG size comes from its first bytes; anything else has none', () => {
 test('what a tile says under its picture', () => {
   const image: PeekItem = { kind: 'image', n: 7, ext: 'png', bytes: 28590, width: 1124, height: 158, thumb: '' }
   expect(tileCaptionOf(image)).toBe('#7')
+})
+
+test('a tile with no drawn picture is as wide as its words, not as its picture would have been', () => {
+  // A small box (one row) would make a 4 column picture, too narrow for "[Image #5]".
+  const image: PeekItem = { kind: 'image', n: 5, ext: 'png', bytes: 9, width: 696, height: 524, thumb: '/t/5.png' }
+  expect(tileFallbackOf(image)).toBe('[Image #5]')
+  expect(tileWidthOf(image, 1, 28, false)).toBe('[Image #5]'.length + 4)
+  expect(tileWidthOf(image, 1, 28, true)).toBe(fitCells(696, 524, 1, 28).columns + 4)
+  expect(tileFallbackOf({ ...image, thumb: '' })).toBe('no preview')
 })
 
 test('the system, and where Claude Code keeps a session', () => {

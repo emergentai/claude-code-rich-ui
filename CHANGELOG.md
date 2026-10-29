@@ -2,6 +2,13 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## Unreleased
+
+### Fixed
+- Attachment peek: where the terminal does not draw pictures, a tile is now as wide as the words it
+  shows (`[Image #5]`), not as wide as the picture would have been, so the words are no longer cut
+  to `[Image...`. ([#38](https://github.com/emergentai/claude-code-rich-ui/issues/38))
+
 ## 0.6.1 - 2026-10-27
 
 ### Fixed
