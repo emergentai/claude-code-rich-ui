@@ -68,3 +68,6 @@ export function pngSize(base64: string): { width: number; height: number } | und
 
 // The line under a tile's picture: its tag's number.
 export const tileCaptionOf = (item: PeekItem) => `#${item.n}`
+
+// What a tile says in place of its picture when none is drawn (no terminal support, or no thumbnail).
+export const tileTextOf = (item: PeekItem) => (item.thumb === '' ? 'no preview' : `[Image #${item.n}]`)

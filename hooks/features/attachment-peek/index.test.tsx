@@ -191,6 +191,12 @@ test('where the terminal cannot draw pictures the tile names the image instead',
   expect(await ui.find({ type: 'Image' })).toBeUndefined()
   expect(await ui.find({ type: 'Text', text: '[Image #1]' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: '#1' })).toBeDefined()
+  // The tile is as wide as the words in it plus its frame, so they are not cut to "[Image…".
+  const widthOfTile = (node: any): unknown =>
+    node?.props?.key === 'peek-tile-i1'
+      ? node.props.width
+      : (node?.children ?? []).map(widthOfTile).find((w: unknown) => w !== undefined)
+  expect(widthOfTile(await ui.find({ type: 'Box' }))).toBe('[Image #1]'.length + 4)
   await ui.unmount()
 })
 

@@ -2,7 +2,7 @@ import { expect, test } from 'claude-code/testing'
 
 import type { PeekItem } from '../../../types'
 
-import { fitCells, pngSize, sameTags, tagsIn, tileCaptionOf } from './peek'
+import { fitCells, pngSize, sameTags, tagsIn, tileCaptionOf, tileTextOf } from './peek'
 import { drawsPictures, engineRoot, osOf, parseSips, projectOf } from './platform'
 
 test('the tags of a draft: images, each once, in the order they stand', () => {
@@ -85,4 +85,10 @@ test('where pictures are drawn: kitty, Ghostty, iTerm2 in fullscreen, never in t
   expect(drawsPictures({ CLAUDE_CODE_FORCE_TERMINAL_IMAGES: '1', TMUX: 'x' }, false)).toBe(true)
   expect(drawsPictures({ RICH_UI_PEEK_IMAGES: '1', TMUX: 'x' }, false)).toBe(true)
   expect(drawsPictures({ RICH_UI_PEEK_IMAGES: '0', TERM_PROGRAM: 'ghostty' }, true)).toBe(false)
+})
+
+test('what a tile says where no picture is drawn', () => {
+  const item: PeekItem = { kind: 'image', n: 5, ext: 'png', bytes: 1, width: 10, height: 10, thumb: '/x.png' }
+  expect(tileTextOf(item)).toBe('[Image #5]')
+  expect(tileTextOf({ ...item, thumb: '' })).toBe('no preview')
 })

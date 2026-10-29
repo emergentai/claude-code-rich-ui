@@ -11,6 +11,7 @@ import {
   sameTags,
   tagsIn,
   tileCaptionOf,
+  tileTextOf,
 } from './peek'
 import { drawsPictures, engineRoot, osOf, parseSips, projectOf, sizeArgv, thumbArgv } from './platform'
 import type { Os } from './platform'
@@ -333,7 +334,7 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
         borderStyle="round"
         borderDimColor
         paddingX={1}
-        width={tileWidth(item, rows)}
+        width={tileWidth(item, rows, hasPictures)}
         flexShrink={0}
       >
         {source !== undefined ? (
@@ -345,7 +346,7 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
             alt={`[Image #${item.n}]`}
           />
         ) : (
-          <Text dimColor wrap="truncate">{item.thumb === '' ? 'no preview' : `[Image #${item.n}]`}</Text>
+          <Text dimColor wrap="truncate">{tileTextOf(item)}</Text>
         )}
         <Text dimColor wrap="truncate">{tileCaptionOf(item)}</Text>
       </Box>
@@ -356,7 +357,7 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
   const shown: PeekItem[] = []
   let used = 0
   for (const item of items) {
-    const width = tileWidth(item, rows)
+    const width = tileWidth(item, rows, hasPictures)
     if (shown.length > 0 && used + width + 1 > columns - 4) break
     shown.push(item)
     used += width + 1
@@ -375,11 +376,12 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
   )
 }
 
-// A tile's width in cells, as tileOf lays it out: as wide as its picture or its caption,
-// whichever is more, and the frame.
-function tileWidth(item: PeekItem, rows: number): number {
+// A tile's width in cells, as tileOf lays it out: as wide as its picture (or, where no picture
+// is drawn, the words standing in for it) or its caption, whichever is more, and the frame.
+function tileWidth(item: PeekItem, rows: number, hasPictures: boolean): number {
   const caption = [...tileCaptionOf(item)].length
-  const body = fitCells(item.width, item.height, rows, TILE_COLUMNS).columns
+  const isDrawn = hasPictures && item.thumb !== ''
+  const body = isDrawn ? fitCells(item.width, item.height, rows, TILE_COLUMNS).columns : [...tileTextOf(item)].length
 
   return Math.max(caption, body) + 4
 }
