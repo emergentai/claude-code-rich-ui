@@ -11,6 +11,8 @@ import {
   sameTags,
   tagsIn,
   tileCaptionOf,
+  tileFallbackOf,
+  tileWidthOf,
 } from './peek'
 import { drawsPictures, engineRoot, osOf, parseSips, projectOf, sizeArgv, thumbArgv } from './platform'
 import type { Os } from './platform'
@@ -320,9 +322,17 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
   const rows = Math.min(TILE_ROWS, e.props.maxRows - 3)
   if (rows < 1) return rest
 
+  // The picture of each tile, where the terminal draws one; a tile without one is sized to its words.
+  const sources = new Map<string, ImageSource | undefined>()
+  await Promise.all(
+    items.map(async item => sources.set(idOf(item), hasPictures ? await pictureOf($, item) : undefined)),
+  )
+  const tileWidth = (item: PeekItem) =>
+    tileWidthOf(item, rows, TILE_COLUMNS, sources.get(idOf(item)) !== undefined)
+
   // One tile: a picture over a one-line caption, in a round frame.
-  const tileOf = async (item: PeekItem) => {
-    const source = hasPictures ? await pictureOf($, item) : undefined
+  const tileOf = (item: PeekItem) => {
+    const source = sources.get(idOf(item))
     const cells = fitCells(item.width, item.height, rows, TILE_COLUMNS)
 
     return (
@@ -333,7 +343,7 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
         borderStyle="round"
         borderDimColor
         paddingX={1}
-        width={tileWidth(item, rows)}
+        width={tileWidth(item)}
         flexShrink={0}
       >
         {source !== undefined ? (
@@ -345,7 +355,7 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
             alt={`[Image #${item.n}]`}
           />
         ) : (
-          <Text dimColor wrap="truncate">{item.thumb === '' ? 'no preview' : `[Image #${item.n}]`}</Text>
+          <Text dimColor wrap="truncate">{tileFallbackOf(item)}</Text>
         )}
         <Text dimColor wrap="truncate">{tileCaptionOf(item)}</Text>
       </Box>
@@ -356,12 +366,12 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
   const shown: PeekItem[] = []
   let used = 0
   for (const item of items) {
-    const width = tileWidth(item, rows)
+    const width = tileWidth(item)
     if (shown.length > 0 && used + width + 1 > columns - 4) break
     shown.push(item)
     used += width + 1
   }
-  const tiles = await Promise.all(shown.map(tileOf))
+  const tiles = shown.map(tileOf)
   const hidden = items.length - shown.length
 
   return (
@@ -373,13 +383,4 @@ export const renderPeeks: MatchedHook<'ui.render', { component: 'AbovePrompt' }>
       </Box>
     </Box>
   )
-}
-
-// A tile's width in cells, as tileOf lays it out: as wide as its picture or its caption,
-// whichever is more, and the frame.
-function tileWidth(item: PeekItem, rows: number): number {
-  const caption = [...tileCaptionOf(item)].length
-  const body = fitCells(item.width, item.height, rows, TILE_COLUMNS).columns
-
-  return Math.max(caption, body) + 4
 }

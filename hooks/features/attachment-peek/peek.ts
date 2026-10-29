@@ -68,3 +68,16 @@ export function pngSize(base64: string): { width: number; height: number } | und
 
 // The line under a tile's picture: its tag's number.
 export const tileCaptionOf = (item: PeekItem) => `#${item.n}`
+
+// What a tile says in place of its picture when the terminal does not draw one.
+export const tileFallbackOf = (item: PeekItem) => (item.thumb === '' ? 'no preview' : `[Image #${item.n}]`)
+
+// A tile's width in cells: as wide as what it shows (its picture, or the words that stand for
+// it) or its caption, whichever is more, and the frame.
+export function tileWidthOf(item: PeekItem, rows: number, maxColumns: number, hasPicture: boolean): number {
+  const body = hasPicture
+    ? fitCells(item.width, item.height, rows, maxColumns).columns
+    : [...tileFallbackOf(item)].length
+
+  return Math.max([...tileCaptionOf(item)].length, body) + 4
+}

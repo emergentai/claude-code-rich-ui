@@ -2,6 +2,15 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## 0.6.2 - 2026-10-28
+
+### Fixed
+- Attachment peek: where the terminal does not draw pictures, a tile is now as wide as the words it
+  shows (`[Image #5]`), not as wide as the picture would have been, so the words are no longer cut
+  to `[Image...`. ([#38](https://github.com/emergentai/claude-code-rich-ui/issues/38))
+- Markdown preview: each refresh after a write now takes its own request number before it reads, so
+  two writes to the open file can no longer share one and leave the first write's text on show.
+
 ## 0.6.1 - 2026-10-27
 
 ### Fixed
