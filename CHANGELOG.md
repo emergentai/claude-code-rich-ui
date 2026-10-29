@@ -2,7 +2,7 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
-## Unreleased
+## 0.6.3 - 2026-10-28
 
 ### Changed
 - Attachment peek: where the terminal does not draw pictures (tmux, Terminal.app), there is no tile at
