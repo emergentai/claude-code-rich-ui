@@ -61,16 +61,21 @@ export const refreshOnWrite: Hook<'tool.call'> = async ($, e, next) => {
     if ('isError' in result && result.isError) return result
 
     const path = e.file_path
-    const before = await read($, previewAtom)
-    if (before.path !== path) return result
+    if ((await read($, previewAtom)).path !== path) return result
+
+    // This refresh takes a request number of its own before it reads, as a press does, so two writes to
+    // the same file never share one. The pane keeps its text meanwhile. A read still out for an earlier
+    // press or write finds a later number here and is dropped when it finishes as the older text. If the
+    // pane has moved to another file since the check above, no number is taken and nothing is read.
+    const started = await update($, previewAtom, current =>
+      current.path === path ? { ...current, request: (current.request ?? 0) + 1 } : current,
+    )
+    if (started.path !== path) return result
+    const request = started.request
 
     const { text, isTruncated } = clipText(await $.fs.read(path))
-    // Applied only if the pane is still on the request it was on when the read began: it has moved on
-    // if another file or a later press came meanwhile. It then takes the next number itself, so a read
-    // of this file begun before the write, still out, is dropped when it finishes as the older text.
-    const request = (before.request ?? 0) + 1
     await update($, previewAtom, current =>
-      current.path === path && current.request === before.request ? { path, request, text, isTruncated } : current,
+      current.path === path && current.request === request ? { path, request, text, isTruncated } : current,
     )
   } catch {
     // The preview is a convenience; it must not fail a tool call.
