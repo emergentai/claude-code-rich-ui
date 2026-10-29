@@ -2,6 +2,12 @@
 
 Versions follow [`docs/dev/release-process.md`](docs/dev/release-process.md).
 
+## Unreleased
+
+### Fixed
+- Markdown preview: each refresh after a write now takes its own request number before it reads, so
+  two writes to the open file can no longer share one and leave the first write's text on show.
+
 ## 0.6.1 - 2026-10-27
 
 ### Fixed

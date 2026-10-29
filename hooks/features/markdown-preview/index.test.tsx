@@ -305,6 +305,34 @@ test('a refresh begun before a later press of the same file is dropped, and the 
   await ui.unmount()
 })
 
+test('two writes to the open file, finishing in order, leave the later text on show', async ($, on) => {
+  const { files, clock, readGates } = await boot($, on)
+  files.set('/repo/a.md', 'alpha v1')
+  const { ui, pane } = await showFile($, '/repo/a.md')
+
+  // Both writes' reads are held; the first finishes, then the second.
+  let release1 = () => {}
+  let release2 = () => {}
+  files.set('/repo/a.md', 'alpha v2')
+  readGates.set('/repo/a.md', new Promise<void>(resolve => (release1 = resolve)))
+  void $.tool.call({ tool: 'Write', file_path: '/repo/a.md', content: 'x' } as never)
+  await clock.settle()
+  files.set('/repo/a.md', 'alpha v3')
+  readGates.set('/repo/a.md', new Promise<void>(resolve => (release2 = resolve)))
+  void $.tool.call({ tool: 'Write', file_path: '/repo/a.md', content: 'y' } as never)
+  await clock.settle()
+
+  release1()
+  await clock.settle()
+  release2()
+  await clock.settle()
+
+  expect(await pane.find({ type: 'Markdown', text: 'alpha v3' })).toBeDefined()
+  expect(await pane.find({ type: 'Markdown', text: 'alpha v2' })).toBeUndefined()
+  await pane.unmount()
+  await ui.unmount()
+})
+
 test('a failed read for an earlier link does not replace the file chosen after it', async ($, on) => {
   const { files, clock, readGates } = await boot($, on)
   files.set('/repo/b.md', 'beta')
